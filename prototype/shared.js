@@ -214,6 +214,17 @@
       category: 'tea',
     },
   ];
+  const journey = window.NepJourney.createModel({ kinds, menu });
+  const migrate = (value) =>
+    window.NepJourney.ensureState(
+      window.NepServices.ensureState({
+        ...value,
+        seats: value.seats.map((seat, index) => ({
+          ...seat,
+          number: seat.number || index + 1,
+        })),
+      }),
+    );
   const initial = () =>
     window.NepServices.ensureState({
       version: 1,
@@ -271,7 +282,7 @@
     state = initial();
     persistent = false;
   }
-  state = window.NepServices.ensureState(state);
+  state = migrate(state);
   const save = () => {
     try {
       localStorage.setItem(key, JSON.stringify(state));
@@ -282,12 +293,12 @@
   };
   const getSeat = (id) => state.seats.find((s) => s.id === id);
   const reset = () => {
-    state = initial();
+    state = migrate(initial());
     save();
   };
   const getState = () => state;
   const replaceState = (value) => {
-    state = window.NepServices.ensureState(value);
+    state = migrate(value);
     save();
   };
   const statusFor = (seat, date = '2026-11-14') =>
@@ -308,7 +319,7 @@
       try {
         const value = JSON.parse(event.newValue);
         if (value.version === 1) {
-          state = window.NepServices.ensureState(value);
+          state = migrate(value);
           window.dispatchEvent(new Event('nep-state'));
         }
       } catch {
@@ -428,6 +439,7 @@
     statusText,
     kinds,
     menu,
+    journey,
     getState,
     getSeat,
     statusFor,

@@ -65,7 +65,7 @@ Still to build: interactive 3D/editor, real API/auth, transactional booking and 
 
 ## HTML prototype
 
-Hai màn dùng Hallmark và ảnh tham chiếu sơ đồ bàn; tông tối, nhấn mint, font tiếng Việt tự host. Bố cục điện thoại tối đa 480 px, tab điều hướng dưới và bottom sheet. Có mượn sách, đồ dùng chung cần trả lại, mua đồ giải trí và văn phòng phẩm.
+Hai màn dùng Hallmark và ảnh tham chiếu sơ đồ bàn; tông tối, nhấn mint, font tiếng Việt tự host. Bố cục điện thoại tối đa 480 px, tab điều hướng dưới và bottom sheet. Luồng khách: **QR / số bàn / sơ đồ → chọn dịch vụ → đối chiếu gói trả trước → sử dụng → checkout**. Có mượn sách, đồ dùng chung cần trả lại, mua đồ giải trí/văn phòng phẩm, điểm loyalty và hồ sơ mẫu.
 
 ```bash
 rtk proxy python3 -m http.server 4173 --bind 127.0.0.1
@@ -74,10 +74,10 @@ rtk proxy python3 -m http.server 4173 --bind 127.0.0.1
 - [Chọn giao diện](http://localhost:4173/prototype/)
 - [Xem hai màn điện thoại cạnh nhau](http://localhost:4173/prototype/preview.html)
 - [FE1 — Vận hành, sơ đồ bàn và POS](http://localhost:4173/prototype/operations.html)
-- [FE2 — Khách đặt chỗ và self checkout](http://localhost:4173/prototype/customer.html)
+- [FE2 — Hành trình khách và self checkout](http://localhost:4173/prototype/customer.html)
 
-Các màn chia sẻ dữ liệu mẫu qua localStorage khi mở cùng origin (giữ cùng hostname và port). Đơn từ checkout khách xuất hiện ở màn vận hành. Không thu tiền thật; chưa có backend, AI thật hoặc WebGL. [Hướng dẫn prototype](docs/prototype.md).
+Các màn chia sẻ dữ liệu mẫu qua localStorage khi mở cùng origin (giữ cùng hostname và port). Bắt đầu sử dụng tạo đơn ghi vào phiên và phiếu mượn bên nhân viên; checkout quyết toán phần còn thiếu sau gói và điểm. Gói mẫu `NEP2H` gồm 120 phút và một cà phê sữa. Không thu tiền thật; chưa có backend, xác thực, AI thật hoặc WebGL. Xem [hướng dẫn prototype](docs/prototype.md) và [quy tắc hành trình khách](docs/customer-journey.md).
 
-Kiểm tra quy tắc mượn/trả/tồn sản phẩm: `rtk proxy node --test prototype/services.check.cjs`. Hai HTML vẫn chạy độc lập với ứng dụng Expo; lượt cập nhật này không thay đổi demo core trong `src/`.
+Kiểm tra quy tắc dịch vụ và hành trình: `rtk proxy node --test prototype/services.check.cjs prototype/journey.check.cjs`. Hai HTML vẫn chạy độc lập với ứng dụng Expo; các quyền lợi và điểm mô phỏng ở HTML không thay đổi demo core trong `src/`.
 
-[Ảnh hai màn và kết quả kiểm tra](docs/prototype-verification.md).
+[Ảnh hai màn và kết quả kiểm tra hành trình hiện tại](docs/customer-journey-verification.md). [Báo cáo lịch sử luồng cũ](docs/prototype-verification.md).

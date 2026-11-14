@@ -5,6 +5,10 @@
   const UI = window.NepServiceUI;
   const $ = (selector) => document.querySelector(selector);
   const state = () => N.getState();
+  const customerSession = (seatId) =>
+    state().customerSessions.find(
+      (session) => session.seatId === seatId && session.status === 'active',
+    );
   let selected = 'W03',
     zone = 'all',
     filter = 'all',
@@ -174,6 +178,15 @@
     $('#seat-detail').innerHTML =
       `<div class="detail-title"><h2>${s.id}</h2><span>${k.label}</span></div><div class="seat-preview" aria-hidden="true"><div class="seat-preview-visual"><span></span></div></div><h3>${k.label}</h3><p class="detail-description">${k.description}</p><div class="amenity-list">${k.amenities.map((a) => `<span class="amenity">${N.icon(a)}${amenities[a]}</span>`).join('')}</div><div class="detail-facts"><div class="fact-row"><span>Trạng thái</span><span class="status-pill status-pill--${st}">${N.statusText[st]}</span></div><div class="fact-row"><span>Giá theo giờ</span><strong>${N.money(k.rate)}</strong></div><div class="fact-row"><span>Sức chứa</span><strong>${s.kind === 'meeting' ? 'Tối đa 4 người' : '1 người'}</strong></div>${st === 'occupied' || st === 'attention' ? `<div class="fact-row"><span>Khách đang dùng</span><strong>${N.escape(s.guest || 'Khách tại quán')}</strong></div><div class="fact-row"><span>Kết thúc lúc</span><strong>${s.end || '16:00'}</strong></div>` : ''}${st === 'reserved' ? `<div class="fact-row"><span>Khách đặt</span><strong>${N.escape(booking?.name || s.guest || 'Khách đặt trước')}</strong></div><div class="fact-row"><span>Bắt đầu</span><strong>${booking?.time || '15:00'}</strong></div>` : ''}</div><div class="detail-actions">${editing ? `<p class="dialog-note">Di chuyển ${s.id} trong sơ đồ mẫu</p><div class="move-controls"><button class="icon-button" data-move="0,-12" aria-label="Di chuyển lên">↑</button><button class="icon-button" data-move="-12,0" aria-label="Di chuyển trái">←</button><button class="icon-button" data-move="12,0" aria-label="Di chuyển phải">→</button><button class="icon-button" data-move="0,12" aria-label="Di chuyển xuống">↓</button></div><button class="button button--outline" id="cancel-layout">Hủy chỉnh sửa</button>` : st === 'free' ? `<button class="button button--primary" id="book-selected">${N.icon('plus')} Đặt chỗ này</button><button class="button button--outline" id="lock-seat">${N.icon('shield')} Tạm khóa chỗ</button>` : st === 'reserved' ? `<button class="button button--primary" id="check-in">${N.icon('check')} Check-in khách</button><button class="button button--outline" id="cancel-booking">Hủy đặt chỗ mẫu</button>` : st === 'blocked' ? `<button class="button button--outline" id="unlock-seat">Mở lại chỗ ngồi</button>` : `<button class="button button--primary" id="add-pos-order">${N.icon('cup')} Thêm món / dịch vụ</button><button class="button button--outline" id="check-out">${N.icon('clock')} Kết thúc phiên mẫu</button>${st === 'attention' ? '<button class="quiet-button" id="detail-support">Xem yêu cầu hỗ trợ</button>' : ''}`}</div><p class="detail-helper">${editing ? 'Bố trí chỉ lưu cục bộ, chưa có publish backend.' : 'Thao tác trên dữ liệu mô phỏng.'}</p><div class="detail-bottom">${N.icon('info')} Giá được chốt trước khi thanh toán.</div>`;
     $('#book-selected')?.addEventListener('click', () => bookingForm(s.id));
+    const visit = customerSession(s.id);
+    if (visit && $('#check-out')) {
+      const bill = N.journey.quoteSession(state(), Date.now(), visit.id);
+      const panel = document.createElement('div');
+      panel.className = 'detail-facts';
+      panel.innerHTML = `<div class="fact-row"><span>Phiên tự phục vụ</span><strong>Chưa checkout</strong></div><div class="fact-row"><span>Tạm tính sau gói</span><strong>${N.money(bill.due)}</strong></div><p class="detail-helper">Khách đang sử dụng dịch vụ. Đối chiếu gói và thanh toán ở màn khách trước khi giải phóng bàn.</p>`;
+      $('#seat-detail .detail-actions').before(panel);
+      $('#check-out').textContent = 'Hướng dẫn khách checkout';
+    }
     $('#lock-seat')?.addEventListener('click', () => {
       s.status = 'blocked';
       N.save();
@@ -206,6 +219,12 @@
       N.toast('Đã hủy đặt chỗ mẫu. Bản này không xử lý hoàn tiền.');
     });
     $('#check-out')?.addEventListener('click', () => {
+      if (customerSession(s.id)) {
+        N.toast(
+          'Phiên khách chưa checkout. Khách cần đối chiếu hóa đơn và hoàn tất ở màn khách; bàn vẫn được giữ.',
+        );
+        return;
+      }
       const loans = state().loans.filter(
         (loan) =>
           loan.seatId === s.id &&
@@ -433,6 +452,12 @@
     });
   }
   function posForm(id = selected) {
+    if (customerSession(id)) {
+      N.toast(
+        'Bàn có phiên tự phục vụ. Thêm dịch vụ từ phiên khách để đối chiếu quyền lợi gói và ghi đúng hóa đơn.',
+      );
+      return;
+    }
     openDialog(
       'Tạo đơn tại bàn',
       `<form id="pos-form"><p class="dialog-copy">Đơn mẫu cho chỗ ${N.escape(id)}. Mọi khoản thu trong prototype đều được mô phỏng.</p><div class="field"><label for="pos-product">Đồ uống</label><select id="pos-product">${N.menu.map((m) => `<option value="${m.id}">${m.name} · ${N.money(m.price)}</option>`).join('')}</select></div><div class="field"><label for="pos-quantity">Số lượng</label><input id="pos-quantity" type="number" min="1" max="20" value="1" required></div><div class="field"><label for="pos-method">Phương thức mô phỏng</label><select id="pos-method"><option value="Tiền mặt">Tiền mặt</option><option value="Online">Online</option></select></div><p class="dialog-note" id="pos-total"></p><button type="submit" class="button button--primary full-width">Ghi nhận đơn mẫu</button></form>`,
@@ -469,17 +494,17 @@
     const orders = state().orders;
     openDialog(
       'POS & đơn hàng',
-      `<p class="dialog-copy">Chỉ hiển thị đơn mẫu được tạo ở màn vận hành hoặc checkout khách.</p><button class="button button--outline" id="dialog-new-order">${N.icon('plus')} Tạo đơn mẫu</button>${
+      `<p class="dialog-copy">Đơn được gửi khi khách bắt đầu dùng hoặc gọi thêm dịch vụ. Đơn ghi vào phiên chỉ thanh toán khi checkout.</p><button class="button button--outline" id="dialog-new-order">${N.icon('plus')} Tạo đơn mẫu</button>${
         orders.length
           ? orders
               .slice()
               .reverse()
               .map(
                 (o) =>
-                  `<div class="dialog-row"><div><strong>${N.escape(o.id)} · ${N.escape(o.seat)}</strong><small>${N.escape(o.guest)} · ${N.money(o.total)}</small><p>${o.items.map((i) => `${i.qty} × ${N.escape(i.name)}`).join(', ') || 'Gói giờ ngồi'}${o.note ? `<br>Ghi chú: ${N.escape(o.note)}` : ''}</p></div><button class="button button--outline" data-order="${N.escape(o.id)}" ${o.status === 'served' ? 'disabled' : ''}>${o.status === 'served' ? 'Đã phục vụ' : 'Đã phục vụ?'}</button></div>`,
+                  `<div class="dialog-row"><div><strong>${N.escape(o.id)} · ${N.escape(o.seat)}</strong><small>${N.escape(o.guest)} · ${N.money(o.total)}</small><small>${o.paymentStatus === 'on_tab' ? 'Ghi vào phiên · Chưa checkout' : o.paymentStatus === 'paid' ? 'Đã thanh toán mô phỏng' : 'Đơn POS mẫu'}</small><p>${o.items.map((i) => `${i.qty} × ${N.escape(i.name)}`).join(', ') || 'Gói giờ ngồi'}${o.note ? `<br>Ghi chú: ${N.escape(o.note)}` : ''}</p></div><button class="button button--outline" data-order="${N.escape(o.id)}" ${o.status === 'served' ? 'disabled' : ''}>${o.status === 'served' ? 'Đã phục vụ' : 'Đã phục vụ?'}</button></div>`,
               )
               .join('')
-          : '<div class="empty-state"><strong>Chưa có đơn trong bản mẫu</strong><p>Tạo đơn ở đây hoặc checkout từ màn khách.</p></div>'
+          : '<div class="empty-state"><strong>Chưa có đơn trong bản mẫu</strong><p>Tạo đơn ở đây hoặc bắt đầu dịch vụ từ màn khách.</p></div>'
       }`,
     );
     $('#dialog-new-order').addEventListener('click', () => posForm());

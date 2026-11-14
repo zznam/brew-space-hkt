@@ -58,9 +58,9 @@
       .reverse()
       .map(
         (loan) =>
-          `<article class="loan-row"><span class="loan-icon tone-${S.groups[loan.group].tone}">${N.icon(S.item(loan.serviceId).icon)}</span><div><h3>${N.escape(loan.name)}</h3><p>${N.escape(loan.seatId)} · ${loan.quantity} ${loan.group === 'books' ? 'cuốn' : 'món'} · ${labels[loan.status]}</p></div>${staff && ['requested', 'borrowed'].includes(loan.status) ? `<button class="button button--outline" data-loan-id="${N.escape(loan.id)}" data-loan-next="${loan.status === 'requested' ? 'borrowed' : 'returned'}">${loan.status === 'requested' ? 'Giao đồ' : 'Nhận trả'}</button>` : `<span class="loan-status loan-status--${loan.status}">${labels[loan.status]}</span>`}${staff && loan.status === 'requested' ? `<button class="loan-cancel" data-loan-id="${N.escape(loan.id)}" data-loan-next="cancelled" aria-label="Hủy yêu cầu ${N.escape(loan.name)}">${N.icon('close')}</button>` : ''}</article>`,
+          `<article class="loan-row"><span class="loan-icon tone-${S.groups[loan.group].tone}">${N.icon(S.item(loan.serviceId).icon)}</span><div><h3>${N.escape(loan.name)}</h3><p>${N.escape(loan.seatId)} · ${loan.quantity} ${loan.group === 'books' ? 'cuốn' : 'món'} · ${loan.returnRequested && loan.status === 'borrowed' ? 'Khách yêu cầu trả' : labels[loan.status]}</p></div>${staff && ['requested', 'borrowed'].includes(loan.status) ? `<button class="button button--outline" data-loan-id="${N.escape(loan.id)}" data-loan-next="${loan.status === 'requested' ? 'borrowed' : 'returned'}">${loan.status === 'requested' ? 'Giao đồ' : 'Nhận trả'}</button>` : `<span class="loan-status loan-status--${loan.status}">${labels[loan.status]}</span>`}${staff && loan.status === 'requested' ? `<button class="loan-cancel" data-loan-id="${N.escape(loan.id)}" data-loan-next="cancelled" aria-label="Hủy yêu cầu ${N.escape(loan.name)}">${N.icon('close')}</button>` : ''}</article>`,
       )
       .join('');
   }
-  window.NepServiceUI = { shortcuts, tabs, cards, loans };
+  window.NepServiceUI = { shortcuts, tabs, cards, loans, art };
 })();

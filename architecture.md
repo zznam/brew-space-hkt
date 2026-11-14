@@ -3,7 +3,8 @@
 - `prototype/index.html`: cửa vào hai giao diện HTML, không cần build.
 - `prototype/preview.html`, `preview.css`: xem hai màn điện thoại cạnh nhau bằng iframe thật.
 - `prototype/operations.html`, `operations.js`: FE1 vận hành, POS mẫu, booking, hỗ trợ và chỉnh bố trí.
-- `prototype/customer.html`, `customer.js`: FE2 chọn chỗ, giỏ hàng và checkout mô phỏng.
+- `prototype/customer.html`, `customer.js`, `journey.css`: FE2 hành trình bàn → dịch vụ → đối chiếu gói → sử dụng → checkout, loyalty và hồ sơ.
+- `prototype/journey.js`, `journey.check.cjs`: quy tắc phiên khách, quyền lợi gói, hóa đơn và điểm thưởng có kiểm thử độc lập.
 - `prototype/shared.js`: dữ liệu mẫu, localStorage, SVG mặt bằng và icon dùng chung.
 - `prototype/styles.css`, `prototype/mobile.css`, `tokens.css`: style nền, bố cục điện thoại tối đa 480 px và design token.
 - `prototype/services.js`, `service-ui.js`, `services.check.cjs`: danh mục, tồn mẫu, mượn/giao/trả, bán hàng và kiểm thử biên độc lập.

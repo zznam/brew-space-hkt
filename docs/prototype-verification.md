@@ -1,5 +1,7 @@
 # Kiểm tra prototype HTML trên điện thoại
 
+> **Báo cáo lịch sử:** các kết quả dưới đây thuộc luồng giỏ hàng/thanh toán trước, trước lần sửa hành trình khách. Không dùng chúng làm bằng chứng kiểm tra luồng mới. Ảnh preview dùng chung đã cập nhật theo phiên bản hiện tại; xem [báo cáo kiểm tra mới](customer-journey-verification.md).
+
 Ngày kiểm tra: 14/11/2026. Môi trường: Chromium headless qua agent-browser; HTML chạy bằng Python HTTP server. Các kiểm tra xác minh prototype cục bộ, chưa là nghiệm thu sản phẩm pilot.
 
 ## Kết quả đợt cập nhật
@@ -31,11 +33,11 @@ Hai màn giữ hệ màu tối/mint, font và icon thống nhất; đổi bố c
 
 Kiểm tra màu đã render trên 174 node chữ HTML của ba trang mặc định không phát hiện chữ dưới ngưỡng: chữ nhỏ 4,5:1, chữ lớn 3:1. Nút mint giữ tỷ lệ chữ khoảng 11,41:1; focus riêng cho nút mint giữ khoảng 3,36:1 so với nút. Kiểm tra này chưa bao gồm toàn bộ SVG, mọi modal, opacity disabled hoặc mọi trạng thái hover; chưa là audit WCAG đầy đủ. Sơ đồ có lựa chọn thay thế bằng danh sách.
 
-## Ảnh preview
+## Ảnh preview hiện tại
 
 ### Hai màn điện thoại cùng lúc
 
-![Hai màn điện thoại hiển thị phiếu mượn bên nhân viên và sách bên khách](previews/mobile-pair.png)
+![Hai màn điện thoại ở phiên bản hiện tại](previews/mobile-pair.png)
 
 ### Màn nhân viên và màn khách
 
