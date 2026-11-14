@@ -1,13 +1,17 @@
 import { Text } from 'react-native';
+import { router } from 'expo-router';
 import { calculateBill, formatMoney, getVenue } from '@/core';
 import { useAppStore } from '@/core/useAppStore';
 import { SeatMap } from '@/components/SeatMap';
-import { Card, Heading, styles } from '@/components/ui';
+import { Button, Card, Heading, styles } from '@/components/ui';
 export function LiveFloorScreen() {
   const store = useAppStore((state) => state);
   const venue = getVenue(store.venueId);
   const sessions = store.sessions.filter(
     (session) => session.venueId === venue.id,
+  );
+  const selectedSeat = venue.seats.find(
+    (seat) => seat.id === store.selectedSeatId,
   );
   return (
     <>
@@ -20,6 +24,25 @@ export function LiveFloorScreen() {
           {sessions.length} of {venue.seats.length} seats occupied ·{' '}
           {venue.description}
         </Text>
+        <Button
+          label="New order"
+          onPress={() => router.push('/merchant/pos')}
+        />
+        {selectedSeat && (
+          <Button
+            label={`Sell to ${selectedSeat.label}`}
+            onPress={() =>
+              router.push({
+                pathname: '/merchant/pos',
+                params: { seatId: selectedSeat.id },
+              })
+            }
+          />
+        )}
+        <Button
+          label="Tickets"
+          onPress={() => router.push('/merchant/tickets')}
+        />
         <SeatMap
           venue={venue}
           sessions={sessions}

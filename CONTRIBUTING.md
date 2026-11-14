@@ -36,6 +36,7 @@ FE1 owns shared presentation and renderer changes; BE owns shared business contr
 5. Switch venues; the Grind session must not appear there. Switch back to recover it.
 6. End the customer demo session; Seat 8 becomes available.
 7. Apply Morning then Afternoon; verify 7 then 2 occupied seats in the active venue. Reset all demo data.
+8. From the live floor, tap "New order", add Cold brew, pay cash; confirm "Order sent to the kitchen." appears. Go back, tap "Tickets", and advance the ticket through preparing → ready → served.
 
 CI checks formatting, types, lint, core tests, web export, and browser flows at desktop/mobile viewport sizes. Native rendering and actual 3D/device performance still need device testing.
 
