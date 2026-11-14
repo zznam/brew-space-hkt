@@ -10,6 +10,9 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { initializeStore, useAppStore } from '@/core/useAppStore';
+import { initializeLoyalty } from '@/features/customer/loyalty/useLoyalty';
+import { seedSpeedrunDemo } from '@/features/gallery/seedDemo';
+import { posStore } from '@/features/merchant/pos/usePosStore';
 import { SimulatorBar } from '@/components/SimulatorBar';
 import {
   Banner,
@@ -48,8 +51,17 @@ export default function RootLayout() {
 
   useEffect(() => {
     let active = true;
-    void initializeStore().then((message) => {
+    const init =
+      Platform.OS === 'web'
+        ? initializeStore()
+        : Promise.all([initializeStore(), initializeLoyalty()]).then(
+            ([message, loyaltyMessage]) => message ?? loyaltyMessage,
+          );
+    void init.then((message) => {
       if (active) {
+        if (Platform.OS !== 'web' && posStore.getState().orders.length === 0) {
+          seedSpeedrunDemo();
+        }
         setWarning(message);
         setReady(true);
       }
@@ -174,7 +186,7 @@ export default function RootLayout() {
             </View>
           </ScrollView>
 
-          {ready && !onGallery ? (
+          {ready && !onGallery && pathname !== '/' ? (
             role === 'merchant' ? (
               <MerchantNav current={merchantTabForPath(pathname)} />
             ) : (

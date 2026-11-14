@@ -10,6 +10,9 @@ export const galleryMessages = defineMessages(
     yourSession: 'Your session: {seat} · {minutes}m',
     noSession: 'No customer session yet',
     prepared: 'Prepared active customer session with sample drink.',
+    speedrunCta: 'Seed all demo data (Speedrun)',
+    speedrunDone:
+      'All merchant, customer, loyalty, POS, and receipt data seeded for speedrun!',
     catAll: 'All',
     catCustomer: 'Customer',
     catLoyalty: 'Loyalty',
@@ -159,6 +162,9 @@ export const galleryMessages = defineMessages(
     yourSession: 'Phiên của bạn: {seat} · {minutes} phút',
     noSession: 'Chưa có phiên khách nào',
     prepared: 'Đã chuẩn bị phiên khách đang mở kèm một món mẫu.',
+    speedrunCta: 'Nạp toàn bộ dữ liệu demo',
+    speedrunDone:
+      'Đã nạp đầy đủ dữ liệu chủ quán, khách, thành viên, POS và hóa đơn!',
     catAll: 'Tất cả',
     catCustomer: 'Khách',
     catLoyalty: 'Thành viên',

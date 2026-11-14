@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { DEMO_CUSTOMER_ID, getVenue } from '@/core';
-import { appStore, useAppStore } from '@/core/useAppStore';
+import { useAppStore } from '@/core/useAppStore';
 import {
   Badge,
   Banner,
@@ -22,6 +22,12 @@ import {
 import { seatLabelText } from '@/i18n/seatLabel';
 import { useT } from '@/i18n/useLanguage';
 import { galleryMessages, type GalleryKey } from './messages';
+import {
+  seedCustomerSessionAndSupport,
+  seedLoyaltyHistory,
+  seedPosTickets,
+  seedSpeedrunDemo,
+} from './seedDemo';
 
 type JourneyCategory = 'all' | 'customer' | 'loyalty' | 'merchant' | 'ai3d';
 
@@ -50,10 +56,6 @@ export function UserJourneysGalleryScreen() {
   const venueId = useAppStore((s) => s.venueId);
   const sessions = useAppStore((s) => s.sessions);
   const setRole = useAppStore((s) => s.setRole);
-  const selectSeat = useAppStore((s) => s.selectSeat);
-  const startSession = useAppStore((s) => s.startSession);
-  const advanceTime = useAppStore((s) => s.advanceTime);
-  const addItem = useAppStore((s) => s.addItem);
 
   const [activeCategory, setActiveCategory] = useState<JourneyCategory>('all');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -67,37 +69,6 @@ export function UserJourneysGalleryScreen() {
     ? venue.seats.find((s) => s.id === customerSession.seatId)
     : undefined;
 
-  const ensureCustomerSession = () => {
-    setRole('customer');
-    const currentSessions = appStore
-      .getState()
-      .sessions.filter((s) => s.venueId === venueId);
-    const existing = currentSessions.find(
-      (s) => s.customerId === DEMO_CUSTOMER_ID,
-    );
-    if (existing) {
-      return existing.id;
-    }
-    const occupiedIds = new Set(currentSessions.map((s) => s.seatId));
-    const freeSeat =
-      venue.seats.find((s) => !occupiedIds.has(s.id)) ?? venue.seats[0];
-    if (freeSeat) {
-      selectSeat(freeSeat.id);
-      startSession('METERED_OPEN');
-      const created = appStore
-        .getState()
-        .sessions.find(
-          (s) => s.venueId === venueId && s.customerId === DEMO_CUSTOMER_ID,
-        );
-      if (created && venue.menu[0]) {
-        addItem(created.id, venue.menu[0].id);
-        advanceTime();
-        return created.id;
-      }
-    }
-    return null;
-  };
-
   const steps: JourneyStep[] = [
     // Journey 1: Customer Space Discovery, 3D Seat Picking & Live Session
     {
@@ -109,6 +80,7 @@ export function UserJourneysGalleryScreen() {
       route: '/customer/explore',
       roleBadge: 'Customer',
       onLaunch: () => {
+        seedLoyaltyHistory();
         setRole('customer');
         router.push('/customer/explore' as never);
       },
@@ -138,7 +110,9 @@ export function UserJourneysGalleryScreen() {
       route: '/customer/active-session',
       roleBadge: 'Customer',
       onLaunch: () => {
-        ensureCustomerSession();
+        seedLoyaltyHistory();
+        seedCustomerSessionAndSupport();
+        setRole('customer');
         setStatusMessage(t('prepared'));
         router.push('/customer/active-session' as never);
       },
@@ -152,7 +126,9 @@ export function UserJourneysGalleryScreen() {
       route: '/customer/receipt',
       roleBadge: 'Customer',
       onLaunch: () => {
-        ensureCustomerSession();
+        seedLoyaltyHistory();
+        seedCustomerSessionAndSupport();
+        setRole('customer');
         router.push('/customer/receipt' as never);
       },
     },
@@ -167,6 +143,7 @@ export function UserJourneysGalleryScreen() {
       route: '/customer/profile',
       roleBadge: 'Customer',
       onLaunch: () => {
+        seedLoyaltyHistory();
         setRole('customer');
         router.push('/customer/profile' as never);
       },
@@ -221,6 +198,7 @@ export function UserJourneysGalleryScreen() {
       route: '/merchant/pos',
       roleBadge: 'Merchant',
       onLaunch: () => {
+        seedPosTickets();
         setRole('merchant');
         router.push('/merchant/pos' as never);
       },
@@ -234,6 +212,7 @@ export function UserJourneysGalleryScreen() {
       route: '/merchant/tickets',
       roleBadge: 'Merchant',
       onLaunch: () => {
+        seedPosTickets();
         setRole('merchant');
         router.push('/merchant/tickets' as never);
       },
@@ -310,6 +289,18 @@ export function UserJourneysGalleryScreen() {
               : t('noSession')
           }
           tone={customerSession ? 'success' : 'neutral'}
+        />
+      </View>
+
+      <View style={styles.row}>
+        <Button
+          label={t('speedrunCta')}
+          variant="primary"
+          fullWidth={!isWide}
+          onPress={() => {
+            seedSpeedrunDemo();
+            setStatusMessage(t('speedrunDone'));
+          }}
         />
       </View>
 
