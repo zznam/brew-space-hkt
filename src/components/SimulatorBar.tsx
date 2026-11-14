@@ -13,9 +13,9 @@ export function SimulatorBar() {
   );
 
   return (
-    <Card variant="subtle" style={{ gap: 12 }}>
+    <Card variant="subtle" style={{ padding: 10, gap: 6 }}>
       <View style={styles.rowBetween}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <View
             style={{
               width: 8,
@@ -27,110 +27,84 @@ export function SimulatorBar() {
           <Text
             style={{
               fontWeight: '800',
-              fontSize: 12,
+              fontSize: 11,
               letterSpacing: 0.6,
               color: colors.ink,
             }}
           >
-            DEMO CONTROLS · local device only
+            SIMULATOR
           </Text>
         </View>
         <View style={styles.row}>
           <Badge
-            label={`Role: ${store.role === 'merchant' ? 'Merchant' : 'Customer'}`}
+            label={store.role === 'merchant' ? 'Merchant' : 'Customer'}
             tone={store.role === 'merchant' ? 'info' : 'success'}
           />
           {activeVenue ? (
             <Badge
-              label={`${venueSessions.length}/${activeVenue.seats.length} occupied`}
+              label={`${venueSessions.length}/${activeVenue.seats.length} busy`}
               tone="neutral"
             />
           ) : null}
         </View>
       </View>
 
-      <View
-        style={{
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          gap: 16,
-          alignItems: 'flex-start',
-        }}
-      >
-        <View style={{ gap: 6 }}>
-          <Text style={styles.sectionLabel}>Experience Mode</Text>
-          <View style={styles.row}>
-            {(['merchant', 'customer'] as const).map((role) => (
-              <Button
-                key={role}
-                size="sm"
-                label={role === 'merchant' ? 'Merchant' : 'Customer'}
-                selected={store.role === role}
-                onPress={() => {
-                  store.setRole(role);
-                  router.replace(
-                    role === 'merchant'
-                      ? '/merchant/live-floor'
-                      : '/customer/explore',
-                  );
-                }}
-              />
-            ))}
-          </View>
-        </View>
-
-        <View style={{ gap: 6, flex: 1, minWidth: 260 }}>
-          <Text style={styles.sectionLabel}>Active Cafe Venue</Text>
-          <View style={styles.row}>
-            {allVenues.map((venue) => (
-              <Button
-                key={venue.id}
-                size="sm"
-                label={venue.name}
-                selected={store.venueId === venue.id}
-                onPress={() => store.setVenue(venue.id)}
-              />
-            ))}
-          </View>
-        </View>
-      </View>
-
-      <View style={{ gap: 6 }}>
-        <Text style={styles.sectionLabel}>Time & Occupancy Scenarios</Text>
-        <View style={styles.row}>
+      <View style={[styles.row, { gap: 6 }]}>
+        {(['merchant', 'customer'] as const).map((role) => (
           <Button
+            key={role}
             size="sm"
-            label="Morning · 7/8 seats"
-            selected={store.scenario === 'morning'}
-            onPress={() => store.setScenario('morning')}
-          />
-          <Button
-            size="sm"
-            label="Afternoon · 2/8 seats"
-            selected={store.scenario === 'afternoon'}
-            onPress={() => store.setScenario('afternoon')}
-          />
-          <Button
-            size="sm"
-            label="+30m · all venues"
-            onPress={store.advanceTime}
-          />
-          <Button
-            size="sm"
-            variant="danger"
-            label="Reset all demo data"
+            label={role === 'merchant' ? 'Merchant' : 'Customer'}
+            selected={store.role === role}
             onPress={() => {
-              store.reset();
-              router.replace('/merchant/live-floor');
+              store.setRole(role);
+              router.replace(
+                role === 'merchant'
+                  ? '/merchant/live-floor'
+                  : '/customer/explore',
+              );
             }}
           />
-        </View>
+        ))}
+        {allVenues.map((venue) => (
+          <Button
+            key={venue.id}
+            size="sm"
+            label={venue.name}
+            selected={store.venueId === venue.id}
+            onPress={() => store.setVenue(venue.id)}
+          />
+        ))}
       </View>
 
-      <Text style={[styles.text, { fontSize: 13 }]}>
-        Scenario buttons replace sessions in the current venue. Time advances
-        only with +30m. No real bookings or payments.
-      </Text>
+      <View style={[styles.row, { gap: 6 }]}>
+        <Button
+          size="sm"
+          label="Morning · 7/8 seats"
+          selected={store.scenario === 'morning'}
+          onPress={() => store.setScenario('morning')}
+        />
+        <Button
+          size="sm"
+          label="Afternoon · 2/8 seats"
+          selected={store.scenario === 'afternoon'}
+          onPress={() => store.setScenario('afternoon')}
+        />
+        <Button
+          size="sm"
+          label="+30m · all venues"
+          onPress={store.advanceTime}
+        />
+        <Button
+          size="sm"
+          variant="danger"
+          label="Reset all demo data"
+          onPress={() => {
+            store.reset();
+            router.replace('/merchant/live-floor');
+          }}
+        />
+      </View>
     </Card>
   );
 }

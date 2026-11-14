@@ -35,7 +35,8 @@ function Selector({
             accessibilityState={{ selected: value === n }}
             onPress={() => onChange(n)}
             style={{
-              minWidth: 46,
+              flex: 1,
+              minWidth: 44,
               minHeight: 44,
               alignItems: 'center',
               justifyContent: 'center',
@@ -141,7 +142,7 @@ export function RatingForm({ sessionId }: { sessionId: string }) {
           {t('characters', { n: comment.length, max: MAX_NOTE_LENGTH })}
         </Text>
         <Button
-          variant="primary"
+          variant="secondary"
           label={t('submitRating')}
           disabled={!complete}
           onPress={() => {

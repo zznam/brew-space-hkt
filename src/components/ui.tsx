@@ -1,9 +1,10 @@
-import type { PropsWithChildren } from 'react';
+import { useState, type PropsWithChildren } from 'react';
 import {
   Pressable,
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
   type StyleProp,
   type TextStyle,
   type ViewStyle,
@@ -33,6 +34,22 @@ export const colors = {
   dangerBorder: '#fecdca',
 };
 
+/**
+ * Mobile-first responsive hook.
+ * Base styles target a 390pt phone viewport (1 column, full-width cards).
+ * Use `isWide` (width >= 768) only to layer multi-column enhancements on top.
+ */
+export function useResponsive() {
+  const { width, height } = useWindowDimensions();
+  const safeWidth = width > 0 ? width : 390;
+  return {
+    width: safeWidth,
+    height,
+    isWide: safeWidth >= 768,
+    isCompact: safeWidth < 420,
+  };
+}
+
 export type ButtonVariant =
   'default' | 'primary' | 'secondary' | 'danger' | 'ghost';
 
@@ -43,6 +60,7 @@ export function Button({
   disabled = false,
   variant = 'default',
   size = 'md',
+  fullWidth = false,
   style,
 }: {
   label: string;
@@ -51,11 +69,13 @@ export function Button({
   disabled?: boolean;
   variant?: ButtonVariant;
   size?: 'sm' | 'md';
+  fullWidth?: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
   const isPrimary = variant === 'primary' || selected;
-  const isDanger = variant === 'danger';
-  const isGhost = variant === 'ghost';
+  const isSecondary = variant === 'secondary' && !isPrimary;
+  const isDanger = variant === 'danger' && !isPrimary;
+  const isGhost = variant === 'ghost' && !isPrimary;
 
   return (
     <Pressable
@@ -67,8 +87,10 @@ export function Button({
         styles.button,
         size === 'sm' && styles.buttonSm,
         isGhost && styles.buttonGhost,
-        isDanger && !selected && styles.buttonDanger,
+        isSecondary && styles.buttonSecondary,
+        isDanger && styles.buttonDanger,
         isPrimary && styles.selected,
+        fullWidth && { width: '100%' },
         { opacity: disabled ? 0.45 : pressed ? 0.72 : 1 },
         style,
       ]}
@@ -77,8 +99,9 @@ export function Button({
         style={[
           styles.buttonText,
           size === 'sm' && styles.buttonTextSm,
-          isDanger && !selected && { color: colors.danger },
-          isPrimary && { color: '#ffffff' },
+          isSecondary && { color: colors.green, fontWeight: '700' },
+          isDanger && { color: colors.danger, fontWeight: '700' },
+          isPrimary && { color: '#ffffff', fontWeight: '700' },
         ]}
       >
         {label}
@@ -191,16 +214,23 @@ export function StatTile({
 }) {
   return (
     <View style={styles.statTile}>
-      <Text style={styles.statLabel}>{label}</Text>
+      <Text style={styles.statLabel} numberOfLines={1}>
+        {label}
+      </Text>
       <Text
         style={[
           styles.statValue,
           accentColor ? { color: accentColor } : undefined,
         ]}
+        numberOfLines={1}
       >
         {value}
       </Text>
-      {sublabel ? <Text style={styles.statSublabel}>{sublabel}</Text> : null}
+      {sublabel ? (
+        <Text style={styles.statSublabel} numberOfLines={1}>
+          {sublabel}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -209,86 +239,133 @@ export function Divider() {
   return <View style={styles.divider} />;
 }
 
+/**
+ * Expandable row/card for moving secondary detail behind a tap on mobile.
+ */
+export function CollapsibleSection({
+  title,
+  summary,
+  defaultOpen = false,
+  children,
+}: PropsWithChildren<{
+  title: string;
+  summary?: string;
+  defaultOpen?: boolean;
+}>) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <View style={styles.collapsibleContainer}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        onPress={() => setOpen((prev) => !prev)}
+        style={({ pressed }) => [
+          styles.collapsibleHeader,
+          { opacity: pressed ? 0.72 : 1 },
+        ]}
+      >
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text style={styles.subheading}>{title}</Text>
+          {summary ? (
+            <Text style={[styles.text, { fontSize: 13 }]} numberOfLines={1}>
+              {summary}
+            </Text>
+          ) : null}
+        </View>
+        <Text style={{ fontSize: 13, fontWeight: '700', color: colors.green }}>
+          {open ? 'Hide ▲' : 'Show ▼'}
+        </Text>
+      </Pressable>
+      {open ? <View style={{ gap: 10, paddingTop: 4 }}>{children}</View> : null}
+    </View>
+  );
+}
+
 export const styles = StyleSheet.create({
   card: {
+    width: '100%',
+    maxWidth: '100%',
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 18,
-    padding: 22,
-    gap: 14,
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
     shadowColor: '#1a241f',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
     elevation: 1,
   },
   cardSubtle: {
     backgroundColor: colors.surfaceSubtle,
     borderColor: colors.border,
-    padding: 16,
+    padding: 14,
     borderRadius: 14,
     shadowOpacity: 0,
   },
   cardAccent: {
     backgroundColor: colors.greenSurface,
     borderColor: colors.greenBorder,
-    padding: 16,
+    padding: 14,
     borderRadius: 14,
     shadowOpacity: 0,
   },
   eyebrow: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
-    letterSpacing: 0.8,
+    letterSpacing: 0.7,
     textTransform: 'uppercase',
   },
   heading: {
-    fontSize: 26,
+    fontSize: 22,
+    lineHeight: 28,
     fontWeight: '800',
     color: colors.ink,
-    letterSpacing: -0.4,
+    letterSpacing: -0.3,
   },
   subheading: {
-    fontSize: 18,
+    fontSize: 17,
+    lineHeight: 22,
     fontWeight: '700',
     color: colors.ink,
     letterSpacing: -0.2,
   },
   sectionLabel: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: colors.muted,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   text: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 20,
     color: colors.muted,
   },
   row: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
     alignItems: 'center',
   },
   rowBetween: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 10,
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 10,
   },
   button: {
-    paddingHorizontal: 16,
-    paddingVertical: 11,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     minHeight: 44,
+    maxWidth: '100%',
     borderRadius: 12,
     backgroundColor: colors.paperAlt,
     borderWidth: 1,
@@ -297,14 +374,18 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   buttonSm: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
     minHeight: 38,
     borderRadius: 10,
   },
   buttonGhost: {
     backgroundColor: 'transparent',
     borderColor: colors.border,
+  },
+  buttonSecondary: {
+    backgroundColor: colors.greenSurface,
+    borderColor: colors.greenBorder,
   },
   buttonDanger: {
     backgroundColor: colors.dangerSurface,
@@ -323,57 +404,77 @@ export const styles = StyleSheet.create({
     fontSize: 13,
   },
   input: {
+    width: '100%',
+    maxWidth: '100%',
     minHeight: 44,
     borderWidth: 1,
     borderColor: colors.borderStrong,
     borderRadius: 12,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     paddingVertical: 10,
     backgroundColor: colors.surfaceSubtle,
     color: colors.ink,
     fontSize: 15,
   },
   badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
     borderRadius: 999,
     borderWidth: 1,
     alignSelf: 'flex-start',
+    maxWidth: '100%',
   },
   badgeText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
   },
   statTile: {
     flex: 1,
-    minWidth: 135,
+    minWidth: 96,
+    maxWidth: '100%',
     backgroundColor: colors.surfaceSubtle,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 14,
-    padding: 14,
-    gap: 4,
+    borderRadius: 12,
+    padding: 12,
+    gap: 2,
   },
   statLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
     color: colors.muted,
     textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
   },
   statValue: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
     color: colors.ink,
   },
   statSublabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: colors.subtle,
   },
   divider: {
     height: 1,
     backgroundColor: colors.border,
     width: '100%',
-    marginVertical: 4,
+    marginVertical: 2,
+  },
+  collapsibleContainer: {
+    width: '100%',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceSubtle,
+    padding: 12,
+    gap: 6,
+  },
+  collapsibleHeader: {
+    minHeight: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
   },
 });

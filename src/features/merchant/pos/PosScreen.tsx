@@ -11,6 +11,7 @@ import {
   Eyebrow,
   Heading,
   styles,
+  useResponsive,
 } from '@/components/ui';
 import { MerchantNav } from '../MerchantNav';
 import { MenuGrid } from './MenuGrid';
@@ -19,12 +20,9 @@ import { calculateOrderTotal } from './posStore';
 import { posStore, usePosStore } from './usePosStore';
 
 export function PosScreen() {
-  // The seat comes from the route, not the shared app-store selection:
-  // selectedSeatId persists across reloads and is shared with the customer
-  // flow, so reading it here would silently turn "New order" into a seat
-  // order whenever a seat happened to be selected elsewhere.
   const { seatId: routeSeatId } = useLocalSearchParams<{ seatId?: string }>();
   const selectedSeatId = routeSeatId ?? null;
+  const { isWide } = useResponsive();
   const venueId = useAppStore((state) => state.venueId);
   const orders = usePosStore((state) => state.orders);
   const soldOutItemIds = usePosStore((state) => state.soldOutItemIds);
@@ -63,13 +61,13 @@ export function PosScreen() {
           <Eyebrow color={colors.green}>MERCHANT / POS CHECKOUT</Eyebrow>
           <Heading>Order sent to the kitchen.</Heading>
           <Text style={styles.text}>
-            The paid ticket is now queued on the fulfillment board for{' '}
-            {venue.name}.
+            Queued on the fulfillment board for {venue.name}.
           </Text>
           <View style={styles.row}>
             <Button
               label="Start a new order"
               variant="primary"
+              fullWidth={!isWide}
               onPress={() => {
                 posStore.getState().createOrder(venueId, selectedSeatId);
                 setJustPaid(false);
@@ -100,101 +98,112 @@ export function PosScreen() {
     <>
       <MerchantNav current="pos" />
 
-      <Card>
-        <View style={styles.rowBetween}>
-          <View style={{ gap: 4 }}>
-            <Eyebrow color={venue.accent}>MERCHANT / POINT OF SALE</Eyebrow>
-            <Heading>
-              {seatLabel ? `Sell to ${seatLabel}` : 'Walk-in order'}
-            </Heading>
+      <View
+        style={{
+          flexDirection: isWide ? 'row' : 'column',
+          alignItems: 'flex-start',
+          gap: 12,
+        }}
+      >
+        <Card style={isWide ? { flex: 1.4 } : undefined}>
+          <View style={styles.rowBetween}>
+            <View style={{ gap: 2 }}>
+              <Eyebrow color={venue.accent}>MERCHANT / POINT OF SALE</Eyebrow>
+              <Heading>
+                {seatLabel ? `Sell to ${seatLabel}` : 'Walk-in order'}
+              </Heading>
+            </View>
+            <Badge
+              label={seatLabel ? `Target: ${seatLabel}` : 'Walk-in'}
+              tone={seatLabel ? 'info' : 'neutral'}
+            />
           </View>
-          <Badge
-            label={seatLabel ? `Target: ${seatLabel}` : 'Counter Walk-in'}
-            tone={seatLabel ? 'info' : 'neutral'}
-          />
-        </View>
 
-        {actionError && (
-          <View
-            style={{
-              padding: 12,
-              borderRadius: 12,
-              backgroundColor: colors.dangerSurface,
-              borderWidth: 1,
-              borderColor: colors.dangerBorder,
-            }}
-          >
-            <Text
-              accessibilityRole="alert"
-              style={[styles.text, { color: colors.danger, fontWeight: '600' }]}
+          {actionError && (
+            <View
+              style={{
+                padding: 12,
+                borderRadius: 12,
+                backgroundColor: colors.dangerSurface,
+                borderWidth: 1,
+                borderColor: colors.dangerBorder,
+              }}
             >
-              {actionError}
-            </Text>
-          </View>
-        )}
+              <Text
+                accessibilityRole="alert"
+                style={[
+                  styles.text,
+                  { color: colors.danger, fontWeight: '600' },
+                ]}
+              >
+                {actionError}
+              </Text>
+            </View>
+          )}
 
-        <MenuGrid
-          venue={venue}
-          soldOutItemIds={soldOutItemIds}
-          onAdd={(item) => {
-            if (!draftOrder) return;
-            const result = posStore
-              .getState()
-              .addLine(draftOrder.id, item.id, item.name, item.price);
-            setActionError(result.ok ? null : result.message);
-          }}
-          onToggleSoldOut={(itemId) =>
-            posStore.getState().toggleSoldOut(itemId)
-          }
-        />
-      </Card>
-
-      <Card>
-        <CartPanel
-          order={draftOrder ?? null}
-          soldOutItemIds={soldOutItemIds}
-          onIncrement={(itemId) => {
-            if (!draftOrder) return;
-            const item = venue.menu.find((entry) => entry.id === itemId);
-            if (!item) return;
-            const result = posStore
-              .getState()
-              .addLine(draftOrder.id, item.id, item.name, item.price);
-            setActionError(result.ok ? null : result.message);
-          }}
-          onDecrement={(itemId) => {
-            if (!draftOrder) return;
-            const line = draftOrder.lines.find(
-              (entry) => entry.menuItemId === itemId,
-            );
-            if (!line) return;
-            const result = posStore
-              .getState()
-              .setLineQuantity(draftOrder.id, itemId, line.quantity - 1);
-            setActionError(result.ok ? null : result.message);
-          }}
-          onPay={(method) => {
-            if (!draftOrder) return;
-            const result = posStore.getState().pay(draftOrder.id, method);
-            if (result.ok) setJustPaid(true);
-            else setActionError(result.message);
-          }}
-          onCancel={() => {
-            if (!draftOrder) return;
-            const result = posStore.getState().cancelOrder(draftOrder.id);
-            if (result.ok) {
-              setActionError(null);
-              posStore.getState().createOrder(venueId, selectedSeatId);
-            } else {
-              setActionError(result.message);
+          <MenuGrid
+            venue={venue}
+            soldOutItemIds={soldOutItemIds}
+            onAdd={(item) => {
+              if (!draftOrder) return;
+              const result = posStore
+                .getState()
+                .addLine(draftOrder.id, item.id, item.name, item.price);
+              setActionError(result.ok ? null : result.message);
+            }}
+            onToggleSoldOut={(itemId) =>
+              posStore.getState().toggleSoldOut(itemId)
             }
-          }}
-        />
-      </Card>
+          />
+        </Card>
 
-      <Card>
+        <Card style={isWide ? { flex: 1 } : undefined}>
+          <CartPanel
+            order={draftOrder ?? null}
+            soldOutItemIds={soldOutItemIds}
+            onIncrement={(itemId) => {
+              if (!draftOrder) return;
+              const item = venue.menu.find((entry) => entry.id === itemId);
+              if (!item) return;
+              const result = posStore
+                .getState()
+                .addLine(draftOrder.id, item.id, item.name, item.price);
+              setActionError(result.ok ? null : result.message);
+            }}
+            onDecrement={(itemId) => {
+              if (!draftOrder) return;
+              const line = draftOrder.lines.find(
+                (entry) => entry.menuItemId === itemId,
+              );
+              if (!line) return;
+              const result = posStore
+                .getState()
+                .setLineQuantity(draftOrder.id, itemId, line.quantity - 1);
+              setActionError(result.ok ? null : result.message);
+            }}
+            onPay={(method) => {
+              if (!draftOrder) return;
+              const result = posStore.getState().pay(draftOrder.id, method);
+              if (result.ok) setJustPaid(true);
+              else setActionError(result.message);
+            }}
+            onCancel={() => {
+              if (!draftOrder) return;
+              const result = posStore.getState().cancelOrder(draftOrder.id);
+              if (result.ok) {
+                setActionError(null);
+                posStore.getState().createOrder(venueId, selectedSeatId);
+              } else {
+                setActionError(result.message);
+              }
+            }}
+          />
+        </Card>
+      </View>
+
+      <Card variant="subtle">
         <View style={styles.rowBetween}>
-          <Heading>Other open orders</Heading>
+          <Heading style={{ fontSize: 18 }}>Other open orders</Heading>
           <Badge label={`${otherOpenOrders.length}`} tone="neutral" />
         </View>
         {otherOpenOrders.length === 0 ? (
@@ -208,7 +217,7 @@ export function PosScreen() {
                 borderRadius: 12,
                 borderWidth: 1,
                 borderColor: colors.border,
-                backgroundColor: colors.surfaceSubtle,
+                backgroundColor: colors.surface,
               }}
             >
               <Text

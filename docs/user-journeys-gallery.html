@@ -3,25 +3,22 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Vibing HKT — User Journeys Gallery</title>
+    <title>BrewSpace — Mobile-First User Journeys Gallery</title>
     <style>
       :root {
-        --paper: #f7f4ee;
+        --paper: #f4f2eb;
         --surface: #ffffff;
-        --sunk: #ece8df;
-        --ink: #111815;
+        --sunk: #eae7dd;
+        --ink: #1a241f;
         --ink-soft: #2e3833;
-        --muted: #58635d;
-        --line: #d8d2c5;
-        --green: #166534;
-        --green-soft: #eef7f1;
-        --green-border: #bbf7d0;
-        --blue: #1d4ed8;
-        --blue-soft: #eff6ff;
-        --blue-border: #bfdbfe;
-        --amber: #b45309;
-        --amber-soft: #fef9ec;
-        --amber-border: #fde68a;
+        --muted: #57655c;
+        --line: #d6ddd4;
+        --green: #1e563b;
+        --green-soft: #e6f2ec;
+        --green-border: #a3cbb7;
+        --blue: #1d5b8c;
+        --blue-soft: #e8f1f8;
+        --blue-border: #abc9e4;
         --radius: 16px;
         --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
       }
@@ -49,24 +46,23 @@
         position: sticky;
         top: 0;
         z-index: 20;
-        background: rgba(247, 244, 238, 0.92);
+        background: rgba(244, 242, 235, 0.94);
         backdrop-filter: blur(12px);
         border-bottom: 1px solid var(--line);
       }
       .container {
-        max-width: 1180px;
+        max-width: 1220px;
         margin: 0 auto;
-        padding: 0 20px;
+        padding: 0 18px;
       }
       .topbar-inner {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 16px;
+        gap: 12px;
         min-height: 60px;
         flex-wrap: wrap;
-        padding-top: 8px;
-        padding-bottom: 8px;
+        padding: 8px 0;
       }
       .brand {
         display: flex;
@@ -79,8 +75,8 @@
         color: var(--ink);
       }
       .brand-dot {
-        width: 12px;
-        height: 12px;
+        width: 11px;
+        height: 11px;
         border-radius: 50%;
         background: var(--green);
       }
@@ -106,11 +102,11 @@
         background: var(--green-soft);
       }
       .hero {
-        margin: 28px 0 24px;
+        margin: 24px 0;
         background: var(--ink);
         color: #fff;
         border-radius: 20px;
-        padding: 32px;
+        padding: 28px;
         display: grid;
         grid-template-columns: 1.5fr 1fr;
         gap: 24px;
@@ -119,6 +115,7 @@
       @media (max-width: 840px) {
         .hero {
           grid-template-columns: 1fr;
+          padding: 20px;
         }
       }
       .eyebrow {
@@ -131,8 +128,8 @@
       }
       .hero h1 {
         margin: 0 0 10px;
-        font-size: 32px;
-        letter-spacing: -0.7px;
+        font-size: 30px;
+        letter-spacing: -0.6px;
         line-height: 1.15;
       }
       .hero p {
@@ -149,7 +146,7 @@
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.14);
         border-radius: 14px;
-        padding: 14px 16px;
+        padding: 12px 14px;
       }
       .kpi-label {
         font-size: 11px;
@@ -159,7 +156,7 @@
         font-weight: 700;
       }
       .kpi-value {
-        font-size: 22px;
+        font-size: 20px;
         font-weight: 800;
         color: #fff;
         margin-top: 2px;
@@ -213,10 +210,10 @@
       }
       .steps-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(520px, 1fr));
         gap: 20px;
       }
-      @media (max-width: 600px) {
+      @media (max-width: 640px) {
         .steps-grid {
           grid-template-columns: 1fr;
         }
@@ -228,26 +225,49 @@
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        box-shadow: 0 6px 18px rgba(17, 24, 21, 0.05);
+        box-shadow: 0 4px 14px rgba(17, 24, 21, 0.04);
       }
-      .step-shot {
+      .shot-pair {
+        display: grid;
+        grid-template-columns: 170px 1fr;
+        gap: 12px;
+        padding: 14px;
         background: var(--sunk);
         border-bottom: 1px solid var(--line);
-        position: relative;
-        overflow: hidden;
-        cursor: zoom-in;
+        align-items: start;
       }
-      .step-shot img {
+      @media (max-width: 640px) {
+        .shot-pair {
+          grid-template-columns: 1fr;
+        }
+      }
+      .shot-frame {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .shot-label {
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--muted);
+      }
+      .shot-frame img {
         display: block;
         width: 100%;
         height: auto;
-        transition: transform 0.25s ease;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        cursor: zoom-in;
+        background: #fff;
+        transition: transform 0.2s ease;
       }
-      .step-shot:hover img {
-        transform: scale(1.015);
+      .shot-frame img:hover {
+        transform: scale(1.02);
       }
       .step-body {
-        padding: 20px;
+        padding: 18px;
         display: flex;
         flex-direction: column;
         gap: 10px;
@@ -275,7 +295,7 @@
         padding: 0;
         list-style: none;
         display: grid;
-        gap: 6px;
+        gap: 5px;
       }
       .highlights li {
         font-size: 13px;
@@ -289,7 +309,6 @@
         color: var(--green);
         font-weight: 800;
       }
-      /* Lightbox modal */
       .lightbox {
         position: fixed;
         inset: 0;
@@ -328,7 +347,7 @@
       <div class="container topbar-inner">
         <a href="#top" class="brand">
           <span class="brand-dot"></span>
-          <span>vibing / HKT · User Journeys Gallery</span>
+          <span>BrewSpace · Mobile-First Journeys</span>
         </a>
         <nav class="nav-pills">
           <a class="nav-pill" href="#in-app-gallery">In-App Gallery</a>
@@ -343,35 +362,36 @@
     <main id="top" class="container">
       <section class="hero">
         <div>
-          <div class="eyebrow">UI Redesign Showcase · Expo SDK 58 Web &amp; Native</div>
-          <h1>End-to-End User Journeys Gallery</h1>
+          <div class="eyebrow">Mobile-First, Lean Redesign · 390×844 Phone + 1280×900 Desktop</div>
+          <h1>Mobile-First User Journeys Gallery</h1>
           <p>
-            Visual walkthrough of all redesigned Customer and Merchant screens in
-            Vibing HKT. You can also explore and launch these steps live inside
-            the running Expo app at <code>/gallery</code>. Click any screenshot
-            below to inspect it full-screen.
+            Every screen in both Customer and Merchant roles is built at 390pt
+            wide first (1-column full-width cards, ≥44pt touch targets, single
+            primary CTA per view, zero horizontal scroll) and progressively
+            enhanced on wider screens with <code>useResponsive()</code>. Click
+            any mobile or desktop screenshot to zoom.
           </p>
         </div>
         <div class="kpi-grid">
           <div class="kpi-card">
-            <div class="kpi-label">User Journeys</div>
-            <div class="kpi-value">4 Flows</div>
-            <div class="kpi-sub">Customer + Merchant</div>
+            <div class="kpi-label">Phone Baseline</div>
+            <div class="kpi-value">390×844</div>
+            <div class="kpi-sub">0px horizontal overflow</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Redesigned Routes</div>
-            <div class="kpi-value">11 Screens</div>
-            <div class="kpi-sub">+ In-App /gallery</div>
+            <div class="kpi-label">Touch Targets</div>
+            <div class="kpi-value">≥ 44pt</div>
+            <div class="kpi-sub">Thumb-reachable primary CTAs</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Automated Tests</div>
-            <div class="kpi-value">421 Unit</div>
-            <div class="kpi-sub">+ 20 Playwright E2E</div>
+            <div class="kpi-label">Visual Hierarchy</div>
+            <div class="kpi-value">1 Primary</div>
+            <div class="kpi-sub">Single primary button / view</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Spatial Engine</div>
-            <div class="kpi-value">3D + 2D</div>
-            <div class="kpi-sub">Three.js + A11y List</div>
+            <div class="kpi-label">Automated Gate</div>
+            <div class="kpi-value">421 + 20</div>
+            <div class="kpi-sub">Vitest + Mobile/Desktop E2E</div>
           </div>
         </div>
       </section>
@@ -387,11 +407,21 @@
         </div>
         <div class="steps-grid">
           <article class="step-card">
-            <div class="step-shot">
-              <img
-                src="previews/expo-journey-00-gallery.png"
-                alt="In-App User Journeys Gallery screen"
-              />
+            <div class="shot-pair">
+              <div class="shot-frame">
+                <span class="shot-label">Phone (390×844)</span>
+                <img
+                  src="previews/expo-mobile-00-gallery.png"
+                  alt="Mobile In-App User Journeys Gallery"
+                />
+              </div>
+              <div class="shot-frame">
+                <span class="shot-label">Desktop Enhancement (1280×900)</span>
+                <img
+                  src="previews/expo-journey-00-gallery.png"
+                  alt="Desktop In-App User Journeys Gallery"
+                />
+              </div>
             </div>
             <div class="step-body">
               <div class="step-meta">
@@ -400,15 +430,14 @@
               </div>
               <h3>One-Click Journey Filter &amp; State Launcher</h3>
               <p>
-                Accessible from the top header bar of the app from any screen.
-                Lets reviewers filter by journey and click any step to
-                automatically prepare demo state and jump straight into that
-                screen.
+                Accessible from the top header bar from any screen. Stacks 1
+                column on 390pt phones and upgrades to a 2-column grid on wide
+                screens.
               </p>
               <ul class="highlights">
-                <li>Header toggle button switches between Workspace and Journey Gallery</li>
+                <li>1-column full-width cards on phone, 2-column grid on desktop</li>
                 <li>Auto-provisions an active customer session when launching Session or Receipt steps</li>
-                <li>Filter tabs for Customer, Loyalty/Concierge, Merchant POS, and AI 3D Studio</li>
+                <li>Single primary CTA on the first card; secondary buttons on remaining steps</li>
               </ul>
             </div>
           </article>
@@ -427,11 +456,21 @@
 
         <div class="steps-grid">
           <article class="step-card">
-            <div class="step-shot">
-              <img
-                src="previews/expo-journey-1-1-explore.png"
-                alt="Customer Explore & 3D Floor Map"
-              />
+            <div class="shot-pair">
+              <div class="shot-frame">
+                <span class="shot-label">Phone (390×844)</span>
+                <img
+                  src="previews/expo-mobile-1-1-explore.png"
+                  alt="Mobile Customer Explore"
+                />
+              </div>
+              <div class="shot-frame">
+                <span class="shot-label">Desktop (1280×900)</span>
+                <img
+                  src="previews/expo-journey-1-1-explore.png"
+                  alt="Desktop Customer Explore"
+                />
+              </div>
             </div>
             <div class="step-body">
               <div class="step-meta">
@@ -440,24 +479,34 @@
               </div>
               <h3>Explore &amp; 3D Floor Discovery</h3>
               <p>
-                Real-time seat availability hero card, multi-amenity filter pills
-                (Quiet, Outlet, Monitor, Dual-Desk), interactive 3D orbit canvas,
-                and accessible seat list.
+                Seat filters, compact 210px 3D floor map on mobile, full-width
+                1-column seat rows, and thumb-reachable <code>Start metered</code>
+                primary CTA placed directly below the seat map.
               </p>
               <ul class="highlights">
-                <li>Hero availability banner with free/occupied KPIs &amp; hourly rate range</li>
-                <li>Floating HUD camera controls on the 3D venue canvas</li>
-                <li>Seat Detail drawer with shareable deep link &amp; package vs hourly selector</li>
+                <li>Full-width 1-column seat cards on 390pt phone; multi-column grid on desktop</li>
+                <li>Primary <code>Start metered</code> CTA placed right under the selected seat</li>
+                <li>Venue hours &amp; pricing stacked below the fold on mobile so seats appear first</li>
               </ul>
             </div>
           </article>
 
           <article class="step-card">
-            <div class="step-shot">
-              <img
-                src="previews/expo-journey-1-2-venue.png"
-                alt="Dedicated Venue Showcase Page"
-              />
+            <div class="shot-pair">
+              <div class="shot-frame">
+                <span class="shot-label">Phone (390×844)</span>
+                <img
+                  src="previews/expo-mobile-1-2-venue.png"
+                  alt="Mobile Shared Seat Deep Link"
+                />
+              </div>
+              <div class="shot-frame">
+                <span class="shot-label">Desktop (1280×900)</span>
+                <img
+                  src="previews/expo-journey-1-2-venue.png"
+                  alt="Desktop Shared Seat Deep Link"
+                />
+              </div>
             </div>
             <div class="step-body">
               <div class="step-meta">
@@ -466,23 +515,33 @@
               </div>
               <h3>Venue Showcase &amp; Deep-Linked Seat Picker</h3>
               <p>
-                Detailed venue breakdown displaying zone cards, pricing tiers,
-                Wi-Fi credentials, house rules, and query-parameter seat preselection.
+                Deep-linked seat invitation that preselects the venue and seat
+                and opens the Seat Detail card right above the start session
+                CTA.
               </p>
               <ul class="highlights">
-                <li>Zone breakdown cards with seat counts and hourly rate ranges</li>
                 <li>Supports <code>?venue=</code> &amp; <code>?seat=</code> deep links shared by teammates</li>
-                <li>Contextual banner confirming the preselected seat on arrival</li>
+                <li>1-column Opening Hours &amp; Pricing stack on phone; 2-column side-by-side on desktop</li>
               </ul>
             </div>
           </article>
 
           <article class="step-card">
-            <div class="step-shot">
-              <img
-                src="previews/expo-journey-1-3-session.png"
-                alt="Customer Active Session Dashboard"
-              />
+            <div class="shot-pair">
+              <div class="shot-frame">
+                <span class="shot-label">Phone (390×844)</span>
+                <img
+                  src="previews/expo-mobile-1-3-session.png"
+                  alt="Mobile Active Session"
+                />
+              </div>
+              <div class="shot-frame">
+                <span class="shot-label">Desktop (1280×900)</span>
+                <img
+                  src="previews/expo-journey-1-3-session.png"
+                  alt="Desktop Active Session"
+                />
+              </div>
             </div>
             <div class="step-body">
               <div class="step-meta">
@@ -491,25 +550,34 @@
               </div>
               <h3>Live Workspace Session, Drink Customizer &amp; Focus Timer</h3>
               <p>
-                Active workspace dashboard combining live running bill breakdown,
-                Pomodoro focus timer, customized drink ordering, loyalty point
-                redemption, and table support requests.
+                Lean session view where <code>Place order</code> is the single
+                primary CTA, menu items use secondary buttons, and panels pair
+                into 2 columns on desktop.
               </p>
               <ul class="highlights">
-                <li>Dark elevated live-bill banner with itemized seat + menu charges</li>
-                <li>Pomodoro Focus Timer with 15m / 25m / 45m presets</li>
-                <li>Expandable drink modifier drawer (milk, ice, sweetness, notes)</li>
-                <li>One-tap staff call buttons (Water, Power/Adapter, Clean Table, Bill Help)</li>
+                <li>Single <code>primary</code> button (<code>Place order</code>) across the entire screen</li>
+                <li>1-column vertical stack on 390pt phone; 2-column paired cards on desktop</li>
+                <li>Full-width thumb-reachable <code>End demo session</code> button at the bottom</li>
               </ul>
             </div>
           </article>
 
           <article class="step-card">
-            <div class="step-shot">
-              <img
-                src="previews/expo-journey-1-4-receipt.png"
-                alt="Digital Receipt, Refund Request & Rating"
-              />
+            <div class="shot-pair">
+              <div class="shot-frame">
+                <span class="shot-label">Phone (390×844)</span>
+                <img
+                  src="previews/expo-mobile-1-4-receipt.png"
+                  alt="Mobile Digital Receipt"
+                />
+              </div>
+              <div class="shot-frame">
+                <span class="shot-label">Desktop (1280×900)</span>
+                <img
+                  src="previews/expo-journey-1-4-receipt.png"
+                  alt="Desktop Digital Receipt"
+                />
+              </div>
             </div>
             <div class="step-body">
               <div class="step-meta">
@@ -518,14 +586,13 @@
               </div>
               <h3>Digital Receipt, Refund Request &amp; 5-Star Rating</h3>
               <p>
-                Post-checkout itemized invoice showing VAT breakdown, loyalty
-                points earned, self-serve issue/refund request tracking, and
-                session rating.
+                Post-checkout itemized invoice with full-width 1–5 rating
+                buttons (<code>flex: 1, minHeight: 44</code>) and a single
+                primary <code>Back to explore</code> CTA at the bottom.
               </p>
               <ul class="highlights">
-                <li>Monospace invoice header with receipt ID, timestamps, and tax summary</li>
-                <li>Self-serve refund request card with live review status badge</li>
-                <li>Interactive 1–5 star rating form with feedback notes</li>
+                <li>5 rating buttons stretch evenly across 390pt width for effortless thumb tapping</li>
+                <li>Refund Request and Rating Form sit side-by-side on desktop, stacked on mobile</li>
               </ul>
             </div>
           </article>
@@ -544,11 +611,21 @@
 
         <div class="steps-grid">
           <article class="step-card">
-            <div class="step-shot">
-              <img
-                src="previews/expo-journey-2-1-loyalty.png"
-                alt="Member OTP Login & Loyalty Profile"
-              />
+            <div class="shot-pair">
+              <div class="shot-frame">
+                <span class="shot-label">Phone (390×844)</span>
+                <img
+                  src="previews/expo-mobile-2-1-loyalty.png"
+                  alt="Mobile Loyalty Profile"
+                />
+              </div>
+              <div class="shot-frame">
+                <span class="shot-label">Desktop (1280×900)</span>
+                <img
+                  src="previews/expo-journey-2-1-loyalty.png"
+                  alt="Desktop Loyalty Profile"
+                />
+              </div>
             </div>
             <div class="step-body">
               <div class="step-meta">
@@ -558,23 +635,32 @@
               <h3>Member OTP Login, Tier Progress &amp; Barista Preferences</h3>
               <p>
                 Phone + OTP verification flow (demo code <code>123456</code>),
-                Bronze/Silver/Gold tier progression, milestone badges, and saved
-                default drink preferences.
+                1-column achievement badge cards on phone, and saved drink
+                preferences.
               </p>
               <ul class="highlights">
-                <li>Guest mode preview with instant OTP verification card</li>
-                <li>Tier progress bar with lifetime points and redeemable VND balance</li>
-                <li>Achievement badge grid with unlock progress indicators</li>
+                <li>Full-width <code>Join</code> / <code>Save preferences</code> primary CTA on mobile</li>
+                <li>Achievement badges stack 1-column on 390pt phone and 2-column on desktop</li>
               </ul>
             </div>
           </article>
 
           <article class="step-card">
-            <div class="step-shot">
-              <img
-                src="previews/expo-journey-2-2-privacy.png"
-                alt="Transparency & Personal Data Controls"
-              />
+            <div class="shot-pair">
+              <div class="shot-frame">
+                <span class="shot-label">Phone (390×844)</span>
+                <img
+                  src="previews/expo-mobile-2-2-privacy.png"
+                  alt="Mobile Privacy Controls"
+                />
+              </div>
+              <div class="shot-frame">
+                <span class="shot-label">Desktop (1280×900)</span>
+                <img
+                  src="previews/expo-journey-2-2-privacy.png"
+                  alt="Desktop Privacy Controls"
+                />
+              </div>
             </div>
             <div class="step-body">
               <div class="step-meta">
@@ -583,22 +669,32 @@
               </div>
               <h3>Transparency &amp; Personal Data Controls</h3>
               <p>
-                Clear inventory of locally stored session, loyalty, and
-                preference data with two-step personal data erasure.
+                Clean 1-column breakdown of locally stored session, loyalty, and
+                preference records with a thumb-reachable return CTA.
               </p>
               <ul class="highlights">
                 <li>Transparent summary of stored profile &amp; session records</li>
-                <li>Two-step confirmation flow to wipe personal data cleanly</li>
+                <li>Full-width primary return button at the bottom of the screen on mobile</li>
               </ul>
             </div>
           </article>
 
           <article class="step-card">
-            <div class="step-shot">
-              <img
-                src="previews/expo-journey-2-3-concierge.png"
-                alt="Bilingual Venue Concierge Assistant"
-              />
+            <div class="shot-pair">
+              <div class="shot-frame">
+                <span class="shot-label">Phone (390×844)</span>
+                <img
+                  src="previews/expo-mobile-2-3-concierge.png"
+                  alt="Mobile Bilingual Concierge"
+                />
+              </div>
+              <div class="shot-frame">
+                <span class="shot-label">Desktop (1280×900)</span>
+                <img
+                  src="previews/expo-journey-2-3-concierge.png"
+                  alt="Desktop Bilingual Concierge"
+                />
+              </div>
             </div>
             <div class="step-body">
               <div class="step-meta">
@@ -607,14 +703,13 @@
               </div>
               <h3>Bilingual (EN / VI) Venue Concierge Assistant</h3>
               <p>
-                Interactive Q&amp;A assistant answering Wi-Fi, quiet seat picks,
-                power outlet locations, pricing, and drink recommendations using
-                live venue state.
+                Instant Q&amp;A assistant with quick-tap topic chips and a
+                full-width <code>Ask</code> primary button right below the
+                question input.
               </p>
               <ul class="highlights">
-                <li>Quick-tap topic chips for Wi-Fi, Quiet Seats, Power, Pricing, and Drinks</li>
-                <li>Conversational chat bubbles with live seat availability lookups</li>
-                <li>Segmented EN / VI language switcher in customer navigation</li>
+                <li>Keyboard-aware scroll view keeps the question input visible while typing</li>
+                <li>Single primary <code>Ask</code> CTA directly under the input field</li>
               </ul>
             </div>
           </article>
@@ -633,11 +728,21 @@
 
         <div class="steps-grid">
           <article class="step-card">
-            <div class="step-shot">
-              <img
-                src="previews/expo-journey-3-1-floor.png"
-                alt="Merchant Live Floor Command Center"
-              />
+            <div class="shot-pair">
+              <div class="shot-frame">
+                <span class="shot-label">Phone (390×844)</span>
+                <img
+                  src="previews/expo-mobile-3-1-floor.png"
+                  alt="Mobile Merchant Live Floor"
+                />
+              </div>
+              <div class="shot-frame">
+                <span class="shot-label">Desktop (1280×900)</span>
+                <img
+                  src="previews/expo-journey-3-1-floor.png"
+                  alt="Desktop Merchant Live Floor"
+                />
+              </div>
             </div>
             <div class="step-body">
               <div class="step-meta">
@@ -646,24 +751,33 @@
               </div>
               <h3>Live Floor Command Center &amp; Seat Inspector</h3>
               <p>
-                Real-time operational overview with occupancy rate, active tabs,
-                accrued revenue KPIs, 3D floor map, contextual seat inspector,
-                and active session table.
+                Compact 3-tile KPI strip, 3D floor map + 1-column seat rows on
+                phone, and a single primary <code>Sell to Seat X</code> CTA
+                placed directly under the seat map.
               </p>
               <ul class="highlights">
-                <li>4-tile KPI strip (Occupancy %, Occupied vs Free, Open Tabs, Accrued Revenue)</li>
-                <li>Side-by-side 3D floor map and contextual Seat Inspector panel</li>
-                <li>One-click Hourly or 3-Hour Study Pass check-in, quick drink add, and checkout</li>
+                <li>Removed duplicate occupancy badge text for a leaner mobile header</li>
+                <li><code>Sell to Seat X</code> is the sole primary button, placed right below the map</li>
               </ul>
             </div>
           </article>
 
           <article class="step-card">
-            <div class="step-shot">
-              <img
-                src="previews/expo-journey-3-2-pos.png"
-                alt="Merchant Counter POS Terminal"
-              />
+            <div class="shot-pair">
+              <div class="shot-frame">
+                <span class="shot-label">Phone (390×844)</span>
+                <img
+                  src="previews/expo-mobile-3-2-pos.png"
+                  alt="Mobile Merchant POS"
+                />
+              </div>
+              <div class="shot-frame">
+                <span class="shot-label">Desktop (1280×900)</span>
+                <img
+                  src="previews/expo-journey-3-2-pos.png"
+                  alt="Desktop Merchant POS"
+                />
+              </div>
             </div>
             <div class="step-body">
               <div class="step-meta">
@@ -672,24 +786,33 @@
               </div>
               <h3>Counter POS Terminal &amp; Sold-Out Inventory Control</h3>
               <p>
-                Fast barista point-of-sale terminal supporting walk-in or
-                seat-linked orders, category filtering, live sold-out switches,
-                and Cash / Online checkout.
+                1-column full-width menu cards on 390pt phones, side-by-side
+                Menu + Cart on desktop, with <code>Pay cash</code> as the single
+                primary CTA.
               </p>
               <ul class="highlights">
-                <li>Category filter pills with instant stock status badges and sold-out toggles</li>
-                <li>Seat assignment selector linking orders directly to floor desks</li>
-                <li>Order confirmation modal with receipt number and Ticket Board shortcut</li>
+                <li>Menu item buttons use secondary styling so <code>Pay cash</code> is the sole primary CTA</li>
+                <li>Stacks Menu → Cart on 390pt phone; side-by-side 2-column POS on desktop</li>
               </ul>
             </div>
           </article>
 
           <article class="step-card">
-            <div class="step-shot">
-              <img
-                src="previews/expo-journey-3-3-tickets.png"
-                alt="Merchant Kitchen Ticket Board"
-              />
+            <div class="shot-pair">
+              <div class="shot-frame">
+                <span class="shot-label">Phone (390×844)</span>
+                <img
+                  src="previews/expo-mobile-3-3-tickets.png"
+                  alt="Mobile Ticket Board"
+                />
+              </div>
+              <div class="shot-frame">
+                <span class="shot-label">Desktop (1280×900)</span>
+                <img
+                  src="previews/expo-journey-3-3-tickets.png"
+                  alt="Desktop Ticket Board"
+                />
+              </div>
             </div>
             <div class="step-body">
               <div class="step-meta">
@@ -698,13 +821,13 @@
               </div>
               <h3>Barista &amp; Kitchen Ticket Board (KDS)</h3>
               <p>
-                Fulfillment board tracking orders from Queued → Preparing → Ready
-                → Served with elapsed timers and one-tap status progression.
+                1-column status stack on 390pt phones and a multi-column
+                fulfillment board on desktop, with only the next actionable
+                ticket highlighted as primary.
               </p>
               <ul class="highlights">
-                <li>Status filter tabs with live ticket counts per stage</li>
-                <li>Color-coded ticket cards showing seat badge, payment method, and line items</li>
-                <li>Single-tap progression (Start Preparing → Mark Ready → Mark Served)</li>
+                <li>1-column vertical stack on phone; 4-column board on wide viewports</li>
+                <li>Only the first actionable ticket uses primary button styling</li>
               </ul>
             </div>
           </article>
@@ -723,11 +846,21 @@
 
         <div class="steps-grid">
           <article class="step-card">
-            <div class="step-shot">
-              <img
-                src="previews/expo-journey-4-1-onboarding.png"
-                alt="Merchant AI 3D Onboarding Studio"
-              />
+            <div class="shot-pair">
+              <div class="shot-frame">
+                <span class="shot-label">Phone (390×844)</span>
+                <img
+                  src="previews/expo-mobile-4-1-onboarding.png"
+                  alt="Mobile AI 3D Onboarding"
+                />
+              </div>
+              <div class="shot-frame">
+                <span class="shot-label">Desktop (1280×900)</span>
+                <img
+                  src="previews/expo-journey-4-1-onboarding.png"
+                  alt="Desktop AI 3D Onboarding"
+                />
+              </div>
             </div>
             <div class="step-body">
               <div class="step-meta">
@@ -736,15 +869,14 @@
               </div>
               <h3>AI 3D Venue Generator, Multi-Turn Chat &amp; Spatial Studio</h3>
               <p>
-                End-to-end onboarding wizard where cafe owners upload photos,
-                videos, floorplans, or menus, generate a 3D venue with AI,
-                refine it via multi-turn prompts, and publish live.
+                Mobile-first 1-column form inputs, conversational refinement
+                loop, and single stage-appropriate primary CTA
+                (<code>Generate 3D Cafe Environment</code> →
+                <code>Publish 3D Cafe to Live App</code>).
               </p>
               <ul class="highlights">
-                <li>4-step visual progress tracker (Upload → AI Refine → 3D Studio → Publish)</li>
-                <li>Multimodal media upload cards + optional runtime OpenAI API key input</li>
-                <li>Multi-turn conversational refinement with saved iteration snapshots</li>
-                <li>Interactive 3D room dimension, wall/floor palette, and furniture inspector</li>
+                <li>All form inputs stack 1-column at 100% width on 390pt phones</li>
+                <li>Single primary CTA transitions from Generate to Publish once a 3D draft exists</li>
               </ul>
             </div>
           </article>
@@ -752,7 +884,7 @@
       </section>
 
       <footer>
-        <span>Vibing HKT · Expo SDK 58 / React Native + Three.js</span>
+        <span>BrewSpace · Mobile-First Expo SDK 58 / React Native + Three.js</span>
         <span>Open <code>/gallery</code> in the live app or click any screenshot to zoom</span>
       </footer>
     </main>
@@ -764,7 +896,7 @@
     <script>
       const lightbox = document.getElementById('lightbox');
       const lightboxImg = document.getElementById('lightbox-img');
-      document.querySelectorAll('.step-shot img').forEach((img) => {
+      document.querySelectorAll('.shot-frame img').forEach((img) => {
         img.addEventListener('click', () => {
           lightboxImg.src = img.src;
           lightboxImg.alt = img.alt;

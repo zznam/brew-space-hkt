@@ -8,6 +8,7 @@ import {
   Divider,
   Heading,
   styles,
+  useResponsive,
 } from '@/components/ui';
 import { calculateOrderTotal } from './posStore';
 import type { PaymentMethod, PosOrder } from './types';
@@ -29,9 +30,10 @@ export function CartPanel({
   onPay,
   onCancel,
 }: CartPanelProps) {
+  const { isWide } = useResponsive();
   const empty = !order || order.lines.length === 0;
   return (
-    <View style={{ gap: 14 }}>
+    <View style={{ gap: 12 }}>
       <View style={styles.rowBetween}>
         <Text style={styles.subheading}>Order Cart</Text>
         {order ? (
@@ -45,7 +47,7 @@ export function CartPanel({
         </Card>
       ) : (
         <>
-          <View style={{ gap: 10 }}>
+          <View style={{ gap: 8 }}>
             {order.lines.map((line) => (
               <View
                 key={line.menuItemId}
@@ -93,24 +95,29 @@ export function CartPanel({
         </>
       )}
 
-      <View style={styles.row}>
+      <View style={{ gap: 8 }}>
         <Button
           label="Pay cash"
           variant="primary"
+          fullWidth={!isWide}
           onPress={() => onPay('cash')}
           disabled={empty}
         />
-        <Button
-          label="Pay online"
-          onPress={() => onPay('online')}
-          disabled={empty}
-        />
-        <Button
-          label="Cancel order"
-          variant="danger"
-          onPress={onCancel}
-          disabled={!order}
-        />
+        <View style={styles.row}>
+          <Button
+            label="Pay online"
+            style={isWide ? undefined : { flex: 1 }}
+            onPress={() => onPay('online')}
+            disabled={empty}
+          />
+          <Button
+            label="Cancel order"
+            variant="danger"
+            style={isWide ? undefined : { flex: 1 }}
+            onPress={onCancel}
+            disabled={!order}
+          />
+        </View>
       </View>
     </View>
   );

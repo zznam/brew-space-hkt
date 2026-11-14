@@ -12,6 +12,7 @@ import {
   Heading,
   StatTile,
   styles,
+  useResponsive,
 } from '@/components/ui';
 import { activeSessionMessages, MODE_KEYS } from './activeSessionMessages';
 import { CartPanel } from './cart/CartPanel';
@@ -30,6 +31,7 @@ import { VenueInfoCard } from './support/VenueInfoCard';
 
 export function ActiveSessionScreen() {
   const { t, lang } = useT(activeSessionMessages);
+  const { isWide } = useResponsive();
   const store = useAppStore((state) => state);
   const online = useOnlineStatus();
   const blocked = blockWhenOffline(online, lang);
@@ -48,6 +50,7 @@ export function ActiveSessionScreen() {
         <View style={styles.row}>
           <Button
             variant="primary"
+            fullWidth={!isWide}
             label={t('exploreSeats')}
             onPress={() => router.replace('/customer/explore')}
           />
@@ -66,7 +69,7 @@ export function ActiveSessionScreen() {
       <OfflineBanner online={online} />
 
       <View style={styles.rowBetween}>
-        <View style={{ gap: 4 }}>
+        <View style={{ gap: 2 }}>
           <Eyebrow color={venue.accent}>CUSTOMER / ACTIVE SESSION</Eyebrow>
           <Heading>{t('liveTab')}</Heading>
         </View>
@@ -96,33 +99,60 @@ export function ActiveSessionScreen() {
         <StatTile
           label="Menu Tab"
           value={formatMoney(bill.items)}
-          sublabel={`${session.orders.length} item(s) added`}
+          sublabel={`${session.orders.length} item(s)`}
         />
         <StatTile
           label="Running Total"
           value={formatMoney(bill.total)}
-          sublabel="VND demo estimate"
+          sublabel="VND estimate"
           accentColor={venue.accent}
         />
       </View>
 
-      <MenuList venueId={venue.id} />
-      <CartPanel session={session} disabledReason={blocked} />
-      <OrderHistory session={session} disabledReason={blocked} />
-      <FocusTimer venueId={venue.id} />
-      <SupportPanel
-        context={{
-          venueId: venue.id,
-          seatId: session.seatId,
-          sessionId: session.id,
-          minute: session.elapsedMinutes,
+      <View
+        style={{
+          flexDirection: isWide ? 'row' : 'column',
+          gap: 12,
+          alignItems: 'stretch',
         }}
-      />
+      >
+        <View style={isWide ? { flex: 1 } : undefined}>
+          <MenuList venueId={venue.id} />
+        </View>
+        <View style={isWide ? { flex: 1 } : undefined}>
+          <CartPanel session={session} disabledReason={blocked} />
+        </View>
+      </View>
+
+      <OrderHistory session={session} disabledReason={blocked} />
+
+      <View
+        style={{
+          flexDirection: isWide ? 'row' : 'column',
+          gap: 12,
+          alignItems: 'stretch',
+        }}
+      >
+        <View style={isWide ? { flex: 1 } : undefined}>
+          <FocusTimer venueId={venue.id} />
+        </View>
+        <View style={isWide ? { flex: 1.2 } : undefined}>
+          <SupportPanel
+            context={{
+              venueId: venue.id,
+              seatId: session.seatId,
+              sessionId: session.id,
+              minute: session.elapsedMinutes,
+            }}
+          />
+        </View>
+      </View>
+
       <VenueInfoCard venueId={venue.id} />
 
       <Divider />
 
-      <Card variant="accent" style={{ gap: 10 }}>
+      <Card variant="accent" style={{ gap: 8 }}>
         <Text style={[styles.text, { color: colors.ink, fontWeight: '600' }]}>
           {t('summary', {
             count: session.orders.length,
@@ -131,10 +161,11 @@ export function ActiveSessionScreen() {
           })}
         </Text>
         <Heading>{formatMoney(bill.total)}</Heading>
-        <Text style={[styles.text, { fontSize: 13 }]}>{t('disclaimer')}</Text>
+        <Text style={[styles.text, { fontSize: 12 }]}>{t('disclaimer')}</Text>
         <View style={styles.row}>
           <Button
             variant="danger"
+            fullWidth={!isWide}
             label={t('endSession')}
             disabled={blocked !== null}
             onPress={() => {

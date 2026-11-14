@@ -13,6 +13,7 @@ import {
   Eyebrow,
   Heading,
   styles,
+  useResponsive,
 } from '@/components/ui';
 import {
   describeOccupancy,
@@ -45,6 +46,7 @@ const EMPTY_VISITS: never[] = [];
 
 export function ExploreScreen() {
   const { t, lang } = useT(exploreMessages);
+  const { isWide } = useResponsive();
   const seatText = (label: string) => seatLabelText(label, lang);
   const store = useAppStore((state) => state);
   const { ready, warning } = useLoyaltyReady();
@@ -139,7 +141,7 @@ export function ExploreScreen() {
       <CustomerNav current="explore" />
 
       <View style={styles.rowBetween}>
-        <View style={{ gap: 4 }}>
+        <View style={{ gap: 2 }}>
           <Eyebrow color={venue.accent}>{t('eyebrow')}</Eyebrow>
           <Heading>{venue.name}</Heading>
         </View>
@@ -193,7 +195,7 @@ export function ExploreScreen() {
 
       <View
         style={{
-          padding: 12,
+          padding: 10,
           borderRadius: 12,
           backgroundColor: colors.greenSurface,
           borderWidth: 1,
@@ -208,10 +210,8 @@ export function ExploreScreen() {
         </Text>
       </View>
 
-      <VenuePage venue={venue} />
-
       {usual ? (
-        <Card variant="accent">
+        <Card variant="accent" style={{ gap: 8 }}>
           <Text style={[styles.subheading, { color: colors.green }]}>
             {t('usualTitle')}
           </Text>
@@ -237,7 +237,7 @@ export function ExploreScreen() {
               </Text>
               <View style={styles.row}>
                 <Button
-                  variant="primary"
+                  variant="secondary"
                   label={t('usualSelect', { seat: seatText(usual.seat.label) })}
                   onPress={() => choose(usual.seat!.id)}
                 />
@@ -249,35 +249,7 @@ export function ExploreScreen() {
         </Card>
       ) : null}
 
-      <Card variant="subtle" style={{ gap: 10 }}>
-        <Text style={styles.subheading}>{t('pinnedTitle')}</Text>
-        {favouriteIds.length === 0 ? (
-          <Text style={styles.text}>{t('pinnedNone')}</Text>
-        ) : (
-          <View style={styles.row}>
-            {favouriteIds.map((id) => {
-              const seat = venue.seats.find((entry) => entry.id === id);
-              if (!seat) return null;
-              const busy = occupied(id);
-              return (
-                <Button
-                  key={id}
-                  size="sm"
-                  label={
-                    busy
-                      ? t('pinnedOccupied', { seat: seatText(seat.label) })
-                      : t('pinnedBook', { seat: seatText(seat.label) })
-                  }
-                  disabled={busy}
-                  onPress={() => choose(id)}
-                />
-              );
-            })}
-          </View>
-        )}
-      </Card>
-
-      <Card variant="subtle" style={{ gap: 12 }}>
+      <Card variant="subtle" style={{ gap: 8 }}>
         <View style={styles.rowBetween}>
           <Text style={styles.subheading}>{t('filterTitle')}</Text>
           {hasActiveFilters(filters) ? (
@@ -431,26 +403,28 @@ export function ExploreScreen() {
         />
       ) : null}
 
-      <Divider />
-
-      <View style={{ gap: 10 }}>
+      {/* Primary Thumb-Reachable Action Block */}
+      <Card variant="accent" style={{ gap: 10 }}>
         <Text style={styles.sectionLabel}>Start Your Session</Text>
+        <Button
+          variant="primary"
+          fullWidth={!isWide}
+          label={t('startMetered')}
+          onPress={() => start('METERED_OPEN')}
+        />
         <View style={styles.row}>
           <Button
-            variant="primary"
-            label={t('startMetered')}
-            onPress={() => start('METERED_OPEN')}
-          />
-          <Button
+            style={isWide ? undefined : { flex: 1 }}
             label={t('startBundle2h')}
             onPress={() => start('BUNDLE_2H')}
           />
           <Button
+            style={isWide ? undefined : { flex: 1 }}
             label={t('startBundle4h')}
             onPress={() => start('BUNDLE_4H')}
           />
         </View>
-      </View>
+      </Card>
 
       {error ? (
         <View
@@ -471,7 +445,39 @@ export function ExploreScreen() {
         </View>
       ) : null}
 
-      <Text style={[styles.text, { fontSize: 13 }]}>{t('footnote')}</Text>
+      <Divider />
+
+      <Card variant="subtle" style={{ gap: 8 }}>
+        <Text style={styles.subheading}>{t('pinnedTitle')}</Text>
+        {favouriteIds.length === 0 ? (
+          <Text style={styles.text}>{t('pinnedNone')}</Text>
+        ) : (
+          <View style={styles.row}>
+            {favouriteIds.map((id) => {
+              const seat = venue.seats.find((entry) => entry.id === id);
+              if (!seat) return null;
+              const busy = occupied(id);
+              return (
+                <Button
+                  key={id}
+                  size="sm"
+                  label={
+                    busy
+                      ? t('pinnedOccupied', { seat: seatText(seat.label) })
+                      : t('pinnedBook', { seat: seatText(seat.label) })
+                  }
+                  disabled={busy}
+                  onPress={() => choose(id)}
+                />
+              );
+            })}
+          </View>
+        )}
+      </Card>
+
+      <VenuePage venue={venue} />
+
+      <Text style={[styles.text, { fontSize: 12 }]}>{t('footnote')}</Text>
     </Card>
   );
 }

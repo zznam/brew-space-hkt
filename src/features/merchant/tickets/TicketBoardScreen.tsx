@@ -9,6 +9,7 @@ import {
   Eyebrow,
   Heading,
   styles,
+  useResponsive,
 } from '@/components/ui';
 import { MerchantNav } from '../MerchantNav';
 import { calculateOrderTotal, ticketLabel } from '../pos/posStore';
@@ -57,22 +58,26 @@ function TicketLine({
   venue,
   advanceTo,
   actionLabel,
+  isPrimary,
+  fullWidth,
 }: {
   order: PosOrder;
   venue: Venue;
   advanceTo: FulfillmentStatus | null;
   actionLabel: string | null;
+  isPrimary: boolean;
+  fullWidth: boolean;
 }) {
   const label = ticketLabel(order, venue);
   return (
     <View
       style={{
-        padding: 14,
+        padding: 12,
         borderRadius: 12,
         borderWidth: 1,
         borderColor: colors.border,
         backgroundColor: colors.surfaceSubtle,
-        gap: 10,
+        gap: 8,
       }}
     >
       <Text style={[styles.text, { color: colors.ink, fontWeight: '700' }]}>
@@ -83,8 +88,8 @@ function TicketLine({
       {advanceTo && actionLabel && (
         <View style={styles.row}>
           <Button
-            size="sm"
-            variant="primary"
+            variant={isPrimary ? 'primary' : 'secondary'}
+            fullWidth={fullWidth}
             label={`${actionLabel}, ${label}`}
             onPress={() =>
               posStore.getState().advanceTicket(order.id, advanceTo)
@@ -98,58 +103,83 @@ function TicketLine({
 
 export function TicketBoardScreen() {
   const venueId = useAppStore((state) => state.venueId);
+  const { isWide } = useResponsive();
   const venue = getVenue(venueId);
   const orders = usePosStore((state) => state.orders).filter(
     (order) => order.venueId === venueId && order.fulfillment !== null,
   );
+  const firstActionableOrderId = orders.find(
+    (order) =>
+      order.fulfillment === 'queued' ||
+      order.fulfillment === 'preparing' ||
+      order.fulfillment === 'ready',
+  )?.id;
+
   return (
     <>
       <MerchantNav current="tickets" />
 
       <Card>
         <View style={styles.rowBetween}>
-          <View style={{ gap: 4 }}>
+          <View style={{ gap: 2 }}>
             <Eyebrow color={venue.accent}>
               MERCHANT / KITCHEN & BAR TICKETS
             </Eyebrow>
-            <Heading>{venue.name} · Fulfillment Queue</Heading>
+            <Heading>{venue.name} · Tickets</Heading>
           </View>
-          <Badge label={`${orders.length} total tickets`} tone="info" />
+          <Badge label={`${orders.length} tickets`} tone="info" />
         </View>
         <Text style={styles.text}>
-          Advance paid orders step-by-step from Queued → Preparing → Ready →
-          Served.
+          Advance orders from Queued → Preparing → Ready → Served.
         </Text>
       </Card>
 
-      {COLUMNS.map((column) => {
-        const tickets = orders.filter(
-          (order) => order.fulfillment === column.status,
-        );
-        return (
-          <Card key={column.status}>
-            <View style={styles.rowBetween}>
-              <Heading>{column.title}</Heading>
-              <Badge label={`${tickets.length}`} tone={column.tone} />
-            </View>
-            {tickets.length === 0 ? (
-              <Text style={styles.text}>No tickets.</Text>
-            ) : (
-              <View style={{ gap: 10 }}>
-                {tickets.map((order) => (
-                  <TicketLine
-                    key={order.id}
-                    order={order}
-                    venue={venue}
-                    advanceTo={column.advanceTo}
-                    actionLabel={column.actionLabel}
-                  />
-                ))}
+      <View
+        style={{
+          flexDirection: isWide ? 'row' : 'column',
+          flexWrap: isWide ? 'wrap' : 'nowrap',
+          gap: 12,
+          alignItems: 'stretch',
+        }}
+      >
+        {COLUMNS.map((column) => {
+          const tickets = orders.filter(
+            (order) => order.fulfillment === column.status,
+          );
+          return (
+            <Card
+              key={column.status}
+              style={
+                isWide
+                  ? { flex: 1, minWidth: 230, maxWidth: '100%' }
+                  : undefined
+              }
+            >
+              <View style={styles.rowBetween}>
+                <Heading style={{ fontSize: 19 }}>{column.title}</Heading>
+                <Badge label={`${tickets.length}`} tone={column.tone} />
               </View>
-            )}
-          </Card>
-        );
-      })}
+              {tickets.length === 0 ? (
+                <Text style={styles.text}>No tickets.</Text>
+              ) : (
+                <View style={{ gap: 10 }}>
+                  {tickets.map((order) => (
+                    <TicketLine
+                      key={order.id}
+                      order={order}
+                      venue={venue}
+                      advanceTo={column.advanceTo}
+                      actionLabel={column.actionLabel}
+                      isPrimary={order.id === firstActionableOrderId}
+                      fullWidth={!isWide}
+                    />
+                  ))}
+                </View>
+              )}
+            </Card>
+          );
+        })}
+      </View>
     </>
   );
 }

@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { formatMoney, type Venue } from '@/core';
-import { Badge, Card, colors, Heading, styles } from '@/components/ui';
+import {
+  Badge,
+  Card,
+  colors,
+  Heading,
+  styles,
+  useResponsive,
+} from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
 import { kindName, venueMessages } from './messages';
 import { venuePageInfo } from './venueModel';
@@ -11,12 +18,13 @@ import { venuePageInfo } from './venueModel';
 export function VenuePage({ venue }: { venue: Venue }) {
   // Read once per mount: "open now" is the device clock in venue time.
   const [now] = useState(() => new Date());
+  const { isWide } = useResponsive();
   const { t, lang } = useT(venueMessages);
   const info = venuePageInfo(venue, now, lang);
   return (
-    <Card variant="subtle">
+    <Card variant="subtle" style={{ gap: 10 }}>
       <View style={styles.rowBetween}>
-        <Heading style={{ fontSize: 20 }}>{t('venueHeading')}</Heading>
+        <Heading style={{ fontSize: 18 }}>{t('venueHeading')}</Heading>
         {info.openNow === null ? null : (
           <Badge
             label={info.openNow ? t('openNow') : t('closedNow')}
@@ -34,6 +42,7 @@ export function VenuePage({ venue }: { venue: Venue }) {
           style={{
             color: info.openNow ? colors.green : colors.muted,
             fontWeight: '700',
+            fontSize: 13,
           }}
         >
           {info.openNow ? t('openNow') : t('closedNow')}{' '}
@@ -45,13 +54,11 @@ export function VenuePage({ venue }: { venue: Venue }) {
 
       <View
         style={{
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          gap: 16,
-          paddingTop: 6,
+          flexDirection: isWide ? 'row' : 'column',
+          gap: 12,
         }}
       >
-        <View style={{ flex: 1, minWidth: 220, gap: 4 }}>
+        <View style={{ flex: isWide ? 1 : undefined, gap: 4 }}>
           <Text style={styles.sectionLabel}>{t('openingHours')}</Text>
           {info.hours.map((line) => (
             <Text key={line.days} style={styles.text}>
@@ -60,7 +67,7 @@ export function VenuePage({ venue }: { venue: Venue }) {
           ))}
         </View>
 
-        <View style={{ flex: 1, minWidth: 260, gap: 6 }}>
+        <View style={{ flex: isWide ? 1.2 : undefined, gap: 6 }}>
           <Text style={styles.sectionLabel}>{t('pricesTitle')}</Text>
           {info.prices.map((row) => (
             <View
@@ -73,7 +80,7 @@ export function VenuePage({ venue }: { venue: Venue }) {
                 borderColor: colors.border,
               }}
             >
-              <Text style={[styles.text, { fontSize: 14, color: colors.ink }]}>
+              <Text style={[styles.text, { fontSize: 13, color: colors.ink }]}>
                 {t('priceRow', {
                   kind: kindName(row.kind, lang),
                   count: row.seatCount,
@@ -88,7 +95,7 @@ export function VenuePage({ venue }: { venue: Venue }) {
         </View>
       </View>
 
-      <Text style={[styles.text, { fontSize: 13 }]}>{t('venueDemoNote')}</Text>
+      <Text style={[styles.text, { fontSize: 12 }]}>{t('venueDemoNote')}</Text>
     </Card>
   );
 }

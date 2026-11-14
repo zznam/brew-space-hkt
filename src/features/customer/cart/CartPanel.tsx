@@ -326,6 +326,7 @@ export function CartPanel({
 
       <Button
         variant="primary"
+        fullWidth
         label={t('placeOrder')}
         disabled={lines.length === 0 || !ready || disabledReason !== null}
         onPress={() => submit(session)}

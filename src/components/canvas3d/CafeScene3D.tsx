@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import * as THREE from 'three';
 import { formatMoney, type Session, type Venue } from '@/core';
-import { Button, colors, styles } from '../ui';
+import { Button, colors, styles, useResponsive } from '../ui';
 import {
   buildVenueThreeScene,
   CAMERA_PRESETS,
@@ -45,8 +45,10 @@ export function CafeScene3D({
   sessions,
   selectedSeatId,
   onSelect,
-  height = 340,
+  height: customHeight,
 }: CafeScene3DProps) {
+  const { isWide } = useResponsive();
+  const height = customHeight ?? (isWide ? 320 : 210);
   const sceneCfg = resolveScene3D(venue);
   const [preset, setPreset] = useState<CameraPreset>('isometric');
   const [orbit, setOrbit] = useState<OrbitState>(CAMERA_PRESETS.isometric);
@@ -103,7 +105,7 @@ export function CafeScene3D({
     host.innerHTML = '';
     host.appendChild(canvas);
 
-    const width = Math.max(320, host.clientWidth || 760);
+    const width = Math.max(280, host.clientWidth || 350);
     renderer.setSize(width, height, false);
     renderer.setPixelRatio(
       typeof window !== 'undefined'
@@ -216,44 +218,27 @@ export function CafeScene3D({
   return (
     <View
       style={{
-        gap: 10,
-        padding: 14,
-        borderRadius: 16,
+        width: '100%',
+        maxWidth: '100%',
+        gap: 8,
+        padding: 12,
+        borderRadius: 14,
         borderWidth: 1,
         borderColor: colors.border,
         backgroundColor: isDarkTheme ? '#0f172a' : '#f7f4ee',
       }}
     >
-      <View
-        style={{
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 8,
-        }}
-      >
-        <View style={{ gap: 2 }}>
-          <Text
-            style={{
-              fontWeight: '700',
-              fontSize: 15,
-              color: isDarkTheme ? '#f8fafc' : colors.ink,
-            }}
-          >
-            3D Spatial Engine · {venue.name} ({sceneCfg.roomWidth}m ×{' '}
-            {sceneCfg.roomDepth}m · {sceneCfg.theme})
-          </Text>
-          <Text
-            style={{
-              fontSize: 13,
-              color: isDarkTheme ? '#cbd5e1' : colors.muted,
-            }}
-          >
-            {sceneCfg.summary ??
-              'Drag to orbit 3D view, or tap a seat in the 3D floor to select.'}
-          </Text>
-        </View>
+      <View style={{ gap: 6 }}>
+        <Text
+          style={{
+            fontWeight: '700',
+            fontSize: 14,
+            color: isDarkTheme ? '#f8fafc' : colors.ink,
+          }}
+        >
+          3D Spatial Engine · {venue.name} ({sceneCfg.roomWidth}m ×{' '}
+          {sceneCfg.roomDepth}m · {sceneCfg.theme})
+        </Text>
         <View style={styles.row}>
           {PRESET_LABELS.map((item) => (
             <Button
@@ -297,7 +282,7 @@ export function CafeScene3D({
           width: '100%',
           height: webglActive ? height : 0,
           overflow: 'hidden',
-          borderRadius: 12,
+          borderRadius: 10,
         }}
       />
 
@@ -306,14 +291,14 @@ export function CafeScene3D({
         <View
           style={{
             width: '100%',
-            height: 240,
-            borderRadius: 12,
+            height: 200,
+            borderRadius: 10,
             borderWidth: 2,
             borderColor: sceneCfg.wallColor,
             backgroundColor: sceneCfg.floorColor,
             position: 'relative',
             overflow: 'hidden',
-            padding: 12,
+            padding: 10,
           }}
         >
           <Text
@@ -334,14 +319,14 @@ export function CafeScene3D({
               venue.seats,
             );
             const leftPct = Math.min(
-              86,
+              84,
               Math.max(
-                6,
+                4,
                 ((worldX + sceneCfg.roomWidth / 2) / sceneCfg.roomWidth) * 100,
               ),
             );
             const topPct = Math.min(
-              82,
+              80,
               Math.max(
                 14,
                 ((worldZ + sceneCfg.roomDepth / 2) / sceneCfg.roomDepth) * 100,
@@ -359,18 +344,18 @@ export function CafeScene3D({
                   position: 'absolute',
                   left: `${leftPct}%`,
                   top: `${topPct}%`,
-                  paddingVertical: 6,
-                  paddingHorizontal: 10,
-                  borderRadius: 10,
+                  paddingVertical: 5,
+                  paddingHorizontal: 8,
+                  borderRadius: 8,
                   borderWidth: 2,
                   borderColor: selected ? venue.accent : '#ffffff',
                   backgroundColor: occupied ? '#0284c7' : '#15803d',
                 }}
               >
                 <Text
-                  style={{ color: '#ffffff', fontWeight: '700', fontSize: 12 }}
+                  style={{ color: '#ffffff', fontWeight: '700', fontSize: 11 }}
                 >
-                  {seat.label} ({seat.kind})
+                  {seat.label}
                 </Text>
               </Pressable>
             );
@@ -378,40 +363,19 @@ export function CafeScene3D({
         </View>
       )}
 
-      {/* Scene fixtures & active seat status strip */}
-      <View
-        style={{
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 8,
-        }}
-      >
+      {activeSeat ? (
         <Text
           style={{
-            fontSize: 13,
-            color: isDarkTheme ? '#cbd5e1' : colors.muted,
+            fontSize: 12,
+            fontWeight: '700',
+            color: isDarkTheme ? '#f8fafc' : colors.ink,
           }}
         >
-          Fixtures in 3D room:{' '}
-          {sceneCfg.fixtures.map((f) => f.label).join(' · ') || 'Standard room'}
+          Selected: {activeSeat.label} ({activeSeat.kind}) ·{' '}
+          {activeSeatOccupied ? 'Occupied' : 'Available'} ·{' '}
+          {formatMoney(activeSeat.hourlyRate)}/h
         </Text>
-        {activeSeat ? (
-          <Text
-            style={{
-              fontSize: 13,
-              fontWeight: '700',
-              color: isDarkTheme ? '#f8fafc' : colors.ink,
-            }}
-          >
-            3D Focus: {activeSeat.label} ({activeSeat.kind}
-            {activeSeat.zone ? ` · ${activeSeat.zone}` : ''}) ·{' '}
-            {activeSeatOccupied ? 'Occupied' : 'Available'} ·{' '}
-            {formatMoney(activeSeat.hourlyRate)}/h
-          </Text>
-        ) : null}
-      </View>
+      ) : null}
     </View>
   );
 }
