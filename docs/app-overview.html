@@ -517,12 +517,12 @@
             <span lang="en">sample venues × seats</span>
           </div>
           <div class="stat">
-            <b>5</b>
-            <span lang="vi">màn hình (1 chủ quán, 4 khách)</span>
-            <span lang="en">screens (1 merchant, 4 customer)</span>
+            <b>7</b>
+            <span lang="vi">màn hình (3 chủ quán, 4 khách)</span>
+            <span lang="en">screens (3 merchant, 4 customer)</span>
           </div>
           <div class="stat">
-            <b>185</b>
+            <b>198</b>
             <span lang="vi">kiểm thử đơn vị (Vitest)</span>
             <span lang="en">unit tests (Vitest)</span>
           </div>
@@ -733,12 +733,54 @@
             <li>Cùng danh sách chỗ với phía khách.</li>
             <li>Danh sách phiên đang mở: chỗ, số phút, tổng tạm tính.</li>
             <li>Thấy ngay phiên và món khách vừa thêm.</li>
+            <li>Lối vào bán hàng: “New order”, “Sell to {chỗ}” và “Tickets”.</li>
           </ul>
           <ul lang="en">
             <li>Occupied seats out of the venue's total.</li>
             <li>The same seat list the customer sees.</li>
             <li>Live tabs: seat, minutes, running total.</li>
             <li>Customer sessions and added items show up immediately.</li>
+            <li>Entry points for selling: “New order”, “Sell to {seat}” and “Tickets”.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>
+            <span lang="vi">Bán hàng tại quầy (POS)</span
+            ><span lang="en">Walk-in POS</span>
+          </h4>
+          <p><code>/merchant/pos</code></p>
+          <ul lang="vi">
+            <li>Tạo đơn cho khách vãng lai hoặc gắn với chỗ đang chọn.</li>
+            <li>Lưới món, giỏ hàng có nút tăng giảm số lượng và tổng tiền.</li>
+            <li>Đánh dấu món hết hàng: không thêm mới được, dòng đã có trong giỏ vẫn giữ.</li>
+            <li>Ghi nhận trả tiền mặt hoặc online (mô phỏng); đơn rỗng không trả được.</li>
+            <li>Chỉ hủy được đơn nháp; đơn đã trả thì không.</li>
+            <li>Danh sách các đơn khác đang mở để quay lại.</li>
+          </ul>
+          <ul lang="en">
+            <li>Create an order for a walk-in guest or for the selected seat.</li>
+            <li>Menu grid and a cart with quantity buttons and a total.</li>
+            <li>Mark items sold out: no new adds, but lines already in a cart stay.</li>
+            <li>Record a cash or online payment (simulated); an empty order cannot be paid.</li>
+            <li>Only a draft order can be cancelled, never a paid one.</li>
+            <li>A list of other open orders to return to.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>
+            <span lang="vi">Bảng phiếu chế biến</span
+            ><span lang="en">Ticket board</span>
+          </h4>
+          <p><code>/merchant/tickets</code></p>
+          <ul lang="vi">
+            <li>Đơn đã trả tiền thành một phiếu, có nhãn chỗ hoặc mã đơn.</li>
+            <li>Bốn cột: chờ làm → đang làm → sẵn sàng → đã phục vụ.</li>
+            <li>Phiếu chỉ tiến từng bước, không nhảy cóc.</li>
+          </ul>
+          <ul lang="en">
+            <li>A paid order becomes a ticket, labelled with its seat or order number.</li>
+            <li>Four columns: queued → preparing → ready → served.</li>
+            <li>A ticket only advances one step at a time.</li>
           </ul>
         </div>
         <div class="card">
@@ -843,8 +885,8 @@
                 <span lang="vi">Gọi món</span><span lang="en">Ordering</span>
               </td>
               <td>
-                <span lang="vi">Giỏ hàng, theo dõi đơn, đặt lại</span
-                ><span lang="en">Cart, order tracking, reorder</span>
+                <span lang="vi">Khách: giỏ hàng, theo dõi đơn, đặt lại. Quán: POS tại quầy, bảng phiếu</span
+                ><span lang="en">Customer: cart, order tracking, reorder. Merchant: walk-in POS, ticket board</span>
               </td>
               <td>
                 <span lang="vi">POS mẫu, đánh dấu đã phục vụ</span
@@ -875,8 +917,8 @@
                 <span lang="vi">Thanh toán</span><span lang="en">Payment</span>
               </td>
               <td>
-                <span lang="vi">Chỉ ước tính và biên nhận</span
-                ><span lang="en">Estimate and receipt only</span>
+                <span lang="vi">Ước tính và biên nhận; POS ghi nhận tiền mặt/online mô phỏng</span
+                ><span lang="en">Estimate and receipt; the POS records a simulated cash/online payment</span>
               </td>
               <td>
                 <span lang="vi">Checkout mô phỏng, thử lỗi và thử lại</span
@@ -1007,6 +1049,16 @@
               <b>merchant/</b>
               LiveFloorScreen
             </div>
+            <div class="box brown">
+              <b>merchant/pos</b>
+              <span lang="vi">Đơn tại quầy, thanh toán mô phỏng</span
+              ><span lang="en">Walk-in orders, simulated payment</span>
+            </div>
+            <div class="box brown">
+              <b>merchant/tickets</b>
+              <span lang="vi">Bảng phiếu chế biến</span
+              ><span lang="en">Ticket board</span>
+            </div>
             <div class="box blue">
               <b>customer/</b>
               ExploreScreen · ActiveSessionScreen
@@ -1132,16 +1184,20 @@
         Các tính năng phía khách lặp lại đúng mẫu này: một file
         <code>*Model.ts</code> chứa quy tắc thuần, một <code>*Store.ts</code>
         là factory tạo store, và một hook <code>use*.ts</code> giữ singleton.
+        POS phía chủ quán cũng vậy, và hiện chưa nối với hóa đơn phiên: đơn POS
+        không cộng vào tổng của chỗ ngồi.
       </p>
       <p lang="en">
         Customer features repeat the same pattern: a <code>*Model.ts</code> of
         pure rules, a <code>*Store.ts</code> store factory, and a
-        <code>use*.ts</code> hook that owns the singleton.
+        <code>use*.ts</code> hook that owns the singleton. The merchant POS
+        follows it too, and is not yet connected to session bills: a POS order
+        does not add to a seat's total.
       </p>
 
       <h3>
-        <span lang="vi">Bốn store trạng thái</span
-        ><span lang="en">Four state stores</span>
+        <span lang="vi">Năm store trạng thái</span
+        ><span lang="en">Five state stores</span>
       </h3>
       <div class="scroll">
         <table>
@@ -1190,6 +1246,17 @@
               <td>
                 <span lang="vi">Yêu cầu hỗ trợ, biên nhận gần nhất, đánh giá.</span
                 ><span lang="en">Support requests, the last receipt, ratings.</span>
+              </td>
+              <td>
+                <span lang="vi">Không (trong bộ nhớ)</span
+                ><span lang="en">No (in memory)</span>
+              </td>
+            </tr>
+            <tr>
+              <td><code>posStore</code></td>
+              <td>
+                <span lang="vi">Đơn POS, phiếu chế biến và danh sách món hết hàng. Là mock tạm trong thư mục merchant, không sửa lõi; sẽ thay bằng API thật.</span
+                ><span lang="en">POS orders, tickets and the sold-out list. A temporary mock inside the merchant folder that leaves the core untouched; it will be swapped for the real API.</span>
               </td>
               <td>
                 <span lang="vi">Không (trong bộ nhớ)</span
@@ -1560,8 +1627,8 @@ npm run test:e2e       # Playwright (npx playwright install chromium)</pre
               </td>
               <td>Vitest</td>
               <td>
-                <span lang="vi">185 kiểm thử trong 6 file: lõi, lưu trữ, giỏ hàng, khám phá, thành viên, hỗ trợ.</span
-                ><span lang="en">185 tests in 6 files: core, storage, cart, explore, loyalty, support.</span>
+                <span lang="vi">198 kiểm thử trong 7 file: lõi, lưu trữ, giỏ hàng, khám phá, thành viên, hỗ trợ, POS.</span
+                ><span lang="en">198 tests in 7 files: core, storage, cart, explore, loyalty, support, POS.</span>
               </td>
             </tr>
             <tr>
@@ -1571,8 +1638,8 @@ npm run test:e2e       # Playwright (npx playwright install chromium)</pre
               </td>
               <td>Playwright</td>
               <td>
-                <span lang="vi">2 kịch bản, mỗi kịch bản chạy ở khung desktop và mobile.</span
-                ><span lang="en">2 scenarios, each run in a desktop and a mobile viewport.</span>
+                <span lang="vi">7 kịch bản trong 3 file (demo, POS, sửa lỗi POS), mỗi kịch bản chạy ở khung desktop và mobile.</span
+                ><span lang="en">7 scenarios in 3 files (demo, POS, POS fixes), each run in a desktop and a mobile viewport.</span>
               </td>
             </tr>
             <tr>
@@ -1753,6 +1820,13 @@ npm run test:e2e       # Playwright (npx playwright install chromium)</pre
               <td>
                 <span lang="vi">Đặc tả 200 tính năng MVP (F001–F200), chia theo nhóm A–W.</span
                 ><span lang="en">The 200-feature MVP spec (F001–F200), grouped into areas A–W.</span>
+              </td>
+            </tr>
+            <tr>
+              <td><a href="fe1-pos-plan.md">fe1-pos-plan.md</a></td>
+              <td>
+                <span lang="vi">Kế hoạch POS của FE1: đã có đơn tại quầy và bảng phiếu; còn ca làm việc, hoàn tiền và nối API thật.</span
+                ><span lang="en">FE1's POS plan: walk-in orders and the ticket board are built; shifts, refunds and the real API are still to come.</span>
               </td>
             </tr>
             <tr>
