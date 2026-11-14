@@ -1,4 +1,4 @@
-import type { Session } from '../../../core/domain';
+import type { Seat, Session } from '../../../core/domain';
 
 /* Pure support-request domain. The note classifier is a deterministic,
  * rule-based stand-in for the future AI classifier: it only labels a note and
@@ -219,7 +219,8 @@ export function mustEscalate(c: NoteClassification): boolean {
   );
 }
 
-export type RequestKind = 'call_staff' | 'note' | 'seat_issue';
+export type RequestKind =
+  'call_staff' | 'note' | 'seat_issue' | 'seat_change' | 'refund';
 export type RequestStatus = 'open' | 'acknowledged' | 'resolved';
 
 export interface SupportRequest {
@@ -234,6 +235,54 @@ export interface SupportRequest {
    * requestStatus() for the displayed (demo-progressed) status. */
   status: RequestStatus;
   createdAtMinute: number;
+  /** Only set on 'seat_change' requests. Optional so older requests stay valid. */
+  preferredKind?: SeatPreference;
+}
+
+/* ---------- seat-change request (F148) ---------- */
+
+export type SeatPreference = 'any' | Seat['kind'];
+
+export const SEAT_PREFERENCES: readonly {
+  id: SeatPreference;
+  label: string;
+}[] = [
+  { id: 'any', label: 'Any seat' },
+  { id: 'desk', label: 'Desk' },
+  { id: 'pod', label: 'Pod' },
+  { id: 'booth', label: 'Booth' },
+];
+
+export const isSeatPreference = (value: unknown): value is SeatPreference =>
+  SEAT_PREFERENCES.some((entry) => entry.id === value);
+
+export const SEAT_CHANGE_NOTE =
+  'Only a team member can move you, and nothing changes until they do. Your time keeps running, and the usual rate rules apply: another kind of seat may have a different hourly rate.';
+
+export function classifySeatChange(): NoteClassification {
+  return {
+    category: 'other',
+    needsStaff: true,
+    priority: 'low',
+    reasonCode: 'SEAT_CHANGE_REQUEST',
+    confidence: 1,
+  };
+}
+
+/** An optional free-text reason: empty is fine, too long is not. */
+export function validateOptionalReason(
+  text: unknown,
+): { ok: true; text: string } | { ok: false; message: string } {
+  if (text === undefined || text === null) return { ok: true, text: '' };
+  if (typeof text !== 'string')
+    return { ok: false, message: 'The reason must be text.' };
+  const trimmed = text.trim();
+  if (trimmed.length > MAX_NOTE_LENGTH)
+    return {
+      ok: false,
+      message: `Reasons can be at most ${MAX_NOTE_LENGTH} characters.`,
+    };
+  return { ok: true, text: trimmed };
 }
 
 export interface SeatIssuePreset {

@@ -93,3 +93,40 @@ test('member earns points, gets support and a receipt for a visit', async ({
   ).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test('shared seat link, assistant answers and refund request', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Customer', exact: true }).click();
+  await page.goto('/customer/explore?venue=matcha&seat=matcha-seat-3');
+  await expect(
+    page.getByRole('heading', { name: 'Seat 3 details' }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Assistant', exact: true }).click();
+  await page
+    .getByLabel('Ask the venue a question')
+    .fill('Còn bao nhiêu chỗ trống?');
+  await page.getByRole('button', { name: 'Ask', exact: true }).click();
+  await expect(page.getByLabel('Conversation')).toContainText(/8/);
+  await page.getByRole('button', { name: 'Explore', exact: true }).click();
+  await page.getByRole('button', { name: /^Seat 3, desk, Available/ }).click();
+  await page
+    .getByRole('button', { name: '2h bundle · 15% off', exact: true })
+    .click();
+  await page
+    .getByRole('button', { name: 'End demo session', exact: true })
+    .click();
+  await page
+    .getByLabel('Reason for your refund request')
+    .fill('Had to leave early');
+  await page
+    .getByRole('button', { name: 'Request a refund', exact: true })
+    .click();
+  await expect(
+    page.getByText('Requested - waiting for manager review'),
+  ).toBeVisible();
+  expect(errors).toEqual([]);
+});

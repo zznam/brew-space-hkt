@@ -7,21 +7,45 @@ import {
   type MenuItem,
   type Session,
 } from '../../../core';
+import type { Preferences } from '../loyalty/loyaltyModel';
+import type { SupportContext } from '../support/supportStore';
 import {
   addToCart,
+  allergyRequestText,
   cartTotal,
+  isDrink,
+  lineKey,
+  modifiersFromPreferences,
   ordersForSession,
   removeLine,
   reorderLines,
+  setModifiers,
   setNote,
   setQuantity,
   type CartLine,
+  type Modifiers,
   type PlacedOrder,
 } from './cartModel';
 
 /** Minimal slice of the core store the cart needs; tests pass createAppStore(). */
 export interface CoreStoreLike {
   getState: () => Pick<AppStore, 'venueId' | 'sessions' | 'addItem'>;
+}
+
+/** Side effects injected by the app (and by tests), so this store imports no
+ * React bindings and no other feature's singleton. Both are optional: without
+ * them the customer is a guest and no staff request is raised. */
+export interface CartDeps {
+  /** Saved preferences when the customer is a member at this venue (read-only
+   * view of the loyalty state); null for guests. */
+  getSavedPreferences?: (venueId: string) => Preferences | null;
+  /** Raise a staff support request. Called once per placed order when an
+   * allergy note is on file. A failed or throwing notifier never blocks the
+   * order; the customer sees a warning instead. */
+  notifyStaff?: (
+    ctx: SupportContext,
+    text: string,
+  ) => { ok: true } | { ok: false; message: string };
 }
 
 export type ReorderResult =
@@ -33,10 +57,18 @@ export interface CartStore {
   nextOrderId: number;
   error: string | null;
   notice: string | null;
+  /** Non-blocking problem after an order that DID go through (e.g. the allergy
+   * request to staff failed). Shown separately from `error`. */
+  warning: string | null;
+  /** True while the cart holds a drink line that started from saved preferences. */
+  prefilled: boolean;
+  /** Drinks start from saved preferences (members) or defaults (guests). */
   addItem: (item: MenuItem) => void;
-  setQuantity: (menuItemId: string, quantity: number) => void;
-  setNote: (menuItemId: string, note: string) => void;
-  removeLine: (menuItemId: string) => void;
+  /** Line actions take a lineKey (item id + modifiers). */
+  setQuantity: (key: string, quantity: number) => void;
+  setNote: (key: string, note: string) => void;
+  setModifiers: (key: string, patch: Partial<Modifiers>) => void;
+  removeLine: (key: string) => void;
   dismissMessages: () => void;
   /** Place the cart as one order. */
   submit: (session: Session) => ActionResult;
@@ -53,6 +85,8 @@ const initial = () => ({
   nextOrderId: 1,
   error: null as string | null,
   notice: null as string | null,
+  warning: null as string | null,
+  prefilled: false,
 });
 
 type PlaceResult =
@@ -61,10 +95,10 @@ type PlaceResult =
 
 /** The core store stays the source of truth for the bill: every unit goes through
  * core `addItem`. This store only keeps cart state and the customer's order log. */
-export function createCartStore(coreStore: CoreStoreLike) {
+export function createCartStore(coreStore: CoreStoreLike, deps: CartDeps = {}) {
   return createStore<CartStore>()((set, get) => {
     const fail = (message: string): { ok: false; message: string } => {
-      set({ error: message, notice: null });
+      set({ error: message, notice: null, warning: null });
       return { ok: false, message };
     };
 
@@ -135,43 +169,101 @@ export function createCartStore(coreStore: CoreStoreLike) {
       set({ orders: [...orders, order], nextOrderId: n + 1 });
     }
 
+    /** Members with an allergy on file get a staff request with every order
+     * that reached the bill. Returns a warning when it could not be raised;
+     * the order itself is never undone. */
+    function notifyAllergy(live: Session, sent: CartLine[]): string | null {
+      if (sent.length === 0) return null;
+      const note = deps.getSavedPreferences?.(live.venueId)?.allergyNote.trim();
+      if (!note) return null;
+      const failed = (reason: string) =>
+        `Your order went through, but your allergy note could not be sent to staff (${reason}). Please tell staff about your allergy directly.`;
+      if (!deps.notifyStaff) return failed('staff requests are unavailable');
+      try {
+        const result = deps.notifyStaff(
+          {
+            venueId: live.venueId,
+            seatId: live.seatId,
+            sessionId: live.id,
+            minute: live.elapsedMinutes,
+          },
+          allergyRequestText(note, sent),
+        );
+        return result.ok ? null : failed(result.message);
+      } catch {
+        return failed('unexpected error');
+      }
+    }
+
+    /** Clear the prefill hint once the cart is empty. */
+    const keepPrefilled = (lines: CartLine[]) =>
+      lines.length > 0 && get().prefilled;
+
     return {
       ...initial(),
       addItem: (item) =>
-        set((state) => ({
-          lines: addToCart(state.lines, item),
-          error: null,
-          notice: null,
-        })),
-      setQuantity: (id, quantity) =>
-        set((state) => ({ lines: setQuantity(state.lines, id, quantity) })),
-      setNote: (id, note) =>
-        set((state) => ({ lines: setNote(state.lines, id, note) })),
-      removeLine: (id) =>
-        set((state) => ({ lines: removeLine(state.lines, id) })),
-      dismissMessages: () => set({ error: null, notice: null }),
+        set((state) => {
+          const saved = isDrink(item)
+            ? deps.getSavedPreferences?.(coreStore.getState().venueId)
+            : null;
+          const modifiers = isDrink(item)
+            ? modifiersFromPreferences(saved)
+            : null;
+          const key = lineKey({ menuItemId: item.id, modifiers });
+          const isNewLine = !state.lines.some((line) => lineKey(line) === key);
+          return {
+            lines: addToCart(state.lines, item, modifiers),
+            prefilled: state.prefilled || (Boolean(saved) && isNewLine),
+            error: null,
+            notice: null,
+            warning: null,
+          };
+        }),
+      setQuantity: (key, quantity) =>
+        set((state) => {
+          const lines = setQuantity(state.lines, key, quantity);
+          return { lines, prefilled: keepPrefilled(lines) };
+        }),
+      setNote: (key, note) =>
+        set((state) => ({ lines: setNote(state.lines, key, note) })),
+      setModifiers: (key, patch) =>
+        set((state) => ({ lines: setModifiers(state.lines, key, patch) })),
+      removeLine: (key) =>
+        set((state) => {
+          const lines = removeLine(state.lines, key);
+          return { lines, prefilled: keepPrefilled(lines) };
+        }),
+      dismissMessages: () => set({ error: null, notice: null, warning: null }),
       submit: (session) => {
         const result = place(session, get().lines);
         if (result.ok) {
           record(result.live, result.sent);
-          set({ lines: [], error: null, notice: 'Order placed.' });
+          set({
+            lines: [],
+            prefilled: false,
+            error: null,
+            notice: 'Order placed.',
+            warning: notifyAllergy(result.live, result.sent),
+          });
           return { ok: true };
         }
         if (result.live) {
           record(result.live, result.sent);
+          const warning = notifyAllergy(result.live, result.sent);
           // Keep only the unsent remainder in the cart.
-          set((state) => ({
-            lines: state.lines
-              .map((line) => {
-                const sent = result.sent.find(
-                  (entry) => entry.menuItemId === line.menuItemId,
-                );
-                return sent
-                  ? { ...line, quantity: line.quantity - sent.quantity }
-                  : line;
-              })
-              .filter((line) => line.quantity > 0),
-          }));
+          const rest = get()
+            .lines.map((line) => {
+              const sent = result.sent.find(
+                (entry) => lineKey(entry) === lineKey(line),
+              );
+              return sent
+                ? { ...line, quantity: line.quantity - sent.quantity }
+                : line;
+            })
+            .filter((line) => line.quantity > 0);
+          const failure = fail(result.message);
+          set({ lines: rest, prefilled: keepPrefilled(rest), warning });
+          return failure;
         }
         return fail(result.message);
       },
@@ -188,9 +280,17 @@ export function createCartStore(coreStore: CoreStoreLike) {
           return fail('None of those items are on the menu any more.');
         const result = place(session, lines);
         if (result.live) record(result.live, result.sent);
-        if (!result.ok) return fail(result.message);
+        const warning = result.live
+          ? notifyAllergy(result.live, result.sent)
+          : null;
+        if (!result.ok) {
+          const failure = fail(result.message);
+          set({ warning });
+          return failure;
+        }
         set({
           error: null,
+          warning,
           notice: dropped.length
             ? `Order placed. No longer available: ${dropped.join(', ')}.`
             : 'Order placed.',
@@ -201,8 +301,10 @@ export function createCartStore(coreStore: CoreStoreLike) {
         set((state) => ({
           orders: state.orders.filter((order) => order.sessionId !== sessionId),
           lines: [],
+          prefilled: false,
           error: null,
           notice: null,
+          warning: null,
         })),
       reset: () => set(initial()),
     };

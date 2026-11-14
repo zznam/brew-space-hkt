@@ -1,6 +1,7 @@
 import type { BillingMode, Seat, Session, Venue } from '../../../core/domain';
 import { visitHabits } from '../loyalty/loyaltyModel';
 import type { VisitSnapshot } from '../shared/visit';
+import { hasAmenities, type Amenity } from '../venue/seatAmenities';
 
 /** Pure seat discovery rules. Occupancy is reported as counts only. */
 export const USUAL_MIN_VISITS = 3;
@@ -10,14 +11,21 @@ export interface SeatFilters {
   /** Inclusive hourly VND ceiling; null means any price. */
   maxRate: number | null;
   availableOnly: boolean;
+  /** Amenities a seat must all have (AND). Missing or empty means no
+   * amenity filter. Amenities are demo presentation data, see seatAmenities. */
+  amenities?: Amenity[];
 }
 export const noFilters = (): SeatFilters => ({
   kinds: [],
   maxRate: null,
   availableOnly: false,
+  amenities: [],
 });
 export const hasActiveFilters = (filters: SeatFilters) =>
-  filters.kinds.length > 0 || filters.maxRate !== null || filters.availableOnly;
+  filters.kinds.length > 0 ||
+  filters.maxRate !== null ||
+  filters.availableOnly ||
+  (filters.amenities?.length ?? 0) > 0;
 
 const occupiedSeatIds = (venue: Venue, sessions: Session[]) =>
   new Set(
@@ -36,7 +44,8 @@ export function filterSeats(
     (seat) =>
       (filters.kinds.length === 0 || filters.kinds.includes(seat.kind)) &&
       (filters.maxRate === null || seat.hourlyRate <= filters.maxRate) &&
-      (!filters.availableOnly || !occupied.has(seat.id)),
+      (!filters.availableOnly || !occupied.has(seat.id)) &&
+      hasAmenities(seat, filters.amenities ?? []),
   );
 }
 export const freeSeats = (venue: Venue, sessions: Session[]) =>

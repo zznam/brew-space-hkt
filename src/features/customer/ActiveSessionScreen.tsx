@@ -7,12 +7,18 @@ import { CartPanel } from './cart/CartPanel';
 import { MenuList } from './cart/MenuList';
 import { OrderHistory } from './cart/OrderHistory';
 import { CustomerNav } from './shared/CustomerNav';
+import { FocusTimer } from './focus/FocusTimer';
+import { blockWhenOffline } from './network/networkModel';
+import { OfflineBanner } from './network/OfflineBanner';
+import { useOnlineStatus } from './network/useOnlineStatus';
 import { finishSession } from './shared/finishSession';
 import { SessionStatusBanner } from './support/SessionStatusBanner';
 import { SupportPanel } from './support/SupportPanel';
 import { VenueInfoCard } from './support/VenueInfoCard';
 export function ActiveSessionScreen() {
   const store = useAppStore((state) => state);
+  const online = useOnlineStatus();
+  const blocked = blockWhenOffline(online);
   const venue = getVenue(store.venueId);
   const session = store.sessions.find(
     (entry) =>
@@ -38,6 +44,7 @@ export function ActiveSessionScreen() {
   return (
     <Card>
       <CustomerNav current="session" />
+      <OfflineBanner online={online} />
       <Heading>Your live tab</Heading>
       <Text style={styles.text}>
         {venue.name} · {seatLabel} · {session.elapsedMinutes} minutes ·{' '}
@@ -45,8 +52,9 @@ export function ActiveSessionScreen() {
       </Text>
       <SessionStatusBanner session={session} />
       <MenuList venueId={venue.id} />
-      <CartPanel session={session} />
-      <OrderHistory session={session} />
+      <CartPanel session={session} disabledReason={blocked} />
+      <OrderHistory session={session} disabledReason={blocked} />
+      <FocusTimer venueId={venue.id} />
       <SupportPanel
         context={{
           venueId: venue.id,
@@ -67,6 +75,7 @@ export function ActiveSessionScreen() {
       </Text>
       <Button
         label="End demo session"
+        disabled={blocked !== null}
         onPress={() => {
           if (finishSession(session).ok) router.replace('/customer/receipt');
         }}

@@ -5,11 +5,21 @@ import type { VisitSnapshot } from '../shared/visit';
 import {
   MAX_NOTE_LENGTH,
   classifyNote,
+  classifySeatChange,
   classifySeatIssue,
   findSeatIssuePreset,
+  isSeatPreference,
   validateNote,
+  validateOptionalReason,
+  type NoteClassification,
+  type SeatPreference,
   type SupportRequest,
 } from './supportModel';
+import {
+  openRefundForSession,
+  validateRefundReason,
+  type RefundRequest,
+} from './refundModel';
 
 /** Where the customer is when asking for help. `minute` is the session's
  * elapsed minutes (the demo clock). */
@@ -31,8 +41,27 @@ export interface Rating {
 export type SubmitResult =
   { ok: true; request: SupportRequest } | { ok: false; message: string };
 
+/** The parts of a finished visit a refund request needs (a VisitSnapshot fits). */
+export type RefundVisit = Pick<
+  VisitSnapshot,
+  'sessionId' | 'venueId' | 'seatId' | 'total' | 'minutes'
+>;
+
+export type RefundResult =
+  { ok: true; refund: RefundRequest } | { ok: false; message: string };
+
+const REFUND_CLASSIFICATION: NoteClassification = {
+  category: 'payment',
+  needsStaff: true,
+  priority: 'normal',
+  reasonCode: 'REFUND_REQUEST',
+  confidence: 1,
+};
+
 export interface SupportStore {
   requests: SupportRequest[];
+  refunds: RefundRequest[];
+  nextRefundId: number;
   lastReceipt: VisitSnapshot | null;
   ratings: Rating[];
   nextRequestId: number;
@@ -41,6 +70,14 @@ export interface SupportStore {
   /** Classifies the note, but only labels it: orders and prices are untouched. */
   submitNote: (ctx: SupportContext, text: string) => SubmitResult;
   reportSeatIssue: (ctx: SupportContext, presetId: string) => SubmitResult;
+  /** Asks staff to move the guest. Staff carry out any move; nothing changes here. */
+  requestSeatChange: (
+    ctx: SupportContext,
+    input: { preferredKind?: SeatPreference; reason?: string },
+  ) => SubmitResult;
+  /** Asks a manager to review a visit. One open request per session. Moves no money. */
+  requestRefund: (visit: RefundVisit, reason: string) => RefundResult;
+  withdrawRefund: (refundId: string) => ActionResult;
   markResolved: (requestId: string) => ActionResult;
   setLastReceipt: (receipt: VisitSnapshot | null) => void;
   rate: (rating: Rating) => ActionResult;
@@ -68,7 +105,8 @@ export function createSupportStore() {
   return createStore<SupportStore>()((set, get) => {
     function add(
       ctx: SupportContext,
-      fields: Pick<SupportRequest, 'kind' | 'text' | 'classification'>,
+      fields: Pick<SupportRequest, 'kind' | 'text' | 'classification'> &
+        Partial<Pick<SupportRequest, 'preferredKind'>>,
     ): SubmitResult {
       const invalid = validateContext(ctx);
       if (invalid) return invalid;
@@ -91,6 +129,8 @@ export function createSupportStore() {
     }
     return {
       requests: [],
+      refunds: [],
+      nextRefundId: 1,
       lastReceipt: null,
       ratings: [],
       nextRequestId: 1,
@@ -117,6 +157,86 @@ export function createSupportStore() {
           text: preset.label,
           classification: classifySeatIssue(preset),
         });
+      },
+      requestSeatChange: (ctx, input) => {
+        const preferred = input?.preferredKind ?? 'any';
+        if (!isSeatPreference(preferred))
+          return fail('Choose desk, pod, booth or any seat.');
+        const reason = validateOptionalReason(input?.reason);
+        if (!reason.ok) return reason;
+        if (!ctx?.sessionId)
+          return fail('Start a session before asking to move seats.');
+        return add(ctx, {
+          kind: 'seat_change',
+          text: reason.text
+            ? `Move seats (${preferred}): ${reason.text}`
+            : `Move seats (${preferred})`,
+          classification: classifySeatChange(),
+          preferredKind: preferred,
+        });
+      },
+      requestRefund: (visit, reasonText) => {
+        const reason = validateRefundReason(reasonText);
+        if (!reason.ok) return reason;
+        if (!visit || typeof visit.sessionId !== 'string' || !visit.sessionId)
+          return fail('Missing visit for this refund request.');
+        if (!Number.isSafeInteger(visit.total) || visit.total < 0)
+          return fail('This visit has an invalid total.');
+        if (visit.total === 0)
+          return fail(
+            'Nothing was charged for this visit, so there is nothing to refund.',
+          );
+        if (openRefundForSession(get().refunds, visit.sessionId))
+          return fail('You already have a refund request waiting for review.');
+        const added = add(
+          {
+            venueId: visit.venueId,
+            seatId: visit.seatId,
+            sessionId: visit.sessionId,
+            minute: visit.minutes,
+          },
+          {
+            kind: 'refund',
+            text: `Refund request: ${reason.text}`,
+            classification: REFUND_CLASSIFICATION,
+          },
+        );
+        if (!added.ok) return added;
+        const state = get();
+        const refund: RefundRequest = {
+          id: `refund-${state.nextRefundId}`,
+          sessionId: visit.sessionId,
+          venueId: visit.venueId,
+          seatId: visit.seatId,
+          amount: visit.total,
+          reason: reason.text,
+          status: 'requested',
+          supportRequestId: added.request.id,
+        };
+        set({
+          refunds: [...state.refunds, refund],
+          nextRefundId: state.nextRefundId + 1,
+        });
+        return { ok: true, refund };
+      },
+      withdrawRefund: (refundId) => {
+        const refund = get().refunds.find((entry) => entry.id === refundId);
+        if (!refund) return fail('Refund request not found.');
+        if (refund.status !== 'requested')
+          return fail('This request is no longer waiting for review.');
+        set({
+          refunds: get().refunds.map((entry) =>
+            entry.id === refundId
+              ? { ...entry, status: 'withdrawn' as const }
+              : entry,
+          ),
+          requests: get().requests.map((entry) =>
+            entry.id === refund.supportRequestId
+              ? { ...entry, status: 'resolved' as const }
+              : entry,
+          ),
+        });
+        return { ok: true };
       },
       markResolved: (requestId) => {
         const request = get().requests.find((entry) => entry.id === requestId);
@@ -169,6 +289,8 @@ export function createSupportStore() {
       reset: () =>
         set({
           requests: [],
+          refunds: [],
+          nextRefundId: 1,
           lastReceipt: null,
           ratings: [],
           nextRequestId: 1,

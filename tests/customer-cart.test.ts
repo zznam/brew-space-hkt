@@ -3,6 +3,8 @@ import { calculateBill, createAppStore, getVenue } from '../src/core';
 import {
   addToCart,
   cartTotal,
+  defaultModifiers,
+  lineKey,
   MAX_LINE_QUANTITY,
   MAX_NOTE_LENGTH,
   orderStatus,
@@ -17,6 +19,11 @@ import {
 import { createCartStore } from '../src/features/customer/cart/cartStore';
 
 const drink = { id: 'grind-drink', name: 'Cold brew', price: 45000 };
+/** Key of a default-modifier drink line (item id + modifiers). */
+const drinkKey = lineKey({
+  menuItemId: drink.id,
+  modifiers: defaultModifiers(),
+});
 const snack = { id: 'grind-snack', name: 'Butter croissant', price: 35000 };
 
 const demo = (core: ReturnType<typeof createAppStore>) =>
@@ -42,12 +49,13 @@ describe('cart model', () => {
         unitPrice: 45000,
         quantity: 1,
         note: '',
+        modifiers: { milk: 'none', sweetness: 50, ice: 'normal' },
       },
     ]);
     lines = addToCart(lines, drink);
     expect(lines).toHaveLength(1);
     expect(lines[0]?.quantity).toBe(2);
-    expect(setQuantity(lines, drink.id, 999)[0]?.quantity).toBe(
+    expect(setQuantity(lines, drinkKey, 999)[0]?.quantity).toBe(
       MAX_LINE_QUANTITY,
     );
     for (let i = 0; i < 40; i++) lines = addToCart(lines, drink);
@@ -55,32 +63,32 @@ describe('cart model', () => {
   });
   it('removes the line when quantity is zero or negative', () => {
     const lines = addToCart(addToCart([], drink), snack);
-    expect(setQuantity(lines, drink.id, 0).map((l) => l.menuItemId)).toEqual([
+    expect(setQuantity(lines, drinkKey, 0).map((l) => l.menuItemId)).toEqual([
       snack.id,
     ]);
-    expect(setQuantity(lines, drink.id, -3)).toHaveLength(1);
-    expect(setQuantity(lines, drink.id, Number.NaN)).toBe(lines);
+    expect(setQuantity(lines, drinkKey, -3)).toHaveLength(1);
+    expect(setQuantity(lines, drinkKey, Number.NaN)).toBe(lines);
     expect(removeLine(lines, snack.id)).toHaveLength(1);
   });
   it('does not mutate its input', () => {
     const lines = addToCart([], drink);
     const frozen = JSON.stringify(lines);
-    setQuantity(lines, drink.id, 5);
-    setNote(lines, drink.id, 'x');
+    setQuantity(lines, drinkKey, 5);
+    setNote(lines, drinkKey, 'x');
     addToCart(lines, drink);
     expect(JSON.stringify(lines)).toBe(frozen);
   });
   it('trims notes and limits them to 120 characters', () => {
     const lines = addToCart([], drink);
-    expect(setNote(lines, drink.id, '  less ice  ')[0]?.note).toBe('less ice');
-    const long = setNote(lines, drink.id, 'a'.repeat(500))[0]?.note ?? '';
+    expect(setNote(lines, drinkKey, '  less ice  ')[0]?.note).toBe('less ice');
+    const long = setNote(lines, drinkKey, 'a'.repeat(500))[0]?.note ?? '';
     expect(long).toHaveLength(MAX_NOTE_LENGTH);
   });
   it('totals integer VND and rejects invalid lines', () => {
     expect(cartTotal([])).toBe(0);
     const lines = setQuantity(
       addToCart(addToCart([], drink), snack),
-      drink.id,
+      drinkKey,
       2,
     );
     expect(cartTotal(lines)).toBe(125000);
@@ -130,6 +138,7 @@ describe('reorder', () => {
         unitPrice: 20000,
         quantity: 1,
         note: '',
+        modifiers: null,
       },
     ],
     total: 0,
@@ -145,6 +154,7 @@ describe('reorder', () => {
         unitPrice: 45000,
         quantity: 2,
         note: 'hot',
+        modifiers: defaultModifiers(),
       },
       {
         menuItemId: snack.id,
@@ -152,6 +162,7 @@ describe('reorder', () => {
         unitPrice: 38000,
         quantity: 1,
         note: '',
+        modifiers: null,
       },
     ]);
   });
@@ -261,7 +272,7 @@ describe('cart store submit', () => {
     cart.getState().addItem(drink);
     for (let i = 0; i < 2; i++) cart.getState().addItem(snack);
     cart.getState().addItem(snack);
-    cart.getState().setQuantity(drink.id, 2);
+    cart.getState().setQuantity(drinkKey, 2);
     const session = demo(core);
     const result = cart.getState().submit(session);
     expect(result.ok).toBe(false);
@@ -282,8 +293,8 @@ describe('cart store reorder', () => {
     const { core, cart, session } = startedSession();
     expect(cart.getState().reorder(session()).ok).toBe(false);
     cart.getState().addItem(drink);
-    cart.getState().setQuantity(drink.id, 2);
-    cart.getState().setNote(drink.id, ' hot ');
+    cart.getState().setQuantity(drinkKey, 2);
+    cart.getState().setNote(drinkKey, ' hot ');
     cart.getState().submit(session());
     cart.getState().addItem(snack);
     const result = cart.getState().reorder(session());
