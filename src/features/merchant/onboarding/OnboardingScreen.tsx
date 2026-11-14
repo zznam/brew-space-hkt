@@ -165,11 +165,11 @@ export function OnboardingScreen() {
 
   async function handleFileSelection(files: FileList | null) {
     if (!files || files.length === 0) return;
+    // Clearing the picker also clears its live FileList, so copy it before awaiting.
+    const selectedFiles = Array.from(files);
     setError('');
     const added: OnboardingUploadItem[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const file = files.item(i);
-      if (!file) continue;
+    for (const file of selectedFiles) {
       try {
         const processed = await processUploadedFile(file);
         added.push(processed);
