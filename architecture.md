@@ -8,6 +8,7 @@
 - `prototype/fonts.css`, `assets/fonts/`: font tự host cùng giấy phép.
 - `docs/prototype.md`: cách mở thử, phạm vi mô phỏng và kết quả kiểm tra.
 - `docs/react-native-plan.md`, `docs/user-features-brainstorm.md`: kế hoạch app React Native và brainstorm tính năng khách từ các nhánh tài liệu.
+- `docs/mvp-features.md`: bản đặc tả 100 tính năng từ nhánh tài liệu MVP.
 - `.beads/artifacts/vhk-qwb/prd.md`: PRD cho pilot 1–2 quán, 1 BE + 2 FE, 10–12 tuần.
 - `.hallmark/`: bối cảnh và lịch sử lựa chọn thiết kế.
 
