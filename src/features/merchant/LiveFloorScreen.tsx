@@ -34,6 +34,7 @@ export function LiveFloorScreen() {
             onPress={() => router.push('/merchant/pos')}
           />
         )}
+        <Button label="Tickets" onPress={() => router.push('/merchant/tickets')} />
         <SeatMap
           venue={venue}
           sessions={sessions}
