@@ -78,7 +78,10 @@ export function createPosStore() {
         paymentMethod: null,
         createdAt: Date.now(),
       };
-      set({ nextOrderId: state.nextOrderId + 1, orders: [...state.orders, order] });
+      set({
+        nextOrderId: state.nextOrderId + 1,
+        orders: [...state.orders, order],
+      });
       return id;
     },
     addLine: (orderId, menuItemId, name, unitPrice) => {
@@ -89,7 +92,9 @@ export function createPosStore() {
         return { ok: false, message: 'Order can no longer be edited.' };
       if (state.soldOutItemIds.includes(menuItemId))
         return { ok: false, message: 'Item is sold out.' };
-      const existing = order.lines.find((line) => line.menuItemId === menuItemId);
+      const existing = order.lines.find(
+        (line) => line.menuItemId === menuItemId,
+      );
       const lines = existing
         ? order.lines.map((line) =>
             line.menuItemId === menuItemId
@@ -112,7 +117,9 @@ export function createPosStore() {
         return { ok: false, message: 'Order can no longer be edited.' };
       if (!Number.isSafeInteger(quantity) || quantity < 0)
         return { ok: false, message: 'Invalid quantity.' };
-      const hasLine = order.lines.some((line) => line.menuItemId === menuItemId);
+      const hasLine = order.lines.some(
+        (line) => line.menuItemId === menuItemId,
+      );
       if (!hasLine) return { ok: false, message: 'Line not found.' };
       const lines =
         quantity === 0
@@ -146,7 +153,12 @@ export function createPosStore() {
       set({
         orders: state.orders.map((entry) =>
           entry.id === orderId
-            ? { ...entry, status: 'paid', fulfillment: 'queued', paymentMethod: method }
+            ? {
+                ...entry,
+                status: 'paid',
+                fulfillment: 'queued',
+                paymentMethod: method,
+              }
             : entry,
         ),
       });

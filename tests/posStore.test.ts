@@ -1,11 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import { calculateOrderTotal, createPosStore } from '../src/features/merchant/pos/posStore';
+import {
+  calculateOrderTotal,
+  createPosStore,
+} from '../src/features/merchant/pos/posStore';
 
 describe('pos order totals', () => {
   it('sums line unit price times quantity', () => {
-    const order = { id: 'o1', venueId: 'grind', seatId: null, status: 'draft' as const,
-      fulfillment: null, paymentMethod: null, createdAt: 0,
-      lines: [{ menuItemId: 'grind-drink', name: 'Cold brew', unitPrice: 45000, quantity: 2 }] };
+    const order = {
+      id: 'o1',
+      venueId: 'grind',
+      seatId: null,
+      status: 'draft' as const,
+      fulfillment: null,
+      paymentMethod: null,
+      createdAt: 0,
+      lines: [
+        {
+          menuItemId: 'grind-drink',
+          name: 'Cold brew',
+          unitPrice: 45000,
+          quantity: 2,
+        },
+      ],
+    };
     expect(calculateOrderTotal(order)).toBe(90000);
   });
 });
@@ -23,7 +40,9 @@ describe('pos store', () => {
   it('adds a line and increases total', () => {
     const store = createPosStore();
     const id = store.getState().createOrder('grind', null);
-    expect(store.getState().addLine(id, 'grind-drink', 'Cold brew', 45000).ok).toBe(true);
+    expect(
+      store.getState().addLine(id, 'grind-drink', 'Cold brew', 45000).ok,
+    ).toBe(true);
     const order = store.getState().orders.find((o) => o.id === id)!;
     expect(calculateOrderTotal(order)).toBe(45000);
   });
@@ -43,7 +62,9 @@ describe('pos store', () => {
     const id = store.getState().createOrder('grind', null);
     store.getState().addLine(id, 'grind-drink', 'Cold brew', 45000);
     store.getState().pay(id, 'cash');
-    expect(store.getState().addLine(id, 'grind-snack', 'Croissant', 35000).ok).toBe(false);
+    expect(
+      store.getState().addLine(id, 'grind-snack', 'Croissant', 35000).ok,
+    ).toBe(false);
   });
 
   it('refuses paying an order with no lines', () => {
@@ -56,9 +77,15 @@ describe('pos store', () => {
     const store = createPosStore();
     const id = store.getState().createOrder('grind', null);
     store.getState().addLine(id, 'grind-drink', 'Cold brew', 45000);
-    expect(store.getState().setLineQuantity(id, 'grind-drink', -1).ok).toBe(false);
-    expect(store.getState().setLineQuantity(id, 'grind-drink', 0).ok).toBe(true);
-    expect(store.getState().orders.find((o) => o.id === id)!.lines).toHaveLength(0);
+    expect(store.getState().setLineQuantity(id, 'grind-drink', -1).ok).toBe(
+      false,
+    );
+    expect(store.getState().setLineQuantity(id, 'grind-drink', 0).ok).toBe(
+      true,
+    );
+    expect(
+      store.getState().orders.find((o) => o.id === id)!.lines,
+    ).toHaveLength(0);
   });
 
   it('keeps an existing cart line when the item is marked sold out, but blocks new adds', () => {
@@ -66,8 +93,12 @@ describe('pos store', () => {
     const id = store.getState().createOrder('grind', null);
     store.getState().addLine(id, 'grind-drink', 'Cold brew', 45000);
     store.getState().toggleSoldOut('grind-drink');
-    expect(store.getState().orders.find((o) => o.id === id)!.lines).toHaveLength(1);
-    expect(store.getState().addLine(id, 'grind-drink', 'Cold brew', 45000).ok).toBe(false);
+    expect(
+      store.getState().orders.find((o) => o.id === id)!.lines,
+    ).toHaveLength(1);
+    expect(
+      store.getState().addLine(id, 'grind-drink', 'Cold brew', 45000).ok,
+    ).toBe(false);
   });
 
   it('pays an order with lines, moving it to paid with a queued ticket', () => {

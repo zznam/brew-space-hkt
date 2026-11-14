@@ -31,10 +31,18 @@ export function LiveFloorScreen() {
         {selectedSeat && (
           <Button
             label={`Sell to ${selectedSeat.label}`}
-            onPress={() => router.push('/merchant/pos')}
+            onPress={() =>
+              router.push({
+                pathname: '/merchant/pos',
+                params: { seatId: selectedSeat.id },
+              })
+            }
           />
         )}
-        <Button label="Tickets" onPress={() => router.push('/merchant/tickets')} />
+        <Button
+          label="Tickets"
+          onPress={() => router.push('/merchant/tickets')}
+        />
         <SeatMap
           venue={venue}
           sessions={sessions}

@@ -12,9 +12,24 @@ const COLUMNS: {
   advanceTo: FulfillmentStatus | null;
   actionLabel: string | null;
 }[] = [
-  { status: 'queued', title: 'Queued', advanceTo: 'preparing', actionLabel: 'Start preparing' },
-  { status: 'preparing', title: 'Preparing', advanceTo: 'ready', actionLabel: 'Mark ready' },
-  { status: 'ready', title: 'Ready', advanceTo: 'served', actionLabel: 'Mark served' },
+  {
+    status: 'queued',
+    title: 'Queued',
+    advanceTo: 'preparing',
+    actionLabel: 'Start preparing',
+  },
+  {
+    status: 'preparing',
+    title: 'Preparing',
+    advanceTo: 'ready',
+    actionLabel: 'Mark ready',
+  },
+  {
+    status: 'ready',
+    title: 'Ready',
+    advanceTo: 'served',
+    actionLabel: 'Mark served',
+  },
   { status: 'served', title: 'Served', advanceTo: null, actionLabel: null },
 ];
 
@@ -30,8 +45,8 @@ function TicketLine({
   return (
     <>
       <Text style={styles.text}>
-        {order.lines.map((line) => `${line.name} ×${line.quantity}`).join(', ')} ·{' '}
-        {formatMoney(calculateOrderTotal(order))}
+        {order.lines.map((line) => `${line.name} ×${line.quantity}`).join(', ')}{' '}
+        · {formatMoney(calculateOrderTotal(order))}
       </Text>
       {advanceTo && actionLabel && (
         <Button

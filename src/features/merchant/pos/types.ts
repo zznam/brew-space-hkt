@@ -1,9 +1,5 @@
 export type PosOrderStatus =
-  | 'draft'
-  | 'awaiting_payment'
-  | 'paid'
-  | 'completed'
-  | 'cancelled';
+  'draft' | 'awaiting_payment' | 'paid' | 'completed' | 'cancelled';
 export type FulfillmentStatus = 'queued' | 'preparing' | 'ready' | 'served';
 export type PaymentMethod = 'cash' | 'online';
 

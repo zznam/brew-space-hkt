@@ -6,6 +6,7 @@ import type { PaymentMethod, PosOrder } from './types';
 
 export interface CartPanelProps {
   order: PosOrder | null;
+  soldOutItemIds: string[];
   onIncrement: (menuItemId: string) => void;
   onDecrement: (menuItemId: string) => void;
   onPay: (method: PaymentMethod) => void;
@@ -14,6 +15,7 @@ export interface CartPanelProps {
 
 export function CartPanel({
   order,
+  soldOutItemIds,
   onIncrement,
   onDecrement,
   onPay,
@@ -32,13 +34,11 @@ export function CartPanel({
                 {line.name} × {line.quantity} ·{' '}
                 {formatMoney(line.unitPrice * line.quantity)}
               </Text>
-              <Button
-                label="-"
-                onPress={() => onDecrement(line.menuItemId)}
-              />
+              <Button label="-" onPress={() => onDecrement(line.menuItemId)} />
               <Button
                 label="+"
                 onPress={() => onIncrement(line.menuItemId)}
+                disabled={soldOutItemIds.includes(line.menuItemId)}
               />
             </View>
           ))}
@@ -46,7 +46,11 @@ export function CartPanel({
         </>
       )}
       <View style={styles.row}>
-        <Button label="Pay cash" onPress={() => onPay('cash')} disabled={empty} />
+        <Button
+          label="Pay cash"
+          onPress={() => onPay('cash')}
+          disabled={empty}
+        />
         <Button
           label="Pay online"
           onPress={() => onPay('online')}
