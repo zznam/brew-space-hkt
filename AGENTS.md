@@ -4,7 +4,7 @@ This file provides guidance to coding agents when working with code in this repo
 
 ## What this is
 
-Vibing HKT is the shared Expo SDK 58 / React Native foundation for a cafe and coworking platform. One app holds both the merchant and the customer experience, backed by a local demo core. There is no backend, auth, payment, AI, or 3D yet: every transaction is simulated on one device.
+Vibing HKT is the shared Expo SDK 58 / React Native foundation for a cafe and coworking platform. One app holds both the merchant and the customer experience, backed by a local demo core. There is no backend, auth, or payment yet: every transaction is simulated on one device. A three.js 3D venue viewer and an OpenAI-backed merchant onboarding flow do exist, but both are client-only demos (see Architecture) — not production AI/3D infrastructure.
 
 The repo holds two independent things:
 
@@ -67,7 +67,11 @@ Keep that boundary. Importing `useAppStore` from pure code makes the core tests 
 
 **Action results.** User-facing session actions (`startSession`, `addItem`, `endSession`) return `ActionResult` (`{ ok: true } | { ok: false; message }`) for the screen to display. An invalid venue ID is a programmer error and throws.
 
-**`SeatMapProps`** (`src/components/SeatMap.tsx`) is the renderer contract. The current accessible seat list is the baseline; a future 3D renderer must take the same props and keep the list available.
+**`SeatMapProps`** (`src/components/SeatMap.tsx`) is the renderer contract. The accessible seat list is the baseline. `src/components/canvas3d/CafeScene3D.tsx` + `sceneBuilder.ts` is a three.js viewer (orbit camera, raycast seat picking) reading the same venue/session/selection shape; it feature-detects WebGL and falls back to a 2D blueprint view when it's unavailable. Any seat-picking UI must work with both.
+
+**The merchant POS module is an intentionally isolated mock.** `src/features/merchant/pos/` and `src/features/merchant/tickets/` have their own zustand store (`posStore.ts`, not persisted), shaped like the eventual PRD/API fields, but never import `src/core`'s domain/billing — only read-only venue/seat lookups. This lets FE build real UI now and swap the mock for a real API client later without BE coordination (see `docs/fe1-pos-plan.md`, "Approach B"). Don't wire POS state into `src/core`.
+
+**Merchant AI onboarding is a client-side demo, not a backend integration.** `src/features/merchant/onboarding/openaiOnboarding.ts` calls the OpenAI API directly from the browser using a key the owner types into a form field at runtime — held only in component state, never persisted or read from `EXPO_PUBLIC_*`/env. With no key, the same file deterministically synthesizes a venue from the owner's notes/uploads, so the flow always works without a key; keep that path working for any change here.
 
 ## Conventions
 
@@ -90,6 +94,7 @@ Keep that boundary. Importing `useAppStore` from pure code makes the core tests 
 
 ## Other folders
 
-- `docs/react-native-plan.md`, `docs/mvp-features.md`, `.beads/artifacts/vhk-qwb/prd.md`: plans and pilot acceptance criteria. The app does not meet them yet, and the plan's multi-app folder layout was superseded by the current single-app layout.
+- `docs/react-native-plan.md`, `docs/mvp-features*.md`, `.beads/artifacts/vhk-qwb/prd.md`: plans and pilot acceptance criteria. The app does not meet them yet, and the plan's multi-app folder layout was superseded by the current single-app layout.
+- `docs/fe1-pos-plan.md`: design doc for the isolated POS module above — read before changing it.
 - `.beads/`: Beads issue tracker data (prefix `vhk`).
 - `graft/`: a local, gitignored code index. Don't commit or lint it.
