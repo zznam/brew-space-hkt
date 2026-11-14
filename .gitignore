@@ -1,0 +1,16 @@
+node_modules/
+.expo/
+dist/
+coverage/
+.env*
+!.env.example
+*.tsbuildinfo
+.DS_Store
+npm-debug.log*
+
+expo-env.d.ts
+playwright-report/
+test-results/
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
