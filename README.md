@@ -2,6 +2,7 @@
 
 Shared Expo / React Native foundation for the 3D cafe and coworking platform. One application contains merchant and customer experiences, backed by a local demo core.
 
+- [Tổng quan tính năng và kiến trúc / Features and architecture overview (HTML, VI + EN)](docs/app-overview.html)
 - [Tài liệu MVP và phân công 1 BE + 2 FE](.beads/artifacts/vhk-qwb/prd.md)
 - [React Native 3D Architecture & Implementation Plan (English)](docs/react-native-plan.md)
 - [Brainstorm tính năng cho khách hàng](docs/user-features-brainstorm.md)
