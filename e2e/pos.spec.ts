@@ -16,10 +16,9 @@ test('cashier takes a walk-in order from menu to served ticket', async ({
   await page.goBack();
   await page.getByRole('button', { name: 'Tickets', exact: true }).click();
   await expect(page.getByText(/Cold brew/)).toBeVisible();
-  await page
-    .getByRole('button', { name: 'Start preparing', exact: true })
-    .click();
-  await page.getByRole('button', { name: 'Mark ready', exact: true }).click();
-  await page.getByRole('button', { name: 'Mark served', exact: true }).click();
+  await expect(page.getByText(/^Walk-in #pos-\d+ · Cold brew/)).toBeVisible();
+  await page.getByRole('button', { name: /^Start preparing/ }).click();
+  await page.getByRole('button', { name: /^Mark ready/ }).click();
+  await page.getByRole('button', { name: /^Mark served/ }).click();
   expect(errors).toEqual([]);
 });

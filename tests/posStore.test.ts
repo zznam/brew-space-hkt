@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { getVenue } from '../src/core';
 import {
   calculateOrderTotal,
   createPosStore,
+  ticketLabel,
 } from '../src/features/merchant/pos/posStore';
 
 describe('pos order totals', () => {
@@ -128,5 +130,37 @@ describe('pos store', () => {
     expect(store.getState().advanceTicket(id, 'preparing').ok).toBe(true);
     expect(store.getState().advanceTicket(id, 'ready').ok).toBe(true);
     expect(store.getState().advanceTicket(id, 'served').ok).toBe(true);
+  });
+});
+
+describe('ticketLabel', () => {
+  const venue = getVenue('grind');
+
+  it('shows the seat label for a seat-scoped order', () => {
+    const order = {
+      id: 'pos-1',
+      venueId: 'grind',
+      seatId: 'grind-seat-1',
+      lines: [],
+      status: 'paid' as const,
+      fulfillment: 'queued' as const,
+      paymentMethod: 'cash' as const,
+      createdAt: 0,
+    };
+    expect(ticketLabel(order, venue)).toBe('Seat 1');
+  });
+
+  it('shows a walk-in label with the order id when there is no seat', () => {
+    const order = {
+      id: 'pos-3',
+      venueId: 'grind',
+      seatId: null,
+      lines: [],
+      status: 'paid' as const,
+      fulfillment: 'queued' as const,
+      paymentMethod: 'cash' as const,
+      createdAt: 0,
+    };
+    expect(ticketLabel(order, venue)).toBe('Walk-in #pos-3');
   });
 });
