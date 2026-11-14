@@ -40,7 +40,7 @@ test('cafe owner can upload multiple files in one selection and select them agai
     .click();
   await picker.setInputFiles(files);
   await expect(
-    page.getByText('Photos, Walkthrough Videos & Documents (2 attached)'),
+    page.getByText('Photos, videos and documents · 2 attached'),
   ).toBeVisible();
   await expect(page.getByText('[DOCUMENT] floorplan.md')).toBeVisible();
   await expect(page.getByText('[DOCUMENT] menu.txt')).toBeVisible();

@@ -22,6 +22,8 @@ npm run web
 
 The native commands require an emulator/simulator or a compatible Expo Go installation. This foundation uses Expo SDK 58; check the SDK supported by your Expo Go version or use a development build. Web is the quickest onboarding path.
 
+The cafe viewer uses Three.js with `expo-gl` on iOS/Android and a WebGL canvas on web. Drag to orbit, tap a seat to select it, and use the camera presets or zoom buttons. The accessible seat list remains available; if renderer initialization fails, a 2D seat map appears. After adding `expo-gl`, rebuild any existing development or standalone native app (`npx expo run:ios` / `npx expo run:android`, or your EAS build workflow); a JavaScript reload cannot add a native module. Expo Go must support SDK 58 and include `expo-gl`. Native GPU rendering still needs a device smoke check: selection, orbit, zoom, venue/occupancy changes, and leaving/reopening the floor view.
+
 ```sh
 npm run check       # TypeScript, ESLint, domain/state tests
 npm run build:web   # production bundle in dist/
@@ -39,7 +41,7 @@ Commit `package-lock.json` when changing dependencies. Use `npx expo install <pa
 - Three themed venues, menus, eight seats per venue, local demo sessions.
 - Shared Zustand state, validated AsyncStorage restore, role/venue controls, scenario resets, and simulated +30 minute time advances.
 - Metered/bundle seat-time estimates, menu additions, and releasing a demo seat.
-- An accessible shared seat list as the baseline for a future 3D viewer.
+- An interactive 3D venue viewer with an accessible shared seat list.
 
 All transactions are simulated on one device. Role switching is a demo tool, not authentication. Time advances only through the simulator. Ending a session clears its tab without taking payment. Data is scoped by venue in local actions; production tenant security must be enforced by the backend.
 
@@ -61,7 +63,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) for team ownership, first tasks, and PR 
 
 This implements the foundation phase of the [React Native architecture plan](docs/react-native-plan.md), using the current [Expo template conventions](https://docs.expo.dev/more/create-expo/). It supersedes the earlier proposed multi-app folder layout for this starter. Native StyleSheet primitives provide shared styling today; NativeWind can be introduced as a coordinated UI change.
 
-Still to build: interactive 3D/editor, real API/auth, transactional booking and pricing, payment/ledger, AI adapters, loyalty, and production persistence. No OpenAI or payment keys belong in the client or in `EXPO_PUBLIC_*` variables. The [MVP requirements and team responsibilities](.beads/artifacts/vhk-qwb/prd.md) remain the pilot acceptance criteria; this demo does not meet those gates yet.
+Still to build: production 3D/editor infrastructure, real API/auth, transactional booking and pricing, payment/ledger, AI adapters, loyalty, and production persistence. No OpenAI or payment keys belong in the client or in `EXPO_PUBLIC_*` variables. The [MVP requirements and team responsibilities](.beads/artifacts/vhk-qwb/prd.md) remain the pilot acceptance criteria; this demo does not meet those gates yet.
 
 ## HTML prototype
 
