@@ -1,6 +1,17 @@
 [
   {
     "date": "2026-11-14",
+    "scope": "customer journey and staff synchronization",
+    "macrostructure": "Guided visit with persistent step progress",
+    "theme": "Existing dark and mint system",
+    "design_system": "design.md",
+    "enrichment": "none; functional floor map and service illustrations",
+    "brief": "Identify table via QR/manual/map; select services; compare prepaid hours and drink; use; checkout; loyalty and local profile",
+    "nav": "Visit, loyalty and personal profile in phone-width column",
+    "variation": "User clarified service usage precedes checkout; no table selected on arrival"
+  },
+  {
+    "date": "2026-11-14",
     "scope": "app",
     "macrostructure": "Spatial workbench / service catalogue",
     "theme": "Existing dark and mint system",

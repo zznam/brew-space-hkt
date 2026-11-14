@@ -1,5 +1,7 @@
 # Kiểm tra prototype HTML trên điện thoại
 
+> **Báo cáo lịch sử:** các kết quả và ảnh dưới đây thuộc luồng giỏ hàng/thanh toán trước, trước lần sửa hành trình khách. Không dùng chúng làm bằng chứng kiểm tra luồng mới: xác định bàn → dịch vụ → đối chiếu gói → sử dụng → checkout. Xem [hành trình hiện tại và kịch bản cần thử](customer-journey.md).
+
 Ngày kiểm tra: 14/11/2026. Môi trường: Chromium headless qua agent-browser; HTML chạy bằng Python HTTP server. Các kiểm tra xác minh prototype cục bộ, chưa là nghiệm thu sản phẩm pilot.
 
 ## Kết quả đợt cập nhật
