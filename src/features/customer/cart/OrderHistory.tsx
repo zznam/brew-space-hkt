@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 import { formatMoney, type Session } from '@/core';
-import { Button, colors, Heading, styles } from '@/components/ui';
+import { Badge, Button, Card, colors, Heading, styles } from '@/components/ui';
 import {
   formatModifiers,
   lineKey,
@@ -33,46 +33,68 @@ export function OrderHistory({
   const orders = ordersForSession(allOrders, session);
   const latestId = orders[orders.length - 1]?.id;
   return (
-    <View style={{ gap: 10 }}>
-      <Heading>{t('ordersTitle')}</Heading>
+    <Card variant="subtle" style={{ gap: 12 }}>
+      <View style={styles.rowBetween}>
+        <Heading style={{ fontSize: 22 }}>{t('ordersTitle')}</Heading>
+        <Badge label={`${orders.length}`} tone="neutral" />
+      </View>
+
       {orders.length === 0 && (
         <Text style={styles.text}>{t('ordersEmpty')}</Text>
       )}
-      {[...orders].reverse().map((order) => (
-        <View
-          key={order.id}
-          style={{
-            gap: 6,
-            borderTopWidth: 1,
-            borderTopColor: colors.border,
-            paddingTop: 10,
-          }}
-        >
-          <Text style={{ color: colors.ink, fontWeight: '600' }}>
-            {t(STATUS_KEY[orderStatus(order, session.elapsedMinutes)])} ·{' '}
-            {formatMoney(order.total)}
-          </Text>
-          {order.lines.map((line) => {
-            const options = formatModifiers(line.modifiers, lang);
-            return (
-              <Text key={lineKey(line)} style={styles.text}>
-                {line.quantity} × {line.name}
-                {options ? ` · ${options}` : ''}
-                {line.note ? ` (${line.note})` : ''}
+
+      {[...orders].reverse().map((order) => {
+        const status = orderStatus(order, session.elapsedMinutes);
+        return (
+          <View
+            key={order.id}
+            style={{
+              gap: 8,
+              padding: 12,
+              borderRadius: 12,
+              backgroundColor: colors.surface,
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}
+          >
+            <View style={styles.rowBetween}>
+              <Text style={{ color: colors.ink, fontWeight: '700' }}>
+                {t(STATUS_KEY[status])} · {formatMoney(order.total)}
               </Text>
-            );
-          })}
-          {order.id === latestId && (
-            <View style={styles.row}>
-              <Button
-                label={t('orderAgain')}
-                disabled={!ready || disabledReason !== null}
-                onPress={() => reorder(session)}
+              <Badge
+                label={status}
+                tone={
+                  status === 'served'
+                    ? 'success'
+                    : status === 'preparing'
+                      ? 'info'
+                      : 'warning'
+                }
               />
             </View>
-          )}
-        </View>
-      ))}
-    </View>
+            {order.lines.map((line) => {
+              const options = formatModifiers(line.modifiers, lang);
+              return (
+                <Text key={lineKey(line)} style={styles.text}>
+                  {line.quantity} × {line.name}
+                  {options ? ` · ${options}` : ''}
+                  {line.note ? ` (${line.note})` : ''}
+                </Text>
+              );
+            })}
+            {order.id === latestId && (
+              <View style={styles.row}>
+                <Button
+                  size="sm"
+                  label={t('orderAgain')}
+                  disabled={!ready || disabledReason !== null}
+                  onPress={() => reorder(session)}
+                />
+              </View>
+            )}
+          </View>
+        );
+      })}
+    </Card>
   );
 }

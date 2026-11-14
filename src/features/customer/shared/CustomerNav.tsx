@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { View } from 'react-native';
-import { Button, styles } from '@/components/ui';
+import { Button, colors, Eyebrow, styles } from '@/components/ui';
 import { defineMessages } from '../i18n/i18n';
 import { LanguageToggle } from '../i18n/LanguageToggle';
 import { useT } from '../i18n/useLanguage';
@@ -31,20 +31,31 @@ const messages = defineMessages<CustomerTab>(
 export function CustomerNav({ current }: { current: CustomerTab }) {
   const { t } = useT(messages);
   return (
-    <View style={{ gap: 10 }}>
-      <View style={styles.row}>
-        {TABS.map((tab) => (
-          <Button
-            key={tab.key}
-            label={t(tab.key)}
-            selected={tab.key === current}
-            onPress={() => {
-              if (tab.key !== current) router.replace(tab.href as never);
-            }}
-          />
-        ))}
+    <View
+      style={{
+        gap: 10,
+        paddingBottom: 14,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+      }}
+    >
+      <View style={styles.rowBetween}>
+        <View style={styles.row}>
+          {TABS.map((tab) => (
+            <Button
+              key={tab.key}
+              size="sm"
+              label={t(tab.key)}
+              selected={tab.key === current}
+              onPress={() => {
+                if (tab.key !== current) router.replace(tab.href as never);
+              }}
+            />
+          ))}
+        </View>
+        <LanguageToggle />
       </View>
-      <LanguageToggle />
+      <Eyebrow color={colors.muted}>GUEST EXPERIENCE</Eyebrow>
     </View>
   );
 }

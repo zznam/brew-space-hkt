@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
-import { Button, Card, Heading, colors, styles } from '@/components/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  colors,
+  Divider,
+  Heading,
+  styles,
+} from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
 import { supportMessages } from './messages';
 import {
@@ -68,100 +76,140 @@ export function SupportPanel({ context }: { context: SupportContext }) {
   }
 
   return (
-    <Card>
-      <Heading>{t('needHelp')}</Heading>
-      <Button
-        label={t('callStaff')}
-        onPress={() => report(callStaff(context))}
-      />
-      <Text style={styles.text}>{t('reportSeatIssue')}</Text>
-      <View style={styles.row}>
-        {SEAT_ISSUE_PRESETS.map((preset) => (
-          <Button
-            key={preset.id}
-            label={seatIssueLabel(preset, lang)}
-            onPress={() => report(reportSeatIssue(context, preset.id))}
-          />
-        ))}
+    <Card variant="subtle" style={{ gap: 12 }}>
+      <View style={styles.rowBetween}>
+        <Heading style={{ fontSize: 22 }}>{t('needHelp')}</Heading>
+        <Button
+          variant="primary"
+          size="sm"
+          label={t('callStaff')}
+          onPress={() => report(callStaff(context))}
+        />
       </View>
-      <Text style={styles.text}>{t('leaveNote')}</Text>
-      <TextInput
-        accessibilityLabel={t('noteLabel')}
-        multiline
-        maxLength={MAX_NOTE_LENGTH + 50}
-        value={note}
-        onChangeText={setNote}
-        placeholder={t('notePlaceholder')}
-        style={{
-          minHeight: 72,
-          borderWidth: 1,
-          borderColor: colors.border,
-          borderRadius: 12,
-          padding: 12,
-          color: colors.ink,
-        }}
-      />
-      <Text
-        style={{
-          color: note.length > MAX_NOTE_LENGTH ? '#a33' : colors.muted,
-        }}
-      >
-        {t('characters', { n: note.length, max: MAX_NOTE_LENGTH })}
-      </Text>
-      <Button
-        label={t('sendNote')}
-        disabled={!note.trim() || note.length > MAX_NOTE_LENGTH}
-        onPress={() => report(submitNote(context, note), true)}
-      />
-      <Text style={styles.text}>{t('askMove')}</Text>
-      <Text style={styles.text}>{t('seatChangeNote')}</Text>
-      <View style={styles.row}>
-        {SEAT_PREFERENCES.map((option) => (
-          <Button
-            key={option.id}
-            label={seatPreferenceLabel(option.id, lang)}
-            selected={preferred === option.id}
-            onPress={() => setPreferred(option.id)}
-          />
-        ))}
+
+      <View style={{ gap: 8 }}>
+        <Text style={styles.sectionLabel}>{t('reportSeatIssue')}</Text>
+        <View style={styles.row}>
+          {SEAT_ISSUE_PRESETS.map((preset) => (
+            <Button
+              key={preset.id}
+              size="sm"
+              label={seatIssueLabel(preset, lang)}
+              onPress={() => report(reportSeatIssue(context, preset.id))}
+            />
+          ))}
+        </View>
       </View>
-      <TextInput
-        accessibilityLabel={t('moveReasonLabel')}
-        maxLength={MAX_NOTE_LENGTH + 50}
-        value={moveReason}
-        onChangeText={setMoveReason}
-        placeholder={t('moveReasonPlaceholder')}
-        style={{
-          minHeight: 44,
-          borderWidth: 1,
-          borderColor: colors.border,
-          borderRadius: 12,
-          paddingHorizontal: 12,
-          paddingVertical: 10,
-          color: colors.ink,
-        }}
-      />
-      <Button
-        label={t('askMove')}
-        disabled={moveReason.length > MAX_NOTE_LENGTH}
-        onPress={() =>
-          report(
-            requestSeatChange(context, {
-              preferredKind: preferred,
-              reason: moveReason,
-            }),
-          )
-        }
-      />
-      {feedback ? (
-        <Text
-          accessibilityRole="alert"
-          style={{ color: feedback.ok ? colors.green : '#a33' }}
-        >
-          {feedback.text}
+
+      <Divider />
+
+      <View style={{ gap: 8 }}>
+        <Text style={styles.sectionLabel}>{t('leaveNote')}</Text>
+        <TextInput
+          accessibilityLabel={t('noteLabel')}
+          multiline
+          maxLength={MAX_NOTE_LENGTH + 50}
+          value={note}
+          onChangeText={setNote}
+          placeholder={t('notePlaceholder')}
+          style={[
+            styles.input,
+            { minHeight: 72, backgroundColor: colors.surface },
+          ]}
+        />
+        <View style={styles.rowBetween}>
+          <Text
+            style={{
+              fontSize: 13,
+              color:
+                note.length > MAX_NOTE_LENGTH ? colors.danger : colors.muted,
+            }}
+          >
+            {t('characters', { n: note.length, max: MAX_NOTE_LENGTH })}
+          </Text>
+          <Button
+            size="sm"
+            label={t('sendNote')}
+            disabled={!note.trim() || note.length > MAX_NOTE_LENGTH}
+            onPress={() => report(submitNote(context, note), true)}
+          />
+        </View>
+      </View>
+
+      <Divider />
+
+      <View style={{ gap: 8 }}>
+        <Text style={styles.sectionLabel}>{t('askMove')}</Text>
+        <Text style={[styles.text, { fontSize: 13 }]}>
+          {t('seatChangeNote')}
         </Text>
+        <View style={styles.row}>
+          {SEAT_PREFERENCES.map((option) => (
+            <Button
+              key={option.id}
+              size="sm"
+              label={seatPreferenceLabel(option.id, lang)}
+              selected={preferred === option.id}
+              onPress={() => setPreferred(option.id)}
+            />
+          ))}
+        </View>
+        <TextInput
+          accessibilityLabel={t('moveReasonLabel')}
+          maxLength={MAX_NOTE_LENGTH + 50}
+          value={moveReason}
+          onChangeText={setMoveReason}
+          placeholder={t('moveReasonPlaceholder')}
+          style={[styles.input, { backgroundColor: colors.surface }]}
+        />
+        <View style={styles.row}>
+          <Button
+            size="sm"
+            label={t('askMove')}
+            disabled={moveReason.length > MAX_NOTE_LENGTH}
+            onPress={() =>
+              report(
+                requestSeatChange(context, {
+                  preferredKind: preferred,
+                  reason: moveReason,
+                }),
+              )
+            }
+          />
+        </View>
+      </View>
+
+      {feedback ? (
+        <View
+          style={{
+            padding: 12,
+            borderRadius: 12,
+            backgroundColor: feedback.ok
+              ? colors.greenSurface
+              : colors.dangerSurface,
+            borderWidth: 1,
+            borderColor: feedback.ok ? colors.greenBorder : colors.dangerBorder,
+          }}
+        >
+          <Text
+            accessibilityRole="alert"
+            style={{
+              color: feedback.ok ? colors.green : colors.danger,
+              fontWeight: '700',
+            }}
+          >
+            {feedback.text}
+          </Text>
+        </View>
       ) : null}
-      <Text style={styles.text}>{t('yourRequests')}</Text>
+
+      <Divider />
+
+      <View style={styles.rowBetween}>
+        <Text style={styles.sectionLabel}>{t('yourRequests')}</Text>
+        <Badge label={`${mine.length}`} tone="neutral" />
+      </View>
+
       {mine.length === 0 ? (
         <Text style={styles.text}>{t('noRequests')}</Text>
       ) : (
@@ -171,13 +219,15 @@ export function SupportPanel({ context }: { context: SupportContext }) {
             <View
               key={request.id}
               style={{
-                borderTopWidth: 1,
-                borderTopColor: colors.border,
-                paddingTop: 10,
-                gap: 4,
+                padding: 12,
+                borderRadius: 12,
+                backgroundColor: colors.surface,
+                borderWidth: 1,
+                borderColor: colors.border,
+                gap: 6,
               }}
             >
-              <Text style={{ color: colors.ink, fontWeight: '600' }}>
+              <Text style={{ color: colors.ink, fontWeight: '700' }}>
                 {requestDisplayText(request, lang)}
               </Text>
               <Text style={styles.text}>
@@ -194,13 +244,23 @@ export function SupportPanel({ context }: { context: SupportContext }) {
               {request.classification &&
               mustEscalate(request.classification) &&
               status !== 'resolved' ? (
-                <Text style={styles.text}>{t('staffWillCome')}</Text>
+                <Text
+                  style={[
+                    styles.text,
+                    { color: colors.amber, fontWeight: '600' },
+                  ]}
+                >
+                  {t('staffWillCome')}
+                </Text>
               ) : null}
               {status !== 'resolved' ? (
-                <Button
-                  label={t('markResolved')}
-                  onPress={() => markResolved(request.id)}
-                />
+                <View style={styles.row}>
+                  <Button
+                    size="sm"
+                    label={t('markResolved')}
+                    onPress={() => markResolved(request.id)}
+                  />
+                </View>
               ) : null}
             </View>
           );

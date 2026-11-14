@@ -1,6 +1,6 @@
 import { useEffect, useReducer } from 'react';
 import { Text, View } from 'react-native';
-import { Button, styles } from '@/components/ui';
+import { Badge, Button, Card, colors, styles } from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
 import { useLoyalty, useLoyaltyReady } from '../loyalty/useLoyalty';
 import {
@@ -14,8 +14,6 @@ import {
   phaseLabel,
 } from './focusModel';
 import { focusMessages } from './messages';
-
-const sectionTitle = { fontWeight: '700', fontSize: 17 } as const;
 
 /** Pomodoro aid for the session screen. Uses the device clock only: it never
  * changes session time or the bill, and it resets if you leave this screen. */
@@ -39,13 +37,28 @@ export function FocusTimer({ venueId }: { venueId: string }) {
   const preset = getPreset(state.presetId);
   const message = announcement(state, lang);
   return (
-    <View style={{ gap: 8 }}>
-      <Text style={sectionTitle}>{t('title')}</Text>
+    <Card variant="subtle" style={{ gap: 10 }}>
+      <View style={styles.rowBetween}>
+        <Text style={styles.subheading}>{t('title')}</Text>
+        <Badge
+          label={phaseLabel(state.phase, lang)}
+          tone={
+            state.phase === 'work'
+              ? 'info'
+              : state.phase === 'break'
+                ? 'success'
+                : 'neutral'
+          }
+        />
+      </View>
+
       <Text style={styles.text}>{t('intro')}</Text>
+
       <View style={styles.row}>
         {FOCUS_PRESETS.map((item) => (
           <Button
             key={item.id}
+            size="sm"
             label={t('presetLabel', { label: item.label })}
             selected={item.id === state.presetId}
             disabled={state.phase !== 'idle'}
@@ -53,26 +66,46 @@ export function FocusTimer({ venueId }: { venueId: string }) {
           />
         ))}
       </View>
-      <Text
-        accessibilityLabel={t('clockLabel', {
-          phase: phaseLabel(state.phase, lang),
-          clock: formatClock(state.remainingMs),
-        })}
-        style={{ fontSize: 32, fontWeight: '700' }}
+
+      <View
+        style={{
+          padding: 16,
+          borderRadius: 14,
+          backgroundColor: colors.surface,
+          borderWidth: 1,
+          borderColor: colors.border,
+          alignItems: 'center',
+          gap: 6,
+        }}
       >
-        {formatClock(state.remainingMs)}
-      </Text>
-      <Text style={styles.text}>
-        {t('summary', {
-          phase: phaseLabel(state.phase, lang),
-          paused: state.phase !== 'idle' && !state.running ? t('paused') : '',
-          cycles: state.cycles,
-          work: preset.workMinutes,
-          rest: preset.breakMinutes,
-        })}
-      </Text>
+        <Text
+          accessibilityLabel={t('clockLabel', {
+            phase: phaseLabel(state.phase, lang),
+            clock: formatClock(state.remainingMs),
+          })}
+          style={{
+            fontSize: 38,
+            fontWeight: '800',
+            color: colors.ink,
+            letterSpacing: 1,
+          }}
+        >
+          {formatClock(state.remainingMs)}
+        </Text>
+        <Text style={styles.text}>
+          {t('summary', {
+            phase: phaseLabel(state.phase, lang),
+            paused: state.phase !== 'idle' && !state.running ? t('paused') : '',
+            cycles: state.cycles,
+            work: preset.workMinutes,
+            rest: preset.breakMinutes,
+          })}
+        </Text>
+      </View>
+
       <View style={styles.row}>
         <Button
+          variant="primary"
           label={
             state.phase === 'idle'
               ? t('start')
@@ -93,14 +126,18 @@ export function FocusTimer({ venueId }: { venueId: string }) {
           onPress={() => dispatch({ type: 'reset' })}
         />
       </View>
+
       <Text accessibilityLiveRegion="polite" style={styles.text}>
         {message}
       </Text>
       {state.phase === 'break' ? (
-        <Text accessibilityLiveRegion="polite" style={styles.text}>
+        <Text
+          accessibilityLiveRegion="polite"
+          style={[styles.text, { color: colors.green, fontWeight: '600' }]}
+        >
           {breakSuggestion(membership && prefs ? prefs : null, lang)}
         </Text>
       ) : null}
-    </View>
+    </Card>
   );
 }

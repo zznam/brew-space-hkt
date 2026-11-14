@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Text, TextInput } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 import { formatMoney } from '@/core';
-import { Button, Card, Heading, colors, styles } from '@/components/ui';
+import { Badge, Button, Card, colors, Heading, styles } from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
 import type { VisitSnapshot } from '../shared/visit';
 import { supportMessages } from './messages';
@@ -30,11 +30,21 @@ export function RefundRequestCard({ receipt }: { receipt: VisitSnapshot }) {
 
   return (
     <Card>
-      <Heading>{t('refundHeading')}</Heading>
+      <View style={styles.rowBetween}>
+        <Heading style={{ fontSize: 22 }}>{t('refundHeading')}</Heading>
+        {latest ? (
+          <Badge
+            label={latest.status === 'requested' ? 'In Review' : 'Closed'}
+            tone={latest.status === 'requested' ? 'warning' : 'neutral'}
+          />
+        ) : null}
+      </View>
+
       <Text style={styles.text}>{refundNotice(lang)}</Text>
+
       {latest ? (
-        <>
-          <Text style={{ color: colors.ink, fontWeight: '600' }}>
+        <Card variant="subtle" style={{ gap: 6 }}>
+          <Text style={{ color: colors.ink, fontWeight: '700' }}>
             {t('status', { status: refundStatusLabel(latest.status, lang) })}
           </Text>
           <Text style={styles.text}>
@@ -43,20 +53,23 @@ export function RefundRequestCard({ receipt }: { receipt: VisitSnapshot }) {
               reason: latest.reason,
             })}
           </Text>
-        </>
+        </Card>
       ) : null}
+
       {open ? (
-        <Button
-          label={t('withdraw')}
-          onPress={() => {
-            const result = withdrawRefund(open.id);
-            setFeedback(
-              result.ok
-                ? { ok: true, text: t('withdrawn') }
-                : { ok: false, text: failureText(result, lang) },
-            );
-          }}
-        />
+        <View style={styles.row}>
+          <Button
+            label={t('withdraw')}
+            onPress={() => {
+              const result = withdrawRefund(open.id);
+              setFeedback(
+                result.ok
+                  ? { ok: true, text: t('withdrawn') }
+                  : { ok: false, text: failureText(result, lang) },
+              );
+            }}
+          />
+        </View>
       ) : (
         <>
           <TextInput
@@ -66,41 +79,44 @@ export function RefundRequestCard({ receipt }: { receipt: VisitSnapshot }) {
             value={reason}
             onChangeText={setReason}
             placeholder={t('refundReasonPlaceholder')}
-            style={{
-              minHeight: 72,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 12,
-              padding: 12,
-              color: colors.ink,
-            }}
+            style={[styles.input, { minHeight: 72 }]}
           />
-          <Text
-            style={{
-              color: reason.length > MAX_REFUND_REASON ? '#a33' : colors.muted,
-            }}
-          >
-            {t('characters', { n: reason.length, max: MAX_REFUND_REASON })}
-          </Text>
-          <Button
-            label={t('requestRefund')}
-            disabled={!reason.trim() || reason.length > MAX_REFUND_REASON}
-            onPress={() => {
-              const result = requestRefund(receipt, reason);
-              if (result.ok) setReason('');
-              setFeedback(
-                result.ok
-                  ? { ok: true, text: t('refundSent') }
-                  : { ok: false, text: failureText(result, lang) },
-              );
-            }}
-          />
+          <View style={styles.rowBetween}>
+            <Text
+              style={{
+                fontSize: 13,
+                color:
+                  reason.length > MAX_REFUND_REASON
+                    ? colors.danger
+                    : colors.muted,
+              }}
+            >
+              {t('characters', { n: reason.length, max: MAX_REFUND_REASON })}
+            </Text>
+            <Button
+              label={t('requestRefund')}
+              disabled={!reason.trim() || reason.length > MAX_REFUND_REASON}
+              onPress={() => {
+                const result = requestRefund(receipt, reason);
+                if (result.ok) setReason('');
+                setFeedback(
+                  result.ok
+                    ? { ok: true, text: t('refundSent') }
+                    : { ok: false, text: failureText(result, lang) },
+                );
+              }}
+            />
+          </View>
         </>
       )}
+
       {feedback ? (
         <Text
           accessibilityRole="alert"
-          style={{ color: feedback.ok ? colors.green : '#a33' }}
+          style={{
+            color: feedback.ok ? colors.green : colors.danger,
+            fontWeight: '700',
+          }}
         >
           {feedback.text}
         </Text>
