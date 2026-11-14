@@ -1,9 +1,10 @@
-import { defineMessages } from '../i18n/i18n';
+import { defineMessages } from '../../../i18n/i18n';
 
 /** Screen chrome for "Ask the venue". Answers come from conciergeModel, which
  * has its own English and Vietnamese text. English must stay identical. */
 export const conciergeMessages = defineMessages(
   {
+    overline: 'CUSTOMER / VENUE CONCIERGE',
     loading: 'Loading the assistant…',
     heading: 'Ask the venue',
     intro: '{venue}. {note} You can write in English or Vietnamese.',
@@ -18,6 +19,7 @@ export const conciergeMessages = defineMessages(
     back: 'Back to explore',
   },
   {
+    overline: 'KHÁCH / TRỢ LÝ QUÁN',
     loading: 'Đang tải trợ lý…',
     heading: 'Hỏi quán',
     intro: '{venue}. {note} Bạn có thể viết bằng tiếng Anh hoặc tiếng Việt.',

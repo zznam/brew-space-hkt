@@ -11,13 +11,13 @@ import {
   Divider,
   radius,
   styles,
-  type,
   useResponsive,
   Screen,
   ScreenHeader,
   Chip,
+  space,
 } from '@/components/ui';
-import { useT } from '../i18n/useLanguage';
+import { useT } from '../../../i18n/useLanguage';
 import { useLoyalty, useLoyaltyReady } from '../loyalty/useLoyalty';
 import {
   MAX_QUESTION_LENGTH,
@@ -76,7 +76,7 @@ export function ConciergeScreen() {
   return (
     <Screen>
       <ScreenHeader
-        overline="CUSTOMER / VENUE CONCIERGE"
+        overline={t('overline')}
         accentColor={venue.accent}
         title={t('heading')}
         subtitle={t('intro', { venue: venue.name, note: readOnlyNote(lang) })}
@@ -107,7 +107,7 @@ export function ConciergeScreen() {
         </View>
       </Card>
 
-      <View style={{ gap: 10 }}>
+      <View style={{ gap: space.md }}>
         <TextInput
           placeholderTextColor={colors.subtle}
           accessibilityLabel={t('inputLabel')}
@@ -137,7 +137,7 @@ export function ConciergeScreen() {
         <Badge label={`${messages.length} msg`} tone="neutral" />
       </View>
 
-      <View accessibilityLabel={t('conversation')} style={{ gap: 10 }}>
+      <View accessibilityLabel={t('conversation')} style={{ gap: space.md }}>
         {messages.length === 0 ? (
           <Card variant="subtle">
             <Text style={styles.text}>{t('empty')}</Text>
@@ -149,26 +149,25 @@ export function ConciergeScreen() {
               <View
                 key={message.id}
                 style={{
-                  padding: 14,
+                  padding: space.lg,
                   borderRadius: radius.lg,
                   borderWidth: 1,
                   borderColor: isYou ? colors.greenBorder : colors.border,
                   backgroundColor: isYou
                     ? colors.greenSurface
                     : colors.surfaceSubtle,
-                  gap: 4,
+                  gap: space.xs,
                 }}
               >
                 <Text
-                  style={{
-                    color: isYou ? colors.green : colors.ink,
-                    fontWeight: '800',
-                    fontSize: type.caption.fontSize,
-                  }}
+                  style={[
+                    styles.captionStrong,
+                    isYou && { color: colors.green },
+                  ]}
                 >
                   {isYou ? t('you') : t('assistant')}
                 </Text>
-                <Text style={{ color: colors.ink, lineHeight: 22 }}>
+                <Text style={[styles.text, { color: colors.ink }]}>
                   {message.text}
                 </Text>
               </View>

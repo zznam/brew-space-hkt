@@ -1,5 +1,5 @@
 import type { Seat, Session } from '../../../core/domain';
-import { translate, type Lang, type Params } from '../i18n/i18n';
+import { translate, type Lang, type Params } from '../../../i18n/i18n';
 import {
   supportMessages,
   type SupportErrorCode,

@@ -1,4 +1,4 @@
-import { translate, type Lang } from '../i18n/i18n';
+import { translate, type Lang } from '../../../i18n/i18n';
 import { networkMessages } from './messages';
 
 /** Pure offline policy. No React, no platform imports: safe to import from tests. */

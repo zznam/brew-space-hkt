@@ -1,4 +1,4 @@
-import { defineMessages, translator, type Lang } from '../i18n/i18n';
+import { defineMessages, translator, type Lang } from '../../../i18n/i18n';
 
 /** Venue slice copy: seat kinds, amenities, seat detail, venue page, opening
  * hours and shared-link notices. Pure so the models can use it. */
@@ -141,6 +141,4 @@ export function kindName(kind: Kind, lang: Lang): string {
       : t('kindBooth');
 }
 
-/** Core seat labels stay "Seat 3"; Vietnamese shows "Chỗ 3". */
-export const seatLabelText = (label: string, lang: Lang) =>
-  lang === 'vi' ? label.replace(/^Seat\b/, 'Chỗ') : label;
+export { seatLabelText } from '../../../i18n/seatLabel';

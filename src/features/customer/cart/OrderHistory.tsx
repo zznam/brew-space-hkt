@@ -8,7 +8,7 @@ import {
   ordersForSession,
   type OrderStatus,
 } from './cartModel';
-import { useT } from '../i18n/useLanguage';
+import { useT } from '../../../i18n/useLanguage';
 import { useLoyaltyReady } from '../loyalty/useLoyalty';
 import { cartMessages } from './messages';
 import { useCart } from './useCart';

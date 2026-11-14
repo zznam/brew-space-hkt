@@ -9,8 +9,8 @@ import {
   Heading,
   radius,
   styles,
-  type,
   Banner,
+  space,
 } from '@/components/ui';
 import {
   getPreferences,
@@ -18,7 +18,7 @@ import {
   MILK_OPTIONS,
   SWEETNESS_OPTIONS,
 } from '../loyalty/loyaltyModel';
-import { useT } from '../i18n/useLanguage';
+import { useT } from '../../../i18n/useLanguage';
 import { useLoyalty, useLoyaltyReady } from '../loyalty/useLoyalty';
 import {
   cartTotal,
@@ -62,11 +62,11 @@ function ChoiceButton({
       ]}
     >
       <Text
-        style={{
-          color: selected ? colors.onPrimary : colors.ink,
-          fontWeight: '600',
-          fontSize: type.caption.fontSize,
-        }}
+        style={[
+          styles.buttonText,
+          styles.buttonTextSm,
+          selected && { color: colors.onPrimary },
+        ]}
       >
         {label}
       </Text>
@@ -91,7 +91,7 @@ function OptionRow<T extends string | number>({
 }) {
   const { t } = useT(cartMessages);
   return (
-    <View style={{ gap: 6 }}>
+    <View style={{ gap: space.sm }}>
       <Text style={styles.sectionLabel}>{title}</Text>
       <View style={styles.row}>
         {options.map((option) => (
@@ -123,7 +123,7 @@ function ModifierPicker({
 }) {
   const { t, lang } = useT(cartMessages);
   return (
-    <View style={{ gap: 8 }}>
+    <View style={{ gap: space.sm }}>
       <OptionRow
         title={t('milk')}
         itemName={itemName}
@@ -190,7 +190,7 @@ export function CartPanel({
       )}
 
       {prefilled && lines.length > 0 && (
-        <Text style={[styles.text, { color: colors.green, fontWeight: '600' }]}>
+        <Text style={[styles.textStrong, { color: colors.green }]}>
           {t('prefilled')}
         </Text>
       )}
@@ -205,26 +205,20 @@ export function CartPanel({
           <View
             key={key}
             style={{
-              gap: 10,
-              padding: 14,
+              gap: space.md,
+              padding: space.lg,
               borderRadius: radius.lg,
               backgroundColor: colors.surface,
               borderWidth: 1,
               borderColor: colors.border,
             }}
           >
-            <Text
-              style={{
-                color: colors.ink,
-                fontWeight: '700',
-                fontSize: type.headline.fontSize,
-              }}
-            >
+            <Text style={styles.subheading}>
               {line.name} · {formatMoney(line.unitPrice * line.quantity)}
             </Text>
             {line.modifiers && (
               <>
-                <Text style={[styles.text, { fontWeight: '600' }]}>
+                <Text style={styles.caption}>
                   {formatModifiers(line.modifiers, lang)}
                 </Text>
                 <ModifierPicker
@@ -242,12 +236,14 @@ export function CartPanel({
               />
               <Text
                 accessibilityLabel={t('quantity', { n: line.quantity })}
-                style={{
-                  color: colors.ink,
-                  fontWeight: '700',
-                  minWidth: 28,
-                  textAlign: 'center',
-                }}
+                style={[
+                  styles.textStrong,
+                  {
+                    minWidth: 28,
+                    textAlign: 'center',
+                    fontVariant: ['tabular-nums'],
+                  },
+                ]}
               >
                 {line.quantity}
               </Text>
@@ -291,7 +287,7 @@ export function CartPanel({
       {error && (
         <Text
           accessibilityRole="alert"
-          style={{ color: colors.danger, fontWeight: '700' }}
+          style={[styles.textStrong, { color: colors.danger }]}
         >
           {cartText(error, lang)}
         </Text>
@@ -299,7 +295,7 @@ export function CartPanel({
       {warning && (
         <Text
           accessibilityRole="alert"
-          style={{ color: colors.danger, fontWeight: '700' }}
+          style={[styles.textStrong, { color: colors.danger }]}
         >
           {cartText(warning, lang)}
         </Text>
@@ -307,7 +303,7 @@ export function CartPanel({
       {notice && !error && (
         <Text
           accessibilityRole="alert"
-          style={[styles.text, { color: colors.green, fontWeight: '700' }]}
+          style={[styles.textStrong, { color: colors.green }]}
         >
           {cartText(notice, lang)}
         </Text>

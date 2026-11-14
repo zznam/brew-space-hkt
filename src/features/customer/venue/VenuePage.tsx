@@ -10,7 +10,7 @@ import {
   styles,
   useResponsive,
 } from '@/components/ui';
-import { useT } from '../i18n/useLanguage';
+import { useT } from '../../../i18n/useLanguage';
 import { kindName, venueMessages } from './messages';
 import { venuePageInfo } from './venueModel';
 

@@ -9,22 +9,28 @@ import {
   type Scene3DLighting,
   type Scene3DTheme,
   type Seat,
+  type Session,
   type Venue,
 } from '@/core';
 import { useAppStore } from '@/core/useAppStore';
 import { CafeScene3D } from '@/components/canvas3d/CafeScene3D';
+import { seatLabelText } from '@/i18n/seatLabel';
+import { useT } from '@/i18n/useLanguage';
+import { onboardingMessages } from './messages';
 import {
+  Banner,
   Button,
   Card,
+  Chip,
+  CollapsibleSection,
   colors,
+  Divider,
   Heading,
-  radius,
-  styles,
-  type,
-  useResponsive,
-  Banner,
   Screen,
   ScreenHeader,
+  space,
+  styles,
+  useResponsive,
 } from '@/components/ui';
 import {
   processUploadedFile,
@@ -53,13 +59,19 @@ const LIGHTINGS: Scene3DLighting[] = [
   'neon-night',
   'bright-studio',
 ];
-const QUICK_FIXTURES: { kind: Scene3DFixtureKind; label: string }[] = [
-  { kind: 'plant', label: 'Tropical Planter' },
-  { kind: 'window', label: 'Daylight Window' },
-  { kind: 'bookshelf', label: 'Library Shelf' },
-  { kind: 'pendant-light', label: 'Pendant Lamp' },
-  { kind: 'partition', label: 'Acoustic Divider' },
-  { kind: 'sofa-lounge', label: 'Lounge Sofa' },
+type MessageKey = keyof typeof onboardingMessages.en;
+/** `label` names the placed fixture in venue data; `key` is the button copy. */
+const QUICK_FIXTURES: {
+  kind: Scene3DFixtureKind;
+  label: string;
+  key: MessageKey;
+}[] = [
+  { kind: 'plant', label: 'Tropical Planter', key: 'fixturePlant' },
+  { kind: 'window', label: 'Daylight Window', key: 'fixtureWindow' },
+  { kind: 'bookshelf', label: 'Library Shelf', key: 'fixtureBookshelf' },
+  { kind: 'pendant-light', label: 'Pendant Lamp', key: 'fixturePendant' },
+  { kind: 'partition', label: 'Acoustic Divider', key: 'fixturePartition' },
+  { kind: 'sofa-lounge', label: 'Lounge Sofa', key: 'fixtureSofa' },
 ];
 const FEEDBACK_CHIPS: string[] = [
   'Add 2 focus pods and a partition',
@@ -68,6 +80,13 @@ const FEEDBACK_CHIPS: string[] = [
   'Switch lighting to cozy-amber',
   'Add Matcha Cheesecake for 58000',
 ];
+
+const SEAT_KINDS: Seat['kind'][] = ['desk', 'pod', 'booth'];
+// Stable identity: the 3D viewer rebuilds its scene when `sessions` changes.
+const NO_SESSIONS: Session[] = [];
+const fieldStyle = { gap: space.sm };
+
+type NoticePlace = 'setup' | 'refine' | 'publish';
 
 function cloneVenue(venue: Venue): Venue {
   return {
@@ -84,9 +103,12 @@ function cloneVenue(venue: Venue): Venue {
 }
 
 export function OnboardingScreen() {
-  const store = useAppStore((state) => state);
+  const customVenues = useAppStore((state) => state.customVenues);
+  const upsertVenue = useAppStore((state) => state.upsertVenue);
+  const setRole = useAppStore((state) => state.setRole);
   const { isWide } = useResponsive();
-  const allVenues = getAllVenues(store.customVenues);
+  const { t, lang } = useT(onboardingMessages);
+  const allVenues = getAllVenues(customVenues);
 
   const [targetVenueId, setTargetVenueId] = useState<string>('new');
   const [ownerVenueName, setOwnerVenueName] = useState<string>('');
@@ -97,8 +119,8 @@ export function OnboardingScreen() {
   const [generating, setGenerating] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [statusMessage, setStatusMessage] = useState<string>('');
+  const [noticeAt, setNoticeAt] = useState<NoticePlace>('setup');
   const [aiSourceLabel, setAiSourceLabel] = useState<string>('');
-  const [reasoningSummary, setReasoningSummary] = useState<string>('');
 
   const [draftVenue, setDraftVenue] = useState<Venue | null>(null);
   const [previewSeatId, setPreviewSeatId] = useState<string | null>(null);
@@ -114,8 +136,9 @@ export function OnboardingScreen() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   function applySampleBundle(bundle: SampleOnboardingBundle) {
+    setNoticeAt('setup');
     setError('');
-    setStatusMessage(`Loaded sample upload bundle: ${bundle.label}`);
+    setStatusMessage(t('stSample', { label: bundle.label }));
     setOwnerVenueName(bundle.venueName);
     setOwnerNotes(bundle.ownerNotes);
     setUploads(bundle.uploads);
@@ -123,6 +146,7 @@ export function OnboardingScreen() {
 
   function loadExistingVenueIntoDraft(venueId: string) {
     setTargetVenueId(venueId);
+    setNoticeAt('setup');
     setError('');
     if (venueId === 'new') {
       setDraftVenue(null);
@@ -131,7 +155,7 @@ export function OnboardingScreen() {
       setActiveIteration(0);
       return;
     }
-    const existing = getVenue(venueId, store.customVenues);
+    const existing = getVenue(venueId, customVenues);
     const snapshot = cloneVenue(existing);
     setOwnerVenueName(existing.name);
     setOwnerNotes(existing.description);
@@ -160,11 +184,12 @@ export function OnboardingScreen() {
         source: initialIter.source,
       },
     ]);
-    setStatusMessage(`Loaded ${existing.name} into 3D Studio for editing.`);
+    setStatusMessage(t('stLoaded', { venue: existing.name }));
   }
 
   async function handleFileSelection(files: FileList | null) {
     if (!files || files.length === 0) return;
+    setNoticeAt('setup');
     // Clearing the picker also clears its live FileList, so copy it before awaiting.
     const selectedFiles = Array.from(files);
     setError('');
@@ -174,20 +199,17 @@ export function OnboardingScreen() {
         const processed = await processUploadedFile(file);
         added.push(processed);
       } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : 'Could not process uploaded file.',
-        );
+        setError(err instanceof Error ? err.message : t('errFile'));
       }
     }
     if (added.length > 0) {
       setUploads((prev) => [...prev, ...added]);
-      setStatusMessage(`Processed ${added.length} uploaded file(s).`);
+      setStatusMessage(t('stProcessed', { n: added.length }));
     }
   }
 
   async function handleGenerate() {
+    setNoticeAt('setup');
     setError('');
     setStatusMessage('');
     setGenerating(true);
@@ -205,11 +227,10 @@ export function OnboardingScreen() {
       setDraftVenue(snapshot);
       setPreviewSeatId(snapshot.seats[0]?.id ?? null);
       setAiSourceLabel(
-        result.source === 'openai'
-          ? `OpenAI API (${result.modelUsed})`
-          : `Context-Aware AI Synthesizer (${result.modelUsed})`,
+        t(result.source === 'openai' ? 'sourceOpenAI' : 'sourceLocal', {
+          model: result.modelUsed,
+        }),
       );
-      setReasoningSummary(result.reasoningSummary);
 
       const firstIteration: OnboardingIteration = {
         iteration: 1,
@@ -243,14 +264,14 @@ export function OnboardingScreen() {
       ]);
 
       setStatusMessage(
-        `Generated Iteration #1 for "${result.venue.name}" with ${result.venue.seats.length} seats and ${result.venue.menu.length} menu items.`,
+        t('stGenerated', {
+          venue: result.venue.name,
+          seats: result.venue.seats.length,
+          items: result.venue.menu.length,
+        }),
       );
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to generate 3D environment.',
-      );
+      setError(err instanceof Error ? err.message : t('errGenerate'));
     } finally {
       setGenerating(false);
     }
@@ -260,6 +281,7 @@ export function OnboardingScreen() {
     if (!draftVenue) return;
     const instruction = (customInstruction ?? refinementPrompt).trim();
     if (!instruction) return;
+    setNoticeAt('refine');
     setError('');
     setGenerating(true);
     const nextIterNum = iterations.length + 1;
@@ -279,11 +301,10 @@ export function OnboardingScreen() {
       const snapshot = cloneVenue(result.venue);
       setDraftVenue(snapshot);
       setAiSourceLabel(
-        result.source === 'openai'
-          ? `OpenAI API (${result.modelUsed})`
-          : `Context-Aware AI Synthesizer (${result.modelUsed})`,
+        t(result.source === 'openai' ? 'sourceOpenAI' : 'sourceLocal', {
+          model: result.modelUsed,
+        }),
       );
-      setReasoningSummary(result.reasoningSummary);
 
       const newIteration: OnboardingIteration = {
         iteration: nextIterNum,
@@ -309,12 +330,13 @@ export function OnboardingScreen() {
       setChatMessages((prev) => [...prev, ownerMsg, aiMsg]);
       setRefinementPrompt('');
       setStatusMessage(
-        `Iteration #${nextIterNum} applied: ${newIteration.diffSummary.join(' · ')}`,
+        t('stRefined', {
+          n: nextIterNum,
+          changes: newIteration.diffSummary.join(' · '),
+        }),
       );
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Could not refine 3D scene.',
-      );
+      setError(err instanceof Error ? err.message : t('errRefine'));
     } finally {
       setGenerating(false);
     }
@@ -322,116 +344,121 @@ export function OnboardingScreen() {
 
   function restoreIteration(iter: OnboardingIteration) {
     const restored = cloneVenue(iter.venueSnapshot);
+    setNoticeAt('refine');
     setDraftVenue(restored);
     setActiveIteration(iter.iteration);
-    setReasoningSummary(iter.reasoningSummary);
     setPreviewSeatId(restored.seats[0]?.id ?? null);
     setStatusMessage(
-      `Restored Iteration #${iter.iteration} (${restored.seats.length} seats, ${restored.scene3d?.lighting ?? 'default'} lighting).`,
+      t('stRestored', {
+        n: iter.iteration,
+        seats: restored.seats.length,
+        lighting: restored.scene3d?.lighting ?? 'default',
+      }),
     );
   }
 
   function handlePublish() {
     if (!draftVenue) return;
+    setNoticeAt('publish');
     setError('');
-    const result = store.upsertVenue(draftVenue);
+    const result = upsertVenue(draftVenue);
     if (!result.ok) {
       setError(result.message);
       return;
     }
     setStatusMessage(
-      `Published! ${draftVenue.name} (Iteration #${activeIteration || 1}) is now active across Merchant and Customer 3D views.`,
+      t('stPublished', { venue: draftVenue.name, n: activeIteration || 1 }),
     );
   }
+
+  const notice = (
+    <>
+      {error ? (
+        <Banner tone="danger" role="alert">
+          {error}
+        </Banner>
+      ) : null}
+      {statusMessage ? (
+        <Banner tone="success" role="alert">
+          {statusMessage}
+        </Banner>
+      ) : null}
+    </>
+  );
+  const scene = draftVenue?.scene3d;
 
   return (
     <Screen>
       <ScreenHeader
-        overline="MERCHANT / 3D STUDIO"
-        title="Onboard Your Cafe with OpenAI & 3D Engine"
-        subtitle="Upload photos, videos, and menu or floorplan documents. AI generates your interactive 3D cafe, then you refine it in chat."
+        overline={t('overline')}
+        title={t('title')}
+        subtitle={t('subtitle')}
       />
-      <Card>
-        <Text style={styles.sectionLabel}>Start from a sample</Text>
-        <View style={styles.row}>
-          {SAMPLE_ONBOARDING_BUNDLES.map((bundle) => (
-            <Button
-              key={bundle.id}
-              label={bundle.label}
-              onPress={() => applySampleBundle(bundle)}
-            />
-          ))}
-        </View>
-      </Card>
 
       <Card>
-        <Heading level={2}>
-          1. Target Venue & Multimodal Context Uploads
-        </Heading>
-        <Text style={{ fontWeight: '700' }}>Onboarding mode</Text>
-        <View style={styles.row}>
-          <Button
-            label="Create New Cafe Venue"
-            selected={targetVenueId === 'new'}
-            onPress={() => loadExistingVenueIntoDraft('new')}
-          />
-          {allVenues.map((v) => (
-            <Button
-              key={v.id}
-              label={`Edit: ${v.name}`}
-              selected={targetVenueId === v.id}
-              onPress={() => loadExistingVenueIntoDraft(v.id)}
-            />
-          ))}
+        <Heading level={2}>{t('step1')}</Heading>
+
+        <View style={fieldStyle}>
+          <Text style={styles.sectionLabel}>{t('sample')}</Text>
+          <View style={styles.row}>
+            {SAMPLE_ONBOARDING_BUNDLES.map((bundle) => (
+              <Chip
+                key={bundle.id}
+                label={bundle.label}
+                onPress={() => applySampleBundle(bundle)}
+              />
+            ))}
+          </View>
         </View>
 
-        <View style={{ gap: 8 }}>
-          <Text style={styles.sectionLabel}>Cafe name</Text>
+        <View style={fieldStyle}>
+          <Text style={styles.sectionLabel}>{t('venue')}</Text>
+          <View style={styles.row}>
+            <Chip
+              label={t('newCafe')}
+              selected={targetVenueId === 'new'}
+              onPress={() => loadExistingVenueIntoDraft('new')}
+            />
+            {allVenues.map((v) => (
+              <Chip
+                key={v.id}
+                label={v.name}
+                accessibilityLabel={t('editVenueA11y', { venue: v.name })}
+                selected={targetVenueId === v.id}
+                onPress={() => loadExistingVenueIntoDraft(v.id)}
+              />
+            ))}
+          </View>
+        </View>
+
+        <View style={fieldStyle}>
+          <Text style={styles.sectionLabel}>{t('cafeName')}</Text>
           <TextInput
             placeholderTextColor={colors.subtle}
-            accessibilityLabel="Cafe name"
+            accessibilityLabel={t('cafeName')}
             value={ownerVenueName}
             onChangeText={setOwnerVenueName}
-            placeholder="e.g. Saigon Roastery & Loft"
+            placeholder={t('cafeNamePlaceholder')}
             style={styles.input}
           />
         </View>
 
-        <View style={{ gap: 8 }}>
-          <Text style={styles.sectionLabel}>Owner context & spatial notes</Text>
+        <View style={fieldStyle}>
+          <Text style={styles.sectionLabel}>{t('notes')}</Text>
           <TextInput
             placeholderTextColor={colors.subtle}
-            accessibilityLabel="Owner context & spatial notes"
+            accessibilityLabel={t('notesA11y')}
             value={ownerNotes}
             onChangeText={setOwnerNotes}
             multiline
-            placeholder="Describe room layout, seating zones, lighting mood, or special amenities..."
-            style={[styles.input, { minHeight: 72 }]}
+            placeholder={t('notesPlaceholder')}
+            style={[styles.input, { minHeight: 88 }]}
           />
         </View>
 
-        <View style={{ gap: 8 }}>
+        <View style={fieldStyle}>
           <Text style={styles.sectionLabel}>
-            OpenAI API Key (optional · runtime memory only)
-          </Text>
-          <TextInput
-            placeholderTextColor={colors.subtle}
-            accessibilityLabel="OpenAI API Key"
-            value={apiKey}
-            onChangeText={setApiKey}
-            secureTextEntry
-            placeholder="sk-... (leave blank to use deterministic context-aware AI synthesizer)"
-            style={styles.input}
-          />
-          <Text style={styles.caption}>
-            Uses OpenAI gpt-4o Structured JSON Outputs when a key is provided;
-            never persisted to disk or EXPO_PUBLIC_*.
-          </Text>
-        </View>
-
-        <View style={{ gap: 8 }}>
-          <Text style={{ fontWeight: '700' }}>
-            Photos, Walkthrough Videos & Documents ({uploads.length} attached)
+            {t('uploads', { n: uploads.length })}
           </Text>
           {Platform.OS === 'web' && (
             <input
@@ -446,114 +473,103 @@ export function OnboardingScreen() {
               }}
             />
           )}
+          {uploads.length === 0 ? (
+            <Text style={styles.caption}>{t('uploadsEmpty')}</Text>
+          ) : (
+            uploads.map((item) => (
+              <View key={item.id} style={[styles.inset, styles.insetRow]}>
+                <View style={{ flex: 1, gap: space.xxs }}>
+                  <Text style={styles.textStrong}>
+                    [{item.kind.toUpperCase()}] {item.name}
+                  </Text>
+                  <Text style={styles.caption}>{item.summary}</Text>
+                </View>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  label={t('remove')}
+                  accessibilityLabel={t('removeA11y', { name: item.name })}
+                  onPress={() =>
+                    setUploads((prev) =>
+                      prev.filter((entry) => entry.id !== item.id),
+                    )
+                  }
+                />
+              </View>
+            ))
+          )}
           <View style={styles.row}>
             {Platform.OS === 'web' && (
               <Button
-                label="Upload Photos / Videos / Documents"
+                size="sm"
+                label={t('uploadFiles')}
+                accessibilityLabel={t('uploadFilesA11y')}
                 onPress={() => fileInputRef.current?.click()}
               />
             )}
             {uploads.length > 0 && (
-              <Button label="Clear uploads" onPress={() => setUploads([])} />
+              <Button
+                size="sm"
+                variant="ghost"
+                label={t('clearUploads')}
+                onPress={() => {
+                  setUploads([]);
+                }}
+              />
             )}
           </View>
-
-          {uploads.length === 0 ? (
-            <Text style={styles.text}>
-              No files uploaded yet. Upload your own cafe photos, videos, and
-              documents or click a Sample Bundle above.
-            </Text>
-          ) : (
-            <View style={{ gap: 6 }}>
-              {uploads.map((item) => (
-                <View
-                  key={item.id}
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: 8,
-                    padding: 10,
-                    borderRadius: radius.md,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    backgroundColor: colors.paper,
-                  }}
-                >
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <Text style={{ fontWeight: '700' }}>
-                      [{item.kind.toUpperCase()}] {item.name}
-                    </Text>
-                    <Text style={styles.caption}>{item.summary}</Text>
-                  </View>
-                  <Button
-                    label={`Remove ${item.name}`}
-                    onPress={() =>
-                      setUploads((prev) =>
-                        prev.filter((entry) => entry.id !== item.id),
-                      )
-                    }
-                  />
-                </View>
-              ))}
-            </View>
-          )}
         </View>
 
-        <View style={styles.row}>
-          <Button
-            variant={draftVenue ? 'secondary' : 'primary'}
-            fullWidth={!isWide}
-            label={
-              generating
-                ? 'Generating 3D Environment…'
-                : 'Generate 3D Cafe Environment'
-            }
-            disabled={generating}
-            onPress={() => void handleGenerate()}
+        <CollapsibleSection
+          title={t('apiKeyTitle')}
+          summary={apiKey ? t('apiKeyEntered') : t('apiKeyOptional')}
+        >
+          <TextInput
+            placeholderTextColor={colors.subtle}
+            accessibilityLabel={t('apiKeyA11y')}
+            value={apiKey}
+            onChangeText={setApiKey}
+            secureTextEntry
+            placeholder="sk-…"
+            style={styles.input}
           />
-        </View>
+          <Text style={styles.caption}>{t('apiKeyHelp')}</Text>
+        </CollapsibleSection>
 
-        {error ? (
-          <Banner tone="danger" role="alert">
-            {error}
-          </Banner>
-        ) : null}
-        {statusMessage ? (
-          <Banner tone="success" role="alert">
-            {statusMessage}
-          </Banner>
-        ) : null}
+        <Button
+          variant={draftVenue ? 'secondary' : 'primary'}
+          fullWidth={!isWide}
+          label={generating ? t('generating') : t('generate')}
+          disabled={generating}
+          onPress={() => void handleGenerate()}
+        />
+        {noticeAt === 'setup' ? notice : null}
       </Card>
 
       {draftVenue ? (
         <>
           <Card>
-            <Heading level={2}>
-              2. Live 3D Environment Preview & Conversational AI Feedback Loop
-            </Heading>
+            <Heading level={2}>{t('step2')}</Heading>
             {aiSourceLabel ? (
-              <Text style={{ fontWeight: '700', color: draftVenue.accent }}>
-                Engine: {aiSourceLabel} · Active Iteration #{activeIteration} of{' '}
-                {iterations.length}
+              <Text style={styles.caption}>
+                {t('engineLine', {
+                  source: aiSourceLabel,
+                  n: activeIteration,
+                  total: iterations.length,
+                })}
               </Text>
             ) : null}
-            {reasoningSummary ? (
-              <Text style={styles.text}>{reasoningSummary}</Text>
-            ) : null}
 
-            {/* Iteration History Switcher */}
             {iterations.length > 0 ? (
-              <View style={{ gap: 6 }}>
-                <Text style={{ fontWeight: '700' }}>
-                  Generated Iterations ({iterations.length})
+              <View style={fieldStyle}>
+                <Text style={styles.sectionLabel}>
+                  {t('iterations', { n: iterations.length })}
                 </Text>
                 <View style={styles.row}>
                   {iterations.map((iter) => (
-                    <Button
+                    <Chip
                       key={`iter-pill-${iter.iteration}`}
-                      label={`Iteration #${iter.iteration}`}
+                      label={t('iterationChip', { n: iter.iteration })}
                       selected={activeIteration === iter.iteration}
                       onPress={() => restoreIteration(iter)}
                     />
@@ -564,316 +580,247 @@ export function OnboardingScreen() {
 
             <CafeScene3D
               venue={draftVenue}
-              sessions={[]}
+              sessions={NO_SESSIONS}
               selectedSeatId={previewSeatId}
               onSelect={setPreviewSeatId}
             />
 
-            {/* Conversational Feedback Loop Transcript */}
-            <View
-              style={{
-                gap: 10,
-                padding: 14,
-                borderRadius: radius.lg,
-                borderWidth: 1,
-                borderColor: colors.border,
-                backgroundColor: colors.paper,
-              }}
-            >
-              <Text
-                style={{ fontWeight: '700', fontSize: type.headline.fontSize }}
-              >
-                Owner ↔ AI Architect Feedback Chat ({chatMessages.length}{' '}
-                messages)
+            <Divider />
+
+            <View style={fieldStyle}>
+              <Text style={styles.sectionLabel}>
+                {t('conversation', { n: chatMessages.length })}
               </Text>
-
-              <View style={{ gap: 8 }}>
-                {chatMessages.map((msg) => {
-                  const isOwner = msg.role === 'owner';
-                  const matchingIter = iterations.find(
-                    (it) => it.iteration === msg.iteration,
-                  );
-                  return (
-                    <View
-                      key={msg.id}
-                      style={{
-                        padding: 10,
-                        borderRadius: radius.md,
-                        borderWidth: 1,
-                        borderColor: isOwner
-                          ? draftVenue.accent
-                          : colors.border,
-                        backgroundColor: isOwner
-                          ? colors.amberSurface
-                          : colors.surfaceSubtle,
-                        gap: 4,
-                      }}
-                    >
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          flexWrap: 'wrap',
-                          gap: 6,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontWeight: '700',
-                            fontSize: type.caption.fontSize,
-                          }}
-                        >
-                          {isOwner
-                            ? `CAFE OWNER · Iteration #${msg.iteration}`
-                            : `AI ARCHITECT · Iteration #${msg.iteration}`}
-                        </Text>
-                        {!isOwner &&
-                        matchingIter &&
-                        iterations.length > 1 &&
-                        activeIteration !== msg.iteration ? (
-                          <Button
-                            label={`Restore Iteration #${msg.iteration}`}
-                            onPress={() => restoreIteration(matchingIter)}
-                          />
-                        ) : null}
+              {chatMessages.map((msg) => {
+                const isOwner = msg.role === 'owner';
+                const matchingIter = iterations.find(
+                  (it) => it.iteration === msg.iteration,
+                );
+                const canRestore =
+                  !isOwner &&
+                  matchingIter &&
+                  iterations.length > 1 &&
+                  activeIteration !== msg.iteration;
+                return (
+                  <View
+                    key={msg.id}
+                    style={[
+                      styles.inset,
+                      isOwner && {
+                        backgroundColor: colors.paperAlt,
+                        marginLeft: space.xxl,
+                        width: 'auto',
+                      },
+                    ]}
+                  >
+                    <Text style={styles.sectionLabel}>
+                      {t(isOwner ? 'msgYou' : 'msgArchitect', {
+                        n: msg.iteration,
+                      })}
+                    </Text>
+                    <Text style={[styles.text, { color: colors.ink }]}>
+                      {msg.text}
+                    </Text>
+                    {msg.diffSummary && msg.diffSummary.length > 0 ? (
+                      <Text style={styles.captionStrong}>
+                        {t('changes', { list: msg.diffSummary.join(' · ') })}
+                      </Text>
+                    ) : null}
+                    {canRestore ? (
+                      <View style={styles.row}>
+                        <Button
+                          size="sm"
+                          label={t('restore', { n: msg.iteration })}
+                          onPress={() => restoreIteration(matchingIter)}
+                        />
                       </View>
-                      <Text style={styles.text}>{msg.text}</Text>
-                      {msg.diffSummary && msg.diffSummary.length > 0 ? (
-                        <Text
-                          style={{
-                            fontSize: type.caption.fontSize,
-                            fontWeight: '700',
-                            color: draftVenue.accent,
-                          }}
-                        >
-                          Changes: {msg.diffSummary.join(' · ')}
-                        </Text>
-                      ) : null}
-                    </View>
-                  );
-                })}
-              </View>
-
-              <View style={{ gap: 6 }}>
-                <Text
-                  style={{ fontWeight: '700', fontSize: type.caption.fontSize }}
-                >
-                  Quick feedback ideas
-                </Text>
-                <View style={styles.row}>
-                  {FEEDBACK_CHIPS.map((chip) => (
-                    <Button
-                      key={chip}
-                      label={chip}
-                      onPress={() => setRefinementPrompt(chip)}
-                    />
-                  ))}
-                </View>
-              </View>
-
-              <View style={{ gap: 8 }}>
-                <Text style={{ fontWeight: '700' }}>
-                  Chat with AI to iterate on the 3D environment
-                </Text>
-                <TextInput
-                  placeholderTextColor={colors.subtle}
-                  accessibilityLabel="Refinement instruction for AI"
-                  value={refinementPrompt}
-                  onChangeText={setRefinementPrompt}
-                  placeholder="Tell AI what to adjust next (e.g. 'Add 2 focus pods, add 2 plants, and switch lighting to cozy-amber')..."
-                  style={{
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    borderRadius: radius.md,
-                    padding: 10,
-                    backgroundColor: colors.onPrimary,
-                  }}
-                />
-                <View style={styles.row}>
-                  <Button
-                    label={
-                      generating
-                        ? 'Applying Feedback Iteration…'
-                        : 'Refine 3D Scene with AI'
-                    }
-                    disabled={generating || !refinementPrompt.trim()}
-                    onPress={() => void handleRefine()}
-                  />
-                </View>
-              </View>
+                    ) : null}
+                  </View>
+                );
+              })}
             </View>
+
+            <View style={fieldStyle}>
+              <Text style={styles.sectionLabel}>{t('tellAi')}</Text>
+              <View style={styles.row}>
+                {FEEDBACK_CHIPS.map((chip) => (
+                  <Chip
+                    key={chip}
+                    label={chip}
+                    onPress={() => setRefinementPrompt(chip)}
+                  />
+                ))}
+              </View>
+              <TextInput
+                placeholderTextColor={colors.subtle}
+                accessibilityLabel={t('refineA11y')}
+                value={refinementPrompt}
+                onChangeText={setRefinementPrompt}
+                placeholder={t('refinePlaceholder')}
+                style={styles.input}
+              />
+              <Button
+                fullWidth={!isWide}
+                label={generating ? t('applying') : t('refine')}
+                disabled={generating || !refinementPrompt.trim()}
+                onPress={() => void handleRefine()}
+              />
+            </View>
+            {noticeAt === 'refine' ? notice : null}
           </Card>
 
           <Card>
-            <Heading level={2}>
-              3. Studio Editor: Room Theme, Fixtures, Seats & Menu
-            </Heading>
+            <Heading level={2}>{t('step3')}</Heading>
 
-            <View style={{ gap: 8 }}>
-              <Text style={{ fontWeight: '700' }}>3D Architectural Theme</Text>
-              <View style={styles.row}>
-                {THEMES.map((theme) => (
-                  <Button
-                    key={theme}
-                    label={`Theme: ${theme}`}
-                    selected={draftVenue.scene3d?.theme === theme}
-                    onPress={() =>
-                      setDraftVenue((prev) =>
-                        prev && prev.scene3d
-                          ? {
-                              ...prev,
-                              scene3d: { ...prev.scene3d, theme },
-                            }
-                          : prev,
-                      )
-                    }
-                  />
-                ))}
-              </View>
-            </View>
-
-            <View style={{ gap: 8 }}>
-              <Text style={{ fontWeight: '700' }}>Lighting Mood</Text>
-              <View style={styles.row}>
-                {LIGHTINGS.map((lighting) => (
-                  <Button
-                    key={lighting}
-                    label={`Light: ${lighting}`}
-                    selected={draftVenue.scene3d?.lighting === lighting}
-                    onPress={() =>
-                      setDraftVenue((prev) =>
-                        prev && prev.scene3d
-                          ? {
-                              ...prev,
-                              scene3d: { ...prev.scene3d, lighting },
-                            }
-                          : prev,
-                      )
-                    }
-                  />
-                ))}
-              </View>
-            </View>
-
-            <View style={{ gap: 8 }}>
-              <Text style={{ fontWeight: '700' }}>
-                Add 3D Fixtures & Decor (
-                {draftVenue.scene3d?.fixtures.length ?? 0} placed)
-              </Text>
-              <View style={styles.row}>
-                {QUICK_FIXTURES.map((item) => (
-                  <Button
-                    key={item.kind}
-                    label={`+ ${item.label}`}
-                    onPress={() =>
-                      setDraftVenue((prev) => {
-                        if (!prev || !prev.scene3d) return prev;
-                        const idx = prev.scene3d.fixtures.length + 1;
-                        return {
-                          ...prev,
-                          scene3d: {
-                            ...prev.scene3d,
-                            fixtures: [
-                              ...prev.scene3d.fixtures,
-                              {
-                                id: `${prev.id}-fix-${Date.now()}-${idx}`,
-                                kind: item.kind,
-                                label: `${item.label} ${idx}`,
-                                x: (idx - 1) % 4,
-                                z: (idx % 2) * 0.8,
-                                color: prev.accent,
-                              },
-                            ],
-                          },
-                        };
-                      })
-                    }
-                  />
-                ))}
-              </View>
-            </View>
-
-            <View style={{ gap: 8 }}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                  gap: 8,
-                }}
+            {scene ? (
+              <CollapsibleSection
+                title={t('roomLook')}
+                summary={t('roomSummary', {
+                  theme: scene.theme,
+                  lighting: scene.lighting,
+                  n: scene.fixtures.length,
+                })}
               >
-                <Text style={{ fontWeight: '700' }}>
-                  Bookable Seats ({draftVenue.seats.length})
-                </Text>
-                <Button
-                  label="+ Add Seat"
-                  onPress={() =>
-                    setDraftVenue((prev) => {
-                      if (!prev) return prev;
-                      const idx = prev.seats.length + 1;
-                      const newSeat: Seat = {
-                        id: `${prev.id}-seat-${Date.now()}-${idx}`,
-                        venueId: prev.id,
-                        label: `Seat ${idx}`,
-                        kind: 'desk',
-                        x: (idx - 1) % 4,
-                        z: Math.floor((idx - 1) / 4),
-                        hourlyRate: 35000,
-                        zone: 'Main Floor',
-                      };
-                      return {
-                        ...prev,
-                        seats: [...prev.seats, newSeat],
-                      };
-                    })
-                  }
-                />
-              </View>
-              {draftVenue.seats.map((seat) => (
-                <View
-                  key={seat.id}
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: 8,
-                    padding: 10,
-                    borderRadius: radius.md,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    backgroundColor: colors.paper,
-                  }}
-                >
-                  <Text style={{ fontWeight: '700' }}>
-                    {seat.label} · {seat.kind} · ({seat.x}, {seat.z}) ·{' '}
-                    {formatMoney(seat.hourlyRate)}/h
+                <View style={fieldStyle}>
+                  <Text style={styles.sectionLabel}>{t('theme')}</Text>
+                  <View style={styles.row}>
+                    {THEMES.map((theme) => (
+                      <Chip
+                        key={theme}
+                        label={theme}
+                        accessibilityLabel={t('themeA11y', { value: theme })}
+                        selected={scene.theme === theme}
+                        onPress={() =>
+                          setDraftVenue((prev) =>
+                            prev && prev.scene3d
+                              ? {
+                                  ...prev,
+                                  scene3d: { ...prev.scene3d, theme },
+                                }
+                              : prev,
+                          )
+                        }
+                      />
+                    ))}
+                  </View>
+                </View>
+
+                <View style={fieldStyle}>
+                  <Text style={styles.sectionLabel}>{t('lighting')}</Text>
+                  <View style={styles.row}>
+                    {LIGHTINGS.map((lighting) => (
+                      <Chip
+                        key={lighting}
+                        label={lighting}
+                        accessibilityLabel={t('lightingA11y', {
+                          value: lighting,
+                        })}
+                        selected={scene.lighting === lighting}
+                        onPress={() =>
+                          setDraftVenue((prev) =>
+                            prev && prev.scene3d
+                              ? {
+                                  ...prev,
+                                  scene3d: { ...prev.scene3d, lighting },
+                                }
+                              : prev,
+                          )
+                        }
+                      />
+                    ))}
+                  </View>
+                </View>
+
+                <View style={fieldStyle}>
+                  <Text style={styles.sectionLabel}>
+                    {t('addFixture', { n: scene.fixtures.length })}
                   </Text>
                   <View style={styles.row}>
+                    {QUICK_FIXTURES.map((item) => (
+                      <Button
+                        key={item.kind}
+                        size="sm"
+                        label={`+ ${t(item.key)}`}
+                        onPress={() =>
+                          setDraftVenue((prev) => {
+                            if (!prev || !prev.scene3d) return prev;
+                            const idx = prev.scene3d.fixtures.length + 1;
+                            return {
+                              ...prev,
+                              scene3d: {
+                                ...prev.scene3d,
+                                fixtures: [
+                                  ...prev.scene3d.fixtures,
+                                  {
+                                    id: `${prev.id}-fix-${Date.now()}-${idx}`,
+                                    kind: item.kind,
+                                    label: `${item.label} ${idx}`,
+                                    x: (idx - 1) % 4,
+                                    z: (idx % 2) * 0.8,
+                                    color: prev.accent,
+                                  },
+                                ],
+                              },
+                            };
+                          })
+                        }
+                      />
+                    ))}
+                  </View>
+                </View>
+              </CollapsibleSection>
+            ) : null}
+
+            <CollapsibleSection
+              title={t('seatsTitle', { n: draftVenue.seats.length })}
+              summary={t('seatsSummary')}
+            >
+              {draftVenue.seats.map((seat) => (
+                <View key={seat.id} style={styles.inset}>
+                  <View style={styles.insetRow}>
+                    <Text style={[styles.textStrong, { flex: 1 }]}>
+                      {seatLabelText(seat.label, lang)}
+                    </Text>
+                    <Text style={styles.caption}>
+                      {t('seatMeta', {
+                        rate: formatMoney(seat.hourlyRate),
+                        x: seat.x,
+                        z: seat.z,
+                      })}
+                    </Text>
+                  </View>
+                  <View style={styles.row}>
+                    {SEAT_KINDS.map((kind) => (
+                      <Chip
+                        key={kind}
+                        label={t(kind)}
+                        accessibilityLabel={t('seatTypeA11y', {
+                          seat: seatLabelText(seat.label, lang),
+                          kind: t(kind),
+                        })}
+                        selected={seat.kind === kind}
+                        onPress={() =>
+                          setDraftVenue((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  seats: prev.seats.map((s) =>
+                                    s.id === seat.id ? { ...s, kind } : s,
+                                  ),
+                                }
+                              : prev,
+                          )
+                        }
+                      />
+                    ))}
+                  </View>
+                  <View style={styles.row}>
                     <Button
-                      label={`Cycle kind (${seat.label})`}
-                      onPress={() =>
-                        setDraftVenue((prev) => {
-                          if (!prev) return prev;
-                          const nextKind: Seat['kind'] =
-                            seat.kind === 'desk'
-                              ? 'pod'
-                              : seat.kind === 'pod'
-                                ? 'booth'
-                                : 'desk';
-                          return {
-                            ...prev,
-                            seats: prev.seats.map((s) =>
-                              s.id === seat.id ? { ...s, kind: nextKind } : s,
-                            ),
-                          };
-                        })
-                      }
-                    />
-                    <Button
-                      label={`+5k/h (${seat.label})`}
+                      size="sm"
+                      label={t('raiseRate')}
+                      accessibilityLabel={t('raiseRateA11y', {
+                        seat: seatLabelText(seat.label, lang),
+                      })}
                       onPress={() =>
                         setDraftVenue((prev) =>
                           prev
@@ -891,7 +838,12 @@ export function OnboardingScreen() {
                     />
                     {draftVenue.seats.length > 1 && (
                       <Button
-                        label={`Remove ${seat.label}`}
+                        size="sm"
+                        variant="ghost"
+                        label={t('remove')}
+                        accessibilityLabel={t('removeA11y', {
+                          name: seatLabelText(seat.label, lang),
+                        })}
                         onPress={() =>
                           setDraftVenue((prev) =>
                             prev
@@ -909,34 +861,50 @@ export function OnboardingScreen() {
                   </View>
                 </View>
               ))}
-            </View>
+              <Button
+                fullWidth={!isWide}
+                label={t('addSeat')}
+                onPress={() =>
+                  setDraftVenue((prev) => {
+                    if (!prev) return prev;
+                    const idx = prev.seats.length + 1;
+                    const newSeat: Seat = {
+                      id: `${prev.id}-seat-${Date.now()}-${idx}`,
+                      venueId: prev.id,
+                      label: `Seat ${idx}`,
+                      kind: 'desk',
+                      x: (idx - 1) % 4,
+                      z: Math.floor((idx - 1) / 4),
+                      hourlyRate: 35000,
+                      zone: 'Main Floor',
+                    };
+                    return {
+                      ...prev,
+                      seats: [...prev.seats, newSeat],
+                    };
+                  })
+                }
+              />
+            </CollapsibleSection>
 
-            <View style={{ gap: 8 }}>
-              <Text style={{ fontWeight: '700' }}>
-                AI-Extracted Menu Items ({draftVenue.menu.length})
-              </Text>
+            <CollapsibleSection
+              title={t('menuTitle', { n: draftVenue.menu.length })}
+              summary={t('menuSummary')}
+            >
               {draftVenue.menu.map((item) => (
-                <View
-                  key={item.id}
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: 8,
-                    padding: 10,
-                    borderRadius: radius.md,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    backgroundColor: colors.paper,
-                  }}
-                >
-                  <Text style={{ fontWeight: '700' }}>
-                    {item.name} · {formatMoney(item.price)}
-                  </Text>
+                <View key={item.id} style={[styles.inset, styles.insetRow]}>
+                  <View style={{ flex: 1, gap: space.xxs }}>
+                    <Text style={styles.textStrong}>{item.name}</Text>
+                    <Text style={styles.caption}>
+                      {formatMoney(item.price)}
+                    </Text>
+                  </View>
                   {draftVenue.menu.length > 1 && (
                     <Button
-                      label={`Remove ${item.name}`}
+                      size="sm"
+                      variant="ghost"
+                      label={t('remove')}
+                      accessibilityLabel={t('removeA11y', { name: item.name })}
                       onPress={() =>
                         setDraftVenue((prev) =>
                           prev
@@ -954,36 +922,35 @@ export function OnboardingScreen() {
               <View
                 style={{
                   flexDirection: isWide ? 'row' : 'column',
-                  gap: 8,
-                  alignItems: isWide ? 'center' : 'stretch',
+                  gap: space.sm,
+                  alignItems: isWide ? 'flex-end' : 'stretch',
                 }}
               >
-                <TextInput
-                  placeholderTextColor={colors.subtle}
-                  accessibilityLabel="New menu item name"
-                  value={newMenuName}
-                  onChangeText={setNewMenuName}
-                  placeholder="New item name (e.g. Matcha Basque Cheesecake)"
-                  style={[
-                    styles.input,
-                    isWide ? { flex: 1 } : { width: '100%' },
-                  ]}
-                />
-                <TextInput
-                  placeholderTextColor={colors.subtle}
-                  accessibilityLabel="New menu item price"
-                  value={newMenuPrice}
-                  onChangeText={setNewMenuPrice}
-                  placeholder="Price VND"
-                  style={[
-                    styles.input,
-                    isWide
-                      ? { width: 140, maxWidth: '100%' }
-                      : { width: '100%' },
-                  ]}
-                />
+                <View style={[fieldStyle, isWide && { flex: 1 }]}>
+                  <Text style={styles.sectionLabel}>{t('newItemName')}</Text>
+                  <TextInput
+                    placeholderTextColor={colors.subtle}
+                    accessibilityLabel={t('newItemNameA11y')}
+                    value={newMenuName}
+                    onChangeText={setNewMenuName}
+                    placeholder={t('newItemPlaceholder')}
+                    style={styles.input}
+                  />
+                </View>
+                <View style={[fieldStyle, isWide && { width: 160 }]}>
+                  <Text style={styles.sectionLabel}>{t('price')}</Text>
+                  <TextInput
+                    placeholderTextColor={colors.subtle}
+                    accessibilityLabel={t('priceA11y')}
+                    value={newMenuPrice}
+                    onChangeText={setNewMenuPrice}
+                    inputMode="numeric"
+                    placeholder="45000"
+                    style={styles.input}
+                  />
+                </View>
                 <Button
-                  label="+ Add Menu Item"
+                  label={t('addItem')}
                   onPress={() => {
                     const cleanName = newMenuName.trim();
                     const price = Number(newMenuPrice.replace(/[^0-9]/g, ''));
@@ -1012,23 +979,26 @@ export function OnboardingScreen() {
                   }}
                 />
               </View>
-            </View>
+            </CollapsibleSection>
 
+            <Button
+              variant="primary"
+              fullWidth={!isWide}
+              label={t('publish')}
+              onPress={handlePublish}
+            />
+            {noticeAt === 'publish' ? notice : null}
             <View style={styles.row}>
               <Button
-                variant="primary"
-                fullWidth={!isWide}
-                label="Publish 3D Cafe to Live App"
-                onPress={handlePublish}
-              />
-              <Button
-                label="Open Live Floor"
+                style={isWide ? undefined : { flex: 1 }}
+                label={t('openFloor')}
                 onPress={() => router.push('/merchant/live-floor')}
               />
               <Button
-                label="Preview as Customer"
+                style={isWide ? undefined : { flex: 1 }}
+                label={t('previewCustomer')}
                 onPress={() => {
-                  store.setRole('customer');
+                  setRole('customer');
                   router.push('/customer/explore');
                 }}
               />

@@ -43,6 +43,7 @@ Status is never colour alone: every tone is paired with a text label. Venue `acc
 | `body`     | 15 / 22 / 400            | `styles.text`                    | Body copy (muted)                 |
 | `label`    | 15 / 20 / 600            | `styles.textStrong`              | Emphasised line, button label     |
 | `caption`  | 13 / 18 / 400            | `styles.caption`                 | Helper text, metadata             |
+| `caption`  | 13 / 18 / 600, ink       | `styles.captionStrong`           | Emphasised metadata, small labels |
 | `overline` | 11 / 14 / 700, uppercase | `styles.sectionLabel`, `Eyebrow` | Section labels                    |
 
 **Spacing** (`space`, 4pt grid): `xxs 2 · xs 4 · sm 8 · md 12 · lg 16 · xl 20 · xxl 24 · xxxl 32`. Screen padding and the gap between cards are `lg`; gaps inside a card are `md`; related items `sm`.
@@ -80,10 +81,13 @@ States every interactive component has: default, pressed, selected (where it app
 
 ## Patterns
 
-- **Shell.** App bar (brand, language toggle for customers, journeys button) → demo strip (one horizontally scrolling row) → scrolling content → bottom tab bar. Navigation lives only in the tab bar; screens don't render their own nav. Detail routes highlight their parent tab (`customerTabForPath`, `merchantTabForPath`).
+- **Shell.** App bar (brand, language toggle, journeys button) → demo strip (one horizontally scrolling row) → scrolling content → bottom tab bar. Navigation lives only in the tab bar; screens don't render their own nav. Detail routes highlight their parent tab (`customerTabForPath`, `merchantTabForPath`).
 - **Screen.** `Screen` › `ScreenHeader` › banners › cards. The header sits on the page, not in a card.
 - **Lists.** Rows are `styles.inset` inside a card: label left, action right. Empty lists show `EmptyState`.
 - **Forms.** `styles.sectionLabel` above `styles.input` (48pt, 16px text so iOS doesn't zoom), helper text in `styles.caption`, the result of the action in a `Banner` directly below.
+- **Long editors.** Group secondary controls in `CollapsibleSection`s with a one-line summary so the phone shows the task path first (see `OnboardingScreen`). Choices are `Chip`s; per-row actions are `sm` buttons with a short visible label and a full `accessibilityLabel`.
+- **Text.** Every `Text` takes a whole role from `styles.*` and overrides colour only; add `fontVariant: ['tabular-nums']` for clocks, quantities and totals.
+- **3D viewer gestures.** The canvas sets `touch-action: pan-y`: horizontal drags orbit, vertical swipes scroll the page.
 - **Wide screens.** Add columns with `useResponsive().isWide`; never change the phone layout to do it.
 
 ## Accessibility
@@ -107,4 +111,4 @@ States every interactive component has: default, pressed, selected (where it app
 
 - Light theme only. Tokens are static, so dark mode needs a theme hook first.
 - The 3D viewer (`canvas3d/`) and onboarding fixtures keep their own scene/material colours; they are content, not UI chrome.
-- `OnboardingScreen` and `UserJourneysGalleryScreen` use the tokens and shell but still have dense, desktop-era layouts.
+- Seat markers in the no-WebGL 2D blueprint (`canvas3d/`) are smaller than 44pt; the seat list below it is the accessible path.

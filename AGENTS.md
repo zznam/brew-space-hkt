@@ -92,7 +92,7 @@ The phone is the product; wider screens are an enhancement. This applies to ever
 - Show what the user needs for the current step; move detail behind a tap (a detail screen or an expandable row). When adding to a screen, look for something to remove or collapse first.
 - Follow `docs/design-system.md`. Tokens live in `src/components/theme.ts`; build from the primitives in `src/components/ui.tsx` (`Screen`, `ScreenHeader`, `Card`, `Button`, `Chip`, `SegmentedControl`, `Banner`, `EmptyState`, `Badge`, `StatTile`, plus the shared `styles`). Extend a primitive there when one is missing, so screens stay free of one-off colors, radii, and font sizes.
 - Navigation is the bottom tab bar rendered by `app/_layout.tsx`; screens don't render their own nav.
-- Keep the type scale to what `styles` defines (display, heading, subheading, text, textStrong, caption, section label). Hierarchy comes from spacing and weight; borders, shadows, and tinted surfaces are for the few things that need to stand out.
+- Keep the type scale to what `styles` defines (display, heading, subheading, text, textStrong, caption, captionStrong, section label). Hierarchy comes from spacing and weight; borders, shadows, and tinted surfaces are for the few things that need to stand out.
 - Copy is short: a label says the action ("Start session"), a line of helper text at most. Every list has an empty state and every action shows its `ActionResult` message inline.
 
 ## Conventions
@@ -102,6 +102,7 @@ The phone is the product; wider screens are an enhancement. This applies to ever
 - New domain behavior needs boundary tests in `tests/`.
 - Availability must be understandable without color or 3D: use text labels and the shared buttons in `src/components/ui.tsx`.
 - No secrets in the client or in `EXPO_PUBLIC_*` variables.
+- The whole app is bilingual (EN/VI). `src/i18n/` holds the translator, the language store, `useT(messages)` and the `LanguageToggle` in the app bar. Every screen reads its copy from a `messages.ts` next to it (built with `defineMessages`, which forces every Vietnamese key); never hard-code user-facing text. Message modules import `i18n` by relative path, not `@/`, because Vitest has no alias. English is the default and what the e2e specs pin. Fixture data, AI replies and the onboarding sample prompts stay untranslated; seat labels go through `seatLabelText`.
 - TypeScript runs with `strict` and `noUncheckedIndexedAccess`, so indexed access yields `T | undefined`. `@/*` maps to `src/*`.
 
 ## Ownership

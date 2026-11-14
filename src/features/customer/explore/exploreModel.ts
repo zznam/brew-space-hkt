@@ -1,5 +1,5 @@
 import type { BillingMode, Seat, Session, Venue } from '../../../core/domain';
-import type { Lang } from '../i18n/i18n';
+import type { Lang } from '../../../i18n/i18n';
 import { visitHabits } from '../loyalty/loyaltyModel';
 import type { VisitSnapshot } from '../shared/visit';
 import { kindWord } from '../venue/messages';

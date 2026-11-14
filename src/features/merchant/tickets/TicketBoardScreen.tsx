@@ -13,41 +13,38 @@ import {
   styles,
   useResponsive,
 } from '@/components/ui';
+import { useT } from '@/i18n/useLanguage';
+import { merchantMessages, ticketText } from '../messages';
 import { calculateOrderTotal, ticketLabel } from '../pos/posStore';
 import type { FulfillmentStatus, PosOrder } from '../pos/types';
 import { posStore, usePosStore } from '../pos/usePosStore';
 
 const COLUMNS: {
   status: FulfillmentStatus;
-  title: string;
   tone: 'warning' | 'info' | 'success' | 'neutral';
   advanceTo: FulfillmentStatus | null;
-  actionLabel: string | null;
+  actionLabel: 'startPreparing' | 'markReady' | 'markServed' | null;
 }[] = [
   {
     status: 'queued',
-    title: 'Queued',
     tone: 'warning',
     advanceTo: 'preparing',
-    actionLabel: 'Start preparing',
+    actionLabel: 'startPreparing',
   },
   {
     status: 'preparing',
-    title: 'Preparing',
     tone: 'info',
     advanceTo: 'ready',
-    actionLabel: 'Mark ready',
+    actionLabel: 'markReady',
   },
   {
     status: 'ready',
-    title: 'Ready',
     tone: 'success',
     advanceTo: 'served',
-    actionLabel: 'Mark served',
+    actionLabel: 'markServed',
   },
   {
     status: 'served',
-    title: 'Served',
     tone: 'neutral',
     advanceTo: null,
     actionLabel: null,
@@ -65,11 +62,12 @@ function TicketLine({
   order: PosOrder;
   venue: Venue;
   advanceTo: FulfillmentStatus | null;
-  actionLabel: string | null;
+  actionLabel: 'startPreparing' | 'markReady' | 'markServed' | null;
   isPrimary: boolean;
   fullWidth: boolean;
 }) {
-  const label = ticketLabel(order, venue);
+  const { t, lang } = useT(merchantMessages);
+  const label = ticketText(ticketLabel(order, venue), lang);
   return (
     <View style={[styles.inset, { gap: space.sm }]}>
       <Text style={styles.textStrong}>
@@ -82,7 +80,10 @@ function TicketLine({
           <Button
             variant={isPrimary ? 'primary' : 'secondary'}
             fullWidth={fullWidth}
-            label={`${actionLabel}, ${label}`}
+            label={t('ticketAction', {
+              action: t(actionLabel),
+              ticket: label,
+            })}
             onPress={() =>
               posStore.getState().advanceTicket(order.id, advanceTo)
             }
@@ -96,6 +97,7 @@ function TicketLine({
 export function TicketBoardScreen() {
   const venueId = useAppStore((state) => state.venueId);
   const { isWide } = useResponsive();
+  const { t } = useT(merchantMessages);
   const venue = getVenue(venueId);
   const orders = usePosStore((state) => state.orders).filter(
     (order) => order.venueId === venueId && order.fulfillment !== null,
@@ -110,18 +112,17 @@ export function TicketBoardScreen() {
   return (
     <Screen>
       <ScreenHeader
-        overline="MERCHANT / KITCHEN & BAR"
+        overline={t('ticketsOverline')}
         accentColor={venue.accent}
-        title="Tickets"
-        subtitle={`${venue.name} · Queued → Preparing → Ready → Served`}
-        trailing={<Badge label={`${orders.length} tickets`} tone="info" />}
+        title={t('ticketsTitle')}
+        subtitle={t('ticketsSubtitle', { venue: venue.name })}
+        trailing={
+          <Badge label={t('ticketCount', { n: orders.length })} tone="info" />
+        }
       />
 
       {orders.length === 0 ? (
-        <EmptyState
-          title="No tickets yet"
-          message="Paid orders from New order appear here."
-        />
+        <EmptyState title={t('noTicketsTitle')} message={t('noTicketsBody')} />
       ) : null}
 
       <View
@@ -146,7 +147,7 @@ export function TicketBoardScreen() {
               }
             >
               <View style={styles.rowBetween}>
-                <Heading level={2}>{column.title}</Heading>
+                <Heading level={2}>{t(column.status)}</Heading>
                 <Badge label={`${tickets.length}`} tone={column.tone} />
               </View>
               {tickets.length === 0 ? null : (

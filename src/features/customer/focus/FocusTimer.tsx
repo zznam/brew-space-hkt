@@ -7,9 +7,9 @@ import {
   colors,
   radius,
   styles,
-  type,
+  space,
 } from '@/components/ui';
-import { useT } from '../i18n/useLanguage';
+import { useT } from '../../../i18n/useLanguage';
 import { useLoyalty, useLoyaltyReady } from '../loyalty/useLoyalty';
 import {
   FOCUS_PRESETS,
@@ -77,13 +77,13 @@ export function FocusTimer({ venueId }: { venueId: string }) {
 
       <View
         style={{
-          padding: 14,
+          padding: space.lg,
           borderRadius: radius.lg,
           backgroundColor: colors.surface,
           borderWidth: 1,
           borderColor: colors.border,
           alignItems: 'center',
-          gap: 4,
+          gap: space.xs,
         }}
       >
         <Text
@@ -91,12 +91,7 @@ export function FocusTimer({ venueId }: { venueId: string }) {
             phase: phaseLabel(state.phase, lang),
             clock: formatClock(state.remainingMs),
           })}
-          style={{
-            fontSize: type.display.fontSize,
-            fontWeight: '800',
-            color: colors.ink,
-            letterSpacing: 1,
-          }}
+          style={[styles.display, { fontVariant: ['tabular-nums'] }]}
         >
           {formatClock(state.remainingMs)}
         </Text>
@@ -141,7 +136,7 @@ export function FocusTimer({ venueId }: { venueId: string }) {
       {state.phase === 'break' ? (
         <Text
           accessibilityLiveRegion="polite"
-          style={[styles.text, { color: colors.green, fontWeight: '600' }]}
+          style={[styles.textStrong, { color: colors.green }]}
         >
           {breakSuggestion(membership && prefs ? prefs : null, lang)}
         </Text>

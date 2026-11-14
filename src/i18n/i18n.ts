@@ -1,4 +1,4 @@
-/** Customer-side translations. Pure: no React or storage, so models and tests
+/** App translations. Pure: no React or storage, so models and tests
  * can import it. Each feature slice owns its own message table built with
  * `defineMessages`, so slices never edit a shared dictionary. Money keeps the
  * vi-VN format from core `formatMoney` in both languages. */

@@ -19,7 +19,7 @@ import { activeSessionMessages, MODE_KEYS } from './activeSessionMessages';
 import { CartPanel } from './cart/CartPanel';
 import { MenuList } from './cart/MenuList';
 import { OrderHistory } from './cart/OrderHistory';
-import { useT } from './i18n/useLanguage';
+import { useT } from '../../i18n/useLanguage';
 import { FocusTimer } from './focus/FocusTimer';
 import { blockWhenOffline } from './network/networkModel';
 import { OfflineBanner } from './network/OfflineBanner';
@@ -32,19 +32,22 @@ import { VenueInfoCard } from './support/VenueInfoCard';
 export function ActiveSessionScreen() {
   const { t, lang } = useT(activeSessionMessages);
   const { isWide } = useResponsive();
-  const store = useAppStore((state) => state);
+  const venueId = useAppStore((state) => state.venueId);
+  const session = useAppStore((state) =>
+    state.sessions.find(
+      (entry) =>
+        entry.venueId === state.venueId &&
+        entry.customerId === DEMO_CUSTOMER_ID,
+    ),
+  );
   const online = useOnlineStatus();
   const blocked = blockWhenOffline(online, lang);
-  const venue = getVenue(store.venueId);
-  const session = store.sessions.find(
-    (entry) =>
-      entry.venueId === venue.id && entry.customerId === DEMO_CUSTOMER_ID,
-  );
+  const venue = getVenue(venueId);
   if (!session)
     return (
       <Screen>
         <ScreenHeader
-          overline="CUSTOMER / ACTIVE SESSION"
+          overline={t('overline')}
           accentColor={venue.accent}
           title={t('nextSession')}
         />
@@ -69,7 +72,7 @@ export function ActiveSessionScreen() {
       <OfflineBanner online={online} />
 
       <ScreenHeader
-        overline="CUSTOMER / ACTIVE SESSION"
+        overline={t('overline')}
         accentColor={venue.accent}
         title={t('liveTab')}
         subtitle={t('header', {
@@ -80,7 +83,10 @@ export function ActiveSessionScreen() {
         })}
         trailing={
           <Badge
-            label={`${seatLabel} · ${session.elapsedMinutes}m`}
+            label={t('badge', {
+              seat: seatLabel,
+              minutes: session.elapsedMinutes,
+            })}
             tone="info"
           />
         }
@@ -90,19 +96,19 @@ export function ActiveSessionScreen() {
 
       <View style={styles.grid}>
         <StatTile
-          label="Seat Time"
+          label={t('statSeat')}
           value={formatMoney(bill.time)}
-          sublabel={`${session.elapsedMinutes}m elapsed`}
+          sublabel={t('statSeatSub', { minutes: session.elapsedMinutes })}
         />
         <StatTile
-          label="Menu Tab"
+          label={t('statMenu')}
           value={formatMoney(bill.items)}
-          sublabel={`${session.orders.length} item(s)`}
+          sublabel={t('statMenuSub', { n: session.orders.length })}
         />
         <StatTile
-          label="Running Total"
+          label={t('statTotal')}
           value={formatMoney(bill.total)}
-          sublabel="VND estimate"
+          sublabel={t('statTotalSub')}
           accentColor={venue.accent}
         />
       </View>

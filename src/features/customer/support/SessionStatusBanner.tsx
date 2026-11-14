@@ -1,7 +1,7 @@
 import { Text, View } from 'react-native';
 import type { Session } from '@/core';
 import { colors, radius, space, styles } from '@/components/ui';
-import { useT } from '../i18n/useLanguage';
+import { useT } from '../../../i18n/useLanguage';
 import { supportMessages } from './messages';
 import { timeStatus } from './supportModel';
 

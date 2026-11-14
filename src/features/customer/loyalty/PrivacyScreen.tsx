@@ -10,7 +10,7 @@ import {
   styles,
   useResponsive,
 } from '@/components/ui';
-import { useT } from '../i18n/useLanguage';
+import { useT } from '../../../i18n/useLanguage';
 import { loyaltyMessages } from './messages';
 
 type Key = keyof typeof loyaltyMessages.en;
@@ -29,11 +29,11 @@ export function PrivacyScreen() {
   return (
     <Screen>
       <ScreenHeader
-        overline="CUSTOMER / DATA PRIVACY"
+        overline={t('privacyOverline')}
         title={t('privTitle')}
         subtitle={t('privIntro')}
       />
-      <Badge label="Local Device Only" tone="success" />
+      <Badge label={t('localOnly')} tone="success" />
 
       <View style={{ gap: space.md }}>
         {SECTIONS.map((section) => (

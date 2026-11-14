@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Text, View } from 'react-native';
 import { formatMoney, getVenue, type BillingMode, type Seat } from '@/core';
@@ -28,7 +28,7 @@ import {
   usualSuggestion,
   type SeatFilters,
 } from './explore/exploreModel';
-import { useT } from './i18n/useLanguage';
+import { useT } from '../../i18n/useLanguage';
 import { favouriteSeatIds } from './loyalty/loyaltyModel';
 import { loyaltyWarningText } from './loyalty/messages';
 import { useLoyalty, useLoyaltyReady } from './loyalty/useLoyalty';
@@ -50,10 +50,14 @@ export function ExploreScreen() {
   const { t, lang } = useT(exploreMessages);
   const { isWide } = useResponsive();
   const seatText = (label: string) => seatLabelText(label, lang);
-  const store = useAppStore((state) => state);
+  const venueId = useAppStore((state) => state.venueId);
+  const sessions = useAppStore((state) => state.sessions);
+  const selectedSeatId = useAppStore((state) => state.selectedSeatId);
+  const selectSeat = useAppStore((state) => state.selectSeat);
+  const startSession = useAppStore((state) => state.startSession);
   const { ready, warning } = useLoyaltyReady();
   const loyalty = useLoyalty((state) => state);
-  const venue = getVenue(store.venueId);
+  const venue = getVenue(venueId);
   const [error, setError] = useState('');
   const [filters, setFilters] = useState<SeatFilters>(noFilters());
   const [linkNotice, setLinkNotice] = useState('');
@@ -67,7 +71,7 @@ export function ExploreScreen() {
   const [seenLink, setSeenLink] = useState('');
   if (seenLink !== linkKey) {
     setSeenLink(linkKey);
-    setLinkNotice(parseSeatLink(params, store.venueId, lang).notice ?? '');
+    setLinkNotice(parseSeatLink(params, venueId, lang).notice ?? '');
   }
   useEffect(() => {
     if (appliedLink.current === linkKey) return;
@@ -79,7 +83,7 @@ export function ExploreScreen() {
   }, [linkKey]);
 
   function start(mode: BillingMode) {
-    const result = store.startSession(mode);
+    const result = startSession(mode);
     if (!result.ok) setError(startErrorText(result.message, lang));
     else {
       setError('');
@@ -97,8 +101,13 @@ export function ExploreScreen() {
   }
   function choose(id: string) {
     setError('');
-    store.selectSeat(id);
+    selectSeat(id);
   }
+  // Stable identity: the 3D viewer rebuilds its scene when `venue` changes.
+  const filteredVenue = useMemo(
+    () => ({ ...venue, seats: filterSeats(venue, sessions, filters) }),
+    [venue, sessions, filters],
+  );
 
   if (!ready)
     return (
@@ -111,19 +120,10 @@ export function ExploreScreen() {
 
   const visits = loyalty.visits.length ? loyalty.visits : EMPTY_VISITS;
   const favouriteIds = favouriteSeatIds(loyalty, venue.id);
-  const summary = occupancySummary(venue, store.sessions);
-  const visibleSeats = filterSeats(venue, store.sessions, filters);
-  const filteredVenue = { ...venue, seats: visibleSeats };
-  const usual = usualSuggestion(
-    visits,
-    venue,
-    store.sessions,
-    favouriteIds,
-    lang,
-  );
-  const selectedSeat = venue.seats.find(
-    (seat) => seat.id === store.selectedSeatId,
-  );
+  const summary = occupancySummary(venue, sessions);
+  const visibleSeats = filteredVenue.seats;
+  const usual = usualSuggestion(visits, venue, sessions, favouriteIds, lang);
+  const selectedSeat = venue.seats.find((seat) => seat.id === selectedSeatId);
   const selectedPinned = selectedSeat
     ? favouriteIds.includes(selectedSeat.id)
     : false;
@@ -133,7 +133,7 @@ export function ExploreScreen() {
   // The highest rate would match every seat, so it is the same as "Any".
   const priceCaps = rates.slice(0, -1);
   const occupied = (id: string) =>
-    store.sessions.some(
+    sessions.some(
       (session) => session.venueId === venue.id && session.seatId === id,
     );
 
@@ -148,7 +148,10 @@ export function ExploreScreen() {
         })}
         trailing={
           <Badge
-            label={`${summary.free}/${summary.total} free`}
+            label={t('freeBadge', {
+              free: summary.free,
+              total: summary.total,
+            })}
             tone={summary.free > 0 ? 'success' : 'warning'}
           />
         }
@@ -296,8 +299,8 @@ export function ExploreScreen() {
         <Card>
           <SeatMap
             venue={filteredVenue}
-            sessions={store.sessions}
-            selectedSeatId={store.selectedSeatId}
+            sessions={sessions}
+            selectedSeatId={selectedSeatId}
             onSelect={choose}
           />
         </Card>
@@ -337,7 +340,7 @@ export function ExploreScreen() {
 
       {/* Primary Thumb-Reachable Action Block */}
       <Card>
-        <Text style={styles.sectionLabel}>Start Your Session</Text>
+        <Text style={styles.sectionLabel}>{t('startTitle')}</Text>
         <Button
           variant="primary"
           fullWidth={!isWide}

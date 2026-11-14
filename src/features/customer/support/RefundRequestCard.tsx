@@ -8,9 +8,9 @@ import {
   colors,
   Heading,
   styles,
-  type,
+  space,
 } from '@/components/ui';
-import { useT } from '../i18n/useLanguage';
+import { useT } from '../../../i18n/useLanguage';
 import type { VisitSnapshot } from '../shared/visit';
 import { supportMessages } from './messages';
 import {
@@ -51,7 +51,7 @@ export function RefundRequestCard({ receipt }: { receipt: VisitSnapshot }) {
       <Text style={styles.text}>{refundNotice(lang)}</Text>
 
       {latest ? (
-        <Card variant="subtle" style={{ gap: 6 }}>
+        <Card variant="subtle" style={{ gap: space.sm }}>
           <Text style={styles.textStrong}>
             {t('status', { status: refundStatusLabel(latest.status, lang) })}
           </Text>
@@ -92,13 +92,10 @@ export function RefundRequestCard({ receipt }: { receipt: VisitSnapshot }) {
           />
           <View style={styles.rowBetween}>
             <Text
-              style={{
-                fontSize: type.caption.fontSize,
-                color:
-                  reason.length > MAX_REFUND_REASON
-                    ? colors.danger
-                    : colors.muted,
-              }}
+              style={[
+                styles.caption,
+                reason.length > MAX_REFUND_REASON && { color: colors.danger },
+              ]}
             >
               {t('characters', { n: reason.length, max: MAX_REFUND_REASON })}
             </Text>
@@ -122,10 +119,10 @@ export function RefundRequestCard({ receipt }: { receipt: VisitSnapshot }) {
       {feedback ? (
         <Text
           accessibilityRole="alert"
-          style={{
-            color: feedback.ok ? colors.green : colors.danger,
-            fontWeight: '700',
-          }}
+          style={[
+            styles.textStrong,
+            { color: feedback.ok ? colors.green : colors.danger },
+          ]}
         >
           {feedback.text}
         </Text>

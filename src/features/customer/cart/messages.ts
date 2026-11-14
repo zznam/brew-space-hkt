@@ -3,7 +3,7 @@ import {
   translate,
   type Lang,
   type Params,
-} from '../i18n/i18n';
+} from '../../../i18n/i18n';
 
 /** Cart, menu and order-history copy. English text is what e2e tests select
  * by, so it must not be reworded. Item names come from the venue menu and are

@@ -1,5 +1,5 @@
 import type { Seat } from '../../../core/domain';
-import type { Lang } from '../i18n/i18n';
+import type { Lang } from '../../../i18n/i18n';
 import type { VisitSnapshot } from '../shared/visit';
 import { badgesT } from './messages';
 

@@ -1,4 +1,4 @@
-import { defineMessages } from '../i18n/i18n';
+import { defineMessages } from '../../../i18n/i18n';
 
 export const networkMessages = defineMessages(
   {

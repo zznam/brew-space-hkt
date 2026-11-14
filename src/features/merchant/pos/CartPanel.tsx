@@ -10,6 +10,8 @@ import {
   styles,
   useResponsive,
 } from '@/components/ui';
+import { useT } from '@/i18n/useLanguage';
+import { merchantMessages } from '../messages';
 import { calculateOrderTotal } from './posStore';
 import type { PaymentMethod, PosOrder } from './types';
 
@@ -31,18 +33,22 @@ export function CartPanel({
   onCancel,
 }: CartPanelProps) {
   const { isWide } = useResponsive();
+  const { t } = useT(merchantMessages);
   const empty = !order || order.lines.length === 0;
   return (
     <View style={{ gap: space.md }}>
       <View style={styles.rowBetween}>
-        <Text style={styles.subheading}>Order Cart</Text>
+        <Text style={styles.subheading}>{t('cart')}</Text>
         {order ? (
-          <Badge label={`${order.lines.length} line(s)`} tone="neutral" />
+          <Badge
+            label={t('cartLines', { n: order.lines.length })}
+            tone="neutral"
+          />
         ) : null}
       </View>
 
       {empty || !order ? (
-        <EmptyState message="Cart is empty. Add an item to start." />
+        <EmptyState message={t('cartEmpty')} />
       ) : (
         <>
           <View style={{ gap: space.sm }}>
@@ -73,7 +79,7 @@ export function CartPanel({
           </View>
           <Divider />
           <View style={styles.rowBetween}>
-            <Text style={styles.sectionLabel}>Order Total</Text>
+            <Text style={styles.sectionLabel}>{t('orderTotal')}</Text>
             <Heading>{formatMoney(calculateOrderTotal(order))}</Heading>
           </View>
         </>
@@ -81,7 +87,7 @@ export function CartPanel({
 
       <View style={{ gap: space.sm }}>
         <Button
-          label="Pay cash"
+          label={t('payCash')}
           variant="primary"
           fullWidth={!isWide}
           onPress={() => onPay('cash')}
@@ -89,13 +95,13 @@ export function CartPanel({
         />
         <View style={styles.row}>
           <Button
-            label="Pay online"
+            label={t('payOnline')}
             style={isWide ? undefined : { flex: 1 }}
             onPress={() => onPay('online')}
             disabled={empty}
           />
           <Button
-            label="Cancel order"
+            label={t('cancelOrder')}
             variant="danger"
             style={isWide ? undefined : { flex: 1 }}
             onPress={onCancel}

@@ -23,7 +23,9 @@ import {
   type,
   useResponsive,
 } from '@/components/ui';
-import { LanguageToggle } from '@/features/customer/i18n/LanguageToggle';
+import { LanguageToggle } from '@/i18n/LanguageToggle';
+import { useT } from '@/i18n/useLanguage';
+import { shellMessages } from '@/components/messages';
 import {
   CustomerNav,
   customerTabForPath,
@@ -41,6 +43,7 @@ export default function RootLayout() {
   const pathname = usePathname();
   const role = useAppStore((s) => s.role);
   const { isWide } = useResponsive();
+  const { t } = useT(shellMessages);
   const onGallery = pathname === '/gallery';
 
   useEffect(() => {
@@ -108,14 +111,12 @@ export default function RootLayout() {
                 gap: space.sm,
               }}
             >
-              {ready && role === 'customer' && !onGallery ? (
-                <LanguageToggle />
-              ) : null}
+              {ready ? <LanguageToggle /> : null}
               <IconButton
                 icon="journeys"
                 selected={onGallery}
                 accessibilityLabel={
-                  onGallery ? 'Close Journey Gallery' : 'User Journeys Gallery'
+                  onGallery ? t('closeJourneys') : t('openJourneys')
                 }
                 onPress={() => {
                   if (onGallery) {
@@ -153,16 +154,18 @@ export default function RootLayout() {
             >
               {!ready ? (
                 <Card>
-                  <Text style={styles.subheading}>Loading your demo…</Text>
-                  <Text style={styles.text}>
-                    Restoring local workspace state and 3D venue layouts.
-                  </Text>
+                  <Text style={styles.subheading}>{t('loadingTitle')}</Text>
+                  <Text style={styles.text}>{t('loadingBody')}</Text>
                 </Card>
               ) : (
                 <>
                   {warning ? (
                     <Banner tone="warning" role="alert">
-                      {warning}
+                      {warning.includes('incompatible')
+                        ? t('warnIncompatible')
+                        : warning.includes('could not be loaded')
+                          ? t('warnUnreadable')
+                          : warning}
                     </Banner>
                   ) : null}
                   <Slot />

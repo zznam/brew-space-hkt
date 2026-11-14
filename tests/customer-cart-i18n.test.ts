@@ -23,7 +23,7 @@ import {
   OFFLINE_MESSAGE,
   blockWhenOffline,
 } from '../src/features/customer/network/networkModel';
-import type { Messages } from '../src/features/customer/i18n/i18n';
+import type { Messages } from '../src/i18n/i18n';
 
 const drink = { id: 'grind-drink', name: 'Cold brew', price: 45000 };
 const mods: Modifiers = { milk: 'oat', sweetness: 30, ice: 'less' };

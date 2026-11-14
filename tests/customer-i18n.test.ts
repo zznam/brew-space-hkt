@@ -5,8 +5,8 @@ import {
   isLang,
   translate,
   translator,
-} from '../src/features/customer/i18n/i18n';
-import { createLanguageStore } from '../src/features/customer/i18n/languageStore';
+} from '../src/i18n/i18n';
+import { createLanguageStore } from '../src/i18n/languageStore';
 
 const messages = defineMessages(
   { hello: 'Hello {name}', seats: '{free} of {total} seats free' },
