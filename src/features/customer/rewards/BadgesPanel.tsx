@@ -1,5 +1,5 @@
 import { Text, View } from 'react-native';
-import { Badge, Card, colors, styles } from '@/components/ui';
+import { Badge, Card, colors, styles, useResponsive } from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
 import type { VisitSnapshot } from '../shared/visit';
 import {
@@ -13,6 +13,7 @@ import { badgesMessages } from './messages';
  * the history is local to this device either way. */
 export function BadgesPanel({ visits }: { visits: VisitSnapshot[] }) {
   const { t, lang } = useT(badgesMessages);
+  const { isWide } = useResponsive();
   const badges = computeBadges(visits, lang);
   const streak = computeStreak(visits);
   const earned = badges.filter((badge) => badge.earned).length;
@@ -35,15 +36,22 @@ export function BadgesPanel({ visits }: { visits: VisitSnapshot[] }) {
         })}
       </Text>
 
-      <View style={styles.grid}>
+      <View
+        style={{
+          flexDirection: isWide ? 'row' : 'column',
+          flexWrap: isWide ? 'wrap' : 'nowrap',
+          gap: 8,
+        }}
+      >
         {badges.map((badge) => (
           <View
             key={badge.id}
             accessible
             accessibilityLabel={`${badge.name}, ${badge.earned ? t('earned') : t('locked')}, ${badge.progressText}`}
             style={{
-              flex: 1,
-              minWidth: 200,
+              width: isWide ? 220 : '100%',
+              maxWidth: '100%',
+              flexGrow: isWide ? 1 : 0,
               padding: 12,
               borderRadius: 12,
               borderWidth: 1,

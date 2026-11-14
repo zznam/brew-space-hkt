@@ -11,6 +11,7 @@ import {
   Eyebrow,
   Heading,
   styles,
+  useResponsive,
 } from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
 import { CustomerNav } from '../shared/CustomerNav';
@@ -157,6 +158,7 @@ function Stats({ venue, state }: { venue: Venue; state: LoyaltyState }) {
 
 function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
   const { t, lang } = useT(loyaltyMessages);
+  const { isWide } = useResponsive();
   const join = useLoyalty((store) => store.join);
   const leave = useLoyalty((store) => store.leave);
   const [phone, setPhone] = useState('');
@@ -293,7 +295,12 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
         </Pressable>
 
         <View style={styles.row}>
-          <Button variant="primary" label={t('join')} onPress={submit} />
+          <Button
+            variant="primary"
+            fullWidth={!isWide}
+            label={t('join')}
+            onPress={submit}
+          />
         </View>
 
         {message ? (
@@ -346,6 +353,7 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
 
 function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
   const { t, lang } = useT(loyaltyMessages);
+  const { isWide } = useResponsive();
   const leave = useLoyalty((store) => store.leave);
   const toggleFavourite = useLoyalty((store) => store.toggleFavourite);
   const setPreferences = useLoyalty((store) => store.setPreferences);
@@ -516,6 +524,7 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
         <View style={styles.row}>
           <Button
             variant="primary"
+            fullWidth={!isWide}
             label={t('savePrefs')}
             onPress={() => {
               const result = setPreferences(venue.id, draft, lang);

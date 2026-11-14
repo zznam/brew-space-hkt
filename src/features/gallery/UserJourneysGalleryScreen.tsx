@@ -12,6 +12,7 @@ import {
   StatTile,
   colors,
   styles,
+  useResponsive,
 } from '@/components/ui';
 
 type JourneyCategory = 'all' | 'customer' | 'loyalty' | 'merchant' | 'ai3d';
@@ -32,6 +33,7 @@ interface JourneyStep {
 
 export function UserJourneysGalleryScreen() {
   const router = useRouter();
+  const { isWide } = useResponsive();
   const venueId = useAppStore((s) => s.venueId);
   const sessions = useAppStore((s) => s.sessions);
   const setRole = useAppStore((s) => s.setRole);
@@ -392,7 +394,7 @@ export function UserJourneysGalleryScreen() {
                 letterSpacing: -0.6,
               }}
             >
-              Vibing HKT — User Journeys Gallery
+              BrewSpace — User Journeys Gallery
             </Text>
             <Text style={{ fontSize: 14, color: '#cbd5e1', lineHeight: 20 }}>
               Explore every redesigned screen across the Customer and Merchant
@@ -502,9 +504,22 @@ export function UserJourneysGalleryScreen() {
       </Card>
 
       {/* Journey Step Cards Grid */}
-      <View style={{ gap: 14 }}>
-        {visibleSteps.map((step) => (
-          <Card key={step.id} style={{ gap: 12 }}>
+      <View
+        style={{
+          flexDirection: isWide ? 'row' : 'column',
+          flexWrap: isWide ? 'wrap' : 'nowrap',
+          gap: 12,
+        }}
+      >
+        {visibleSteps.map((step, index) => (
+          <Card
+            key={step.id}
+            style={{
+              gap: 10,
+              width: isWide ? '48.5%' : '100%',
+              flexGrow: isWide ? 1 : 0,
+            }}
+          >
             <View style={styles.rowBetween}>
               <View style={styles.row}>
                 <View
@@ -540,29 +555,22 @@ export function UserJourneysGalleryScreen() {
                   label={step.roleBadge}
                   tone={step.roleBadge === 'Customer' ? 'success' : 'info'}
                 />
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontWeight: '700',
-                    color: colors.muted,
-                  }}
-                >
-                  {step.journeyLabel}
-                </Text>
               </View>
               <View
                 style={{
-                  paddingHorizontal: 10,
-                  paddingVertical: 4,
+                  paddingHorizontal: 8,
+                  paddingVertical: 3,
                   borderRadius: 6,
                   backgroundColor: colors.paperAlt,
                   borderWidth: 1,
                   borderColor: colors.border,
+                  maxWidth: '100%',
                 }}
               >
                 <Text
+                  numberOfLines={1}
                   style={{
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: '700',
                     color: colors.ink,
                     fontFamily: 'monospace',
@@ -580,8 +588,8 @@ export function UserJourneysGalleryScreen() {
 
             <Divider />
 
-            <View style={{ gap: 6 }}>
-              <Eyebrow>Redesigned UI Highlights</Eyebrow>
+            <View style={{ gap: 6, flex: 1 }}>
+              <Eyebrow>Mobile-First Highlights</Eyebrow>
               {step.highlights.map((item, idx) => (
                 <View
                   key={idx}
@@ -614,14 +622,12 @@ export function UserJourneysGalleryScreen() {
               ))}
             </View>
 
-            <View style={[styles.rowBetween, { paddingTop: 4 }]}>
-              <Text style={{ fontSize: 12, color: colors.subtle }}>
-                Auto-switches role to {step.roleBadge} & prepares required state
-              </Text>
+            <View style={{ paddingTop: 4 }}>
               <Button
                 label={`${step.ctaLabel} →`}
                 onPress={step.onLaunch}
-                variant="primary"
+                variant={index === 0 ? 'primary' : 'secondary'}
+                fullWidth={!isWide}
               />
             </View>
           </Card>

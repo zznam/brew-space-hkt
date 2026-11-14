@@ -78,9 +78,9 @@ export function SupportPanel({ context }: { context: SupportContext }) {
   return (
     <Card variant="subtle" style={{ gap: 12 }}>
       <View style={styles.rowBetween}>
-        <Heading style={{ fontSize: 22 }}>{t('needHelp')}</Heading>
+        <Heading style={{ fontSize: 19 }}>{t('needHelp')}</Heading>
         <Button
-          variant="primary"
+          variant="secondary"
           size="sm"
           label={t('callStaff')}
           onPress={() => report(callStaff(context))}

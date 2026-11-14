@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 import { formatMoney, type MenuItem, type Venue } from '@/core';
-import { Badge, Button, colors, styles } from '@/components/ui';
+import { Badge, Button, colors, styles, useResponsive } from '@/components/ui';
 
 export interface MenuGridProps {
   venue: Venue;
@@ -15,26 +15,35 @@ export function MenuGrid({
   onAdd,
   onToggleSoldOut,
 }: MenuGridProps) {
+  const { isWide } = useResponsive();
   if (venue.menu.length === 0) {
     return <Text style={styles.text}>No menu items yet.</Text>;
   }
   return (
-    <View style={styles.grid}>
+    <View
+      style={{
+        flexDirection: isWide ? 'row' : 'column',
+        flexWrap: isWide ? 'wrap' : 'nowrap',
+        gap: 10,
+      }}
+    >
       {venue.menu.map((item) => {
         const soldOut = soldOutItemIds.includes(item.id);
         return (
           <View
             key={item.id}
             style={{
-              width: 240,
-              padding: 14,
+              width: isWide ? 220 : '100%',
+              maxWidth: '100%',
+              flexGrow: isWide ? 1 : 0,
+              padding: 12,
               borderRadius: 14,
               borderWidth: 1,
               borderColor: soldOut ? colors.dangerBorder : colors.border,
               backgroundColor: soldOut
                 ? colors.dangerSurface
                 : colors.surfaceSubtle,
-              gap: 10,
+              gap: 8,
             }}
           >
             <View style={styles.rowBetween}>
@@ -62,8 +71,11 @@ export function MenuGrid({
               style={({ pressed }) => [
                 styles.button,
                 {
-                  backgroundColor: soldOut ? colors.paperAlt : colors.green,
-                  borderColor: soldOut ? colors.border : colors.green,
+                  width: '100%',
+                  backgroundColor: soldOut
+                    ? colors.paperAlt
+                    : colors.greenSurface,
+                  borderColor: soldOut ? colors.border : colors.greenBorder,
                   opacity: soldOut ? 0.45 : pressed ? 0.72 : 1,
                 },
               ]}
@@ -71,7 +83,7 @@ export function MenuGrid({
               <Text
                 style={{
                   fontWeight: '700',
-                  color: soldOut ? colors.ink : '#ffffff',
+                  color: soldOut ? colors.ink : colors.green,
                 }}
               >
                 {item.name} · {formatMoney(item.price)}

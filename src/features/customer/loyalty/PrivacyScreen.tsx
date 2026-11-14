@@ -9,6 +9,7 @@ import {
   Eyebrow,
   Heading,
   styles,
+  useResponsive,
 } from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
 import { CustomerNav } from '../shared/CustomerNav';
@@ -26,6 +27,7 @@ const SECTIONS: { title: Key; lines: Key[] }[] = [
 
 export function PrivacyScreen() {
   const { t } = useT(loyaltyMessages);
+  const { isWide } = useResponsive();
   return (
     <Card>
       <CustomerNav current="member" />
@@ -72,6 +74,7 @@ export function PrivacyScreen() {
         <View style={styles.row}>
           <Button
             variant="primary"
+            fullWidth={!isWide}
             label={t('privGoMember')}
             onPress={() => router.replace('/customer/profile' as never)}
           />

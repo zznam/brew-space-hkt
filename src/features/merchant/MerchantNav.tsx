@@ -1,6 +1,13 @@
 import { router } from 'expo-router';
 import { View } from 'react-native';
-import { Button, Card, colors, Eyebrow, styles } from '@/components/ui';
+import {
+  Button,
+  Card,
+  colors,
+  Eyebrow,
+  styles,
+  useResponsive,
+} from '@/components/ui';
 
 export type MerchantTab = 'live-floor' | 'pos' | 'tickets' | 'onboarding';
 
@@ -16,16 +23,25 @@ const TABS: { key: MerchantTab; label: string; href: string }[] = [
 ];
 
 export function MerchantNav({ current }: { current: MerchantTab }) {
+  const { isWide } = useResponsive();
   return (
     <Card
       variant="subtle"
       style={{
-        paddingVertical: 12,
-        paddingHorizontal: 16,
+        paddingVertical: 10,
+        paddingHorizontal: 12,
         backgroundColor: colors.surface,
+        gap: 8,
       }}
     >
-      <View style={styles.rowBetween}>
+      <View
+        style={{
+          flexDirection: isWide ? 'row' : 'column',
+          justifyContent: 'space-between',
+          alignItems: isWide ? 'center' : 'stretch',
+          gap: 8,
+        }}
+      >
         <Eyebrow>MERCHANT OPERATIONS</Eyebrow>
         <View style={styles.row}>
           {TABS.map((tab) => (
@@ -34,6 +50,7 @@ export function MerchantNav({ current }: { current: MerchantTab }) {
               size="sm"
               label={tab.label}
               selected={tab.key === current}
+              style={isWide ? undefined : { flexGrow: 1 }}
               onPress={() => {
                 if (tab.key !== current) router.push(tab.href as never);
               }}

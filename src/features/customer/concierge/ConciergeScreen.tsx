@@ -12,6 +12,7 @@ import {
   Eyebrow,
   Heading,
   styles,
+  useResponsive,
 } from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
 import { useLoyalty, useLoyaltyReady } from '../loyalty/useLoyalty';
@@ -35,6 +36,7 @@ const MAX_MESSAGES = 40;
 /** "Ask the venue": read-only Q&A at '/customer/assistant'. */
 export function ConciergeScreen() {
   const { t, lang } = useT(conciergeMessages);
+  const { isWide } = useResponsive();
   const venueId = useAppStore((state) => state.venueId);
   const sessions = useAppStore((state) => state.sessions);
   const { ready } = useLoyaltyReady();
@@ -127,6 +129,7 @@ export function ConciergeScreen() {
         <View style={styles.row}>
           <Button
             variant="primary"
+            fullWidth={!isWide}
             label={t('ask')}
             disabled={!draft.trim()}
             onPress={() => ask(draft)}

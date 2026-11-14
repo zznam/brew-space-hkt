@@ -21,6 +21,7 @@ import {
   Eyebrow,
   Heading,
   styles,
+  useResponsive,
 } from '@/components/ui';
 import { MerchantNav } from '../MerchantNav';
 import {
@@ -82,6 +83,7 @@ function cloneVenue(venue: Venue): Venue {
 
 export function OnboardingScreen() {
   const store = useAppStore((state) => state);
+  const { isWide } = useResponsive();
   const allVenues = getAllVenues(store.customVenues);
 
   const [targetVenueId, setTargetVenueId] = useState<string>('new');
@@ -507,7 +509,8 @@ export function OnboardingScreen() {
 
         <View style={styles.row}>
           <Button
-            variant="primary"
+            variant={draftVenue ? 'secondary' : 'primary'}
+            fullWidth={!isWide}
             label={
               generating
                 ? 'Generating 3D Environment…'
@@ -968,35 +971,34 @@ export function OnboardingScreen() {
                   )}
                 </View>
               ))}
-              <View style={styles.row}>
+              <View
+                style={{
+                  flexDirection: isWide ? 'row' : 'column',
+                  gap: 8,
+                  alignItems: isWide ? 'center' : 'stretch',
+                }}
+              >
                 <TextInput
                   accessibilityLabel="New menu item name"
                   value={newMenuName}
                   onChangeText={setNewMenuName}
                   placeholder="New item name (e.g. Matcha Basque Cheesecake)"
-                  style={{
-                    flex: 1,
-                    minWidth: 200,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    borderRadius: 10,
-                    padding: 10,
-                    backgroundColor: colors.paper,
-                  }}
+                  style={[
+                    styles.input,
+                    isWide ? { flex: 1 } : { width: '100%' },
+                  ]}
                 />
                 <TextInput
                   accessibilityLabel="New menu item price"
                   value={newMenuPrice}
                   onChangeText={setNewMenuPrice}
                   placeholder="Price VND"
-                  style={{
-                    width: 120,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    borderRadius: 10,
-                    padding: 10,
-                    backgroundColor: colors.paper,
-                  }}
+                  style={[
+                    styles.input,
+                    isWide
+                      ? { width: 140, maxWidth: '100%' }
+                      : { width: '100%' },
+                  ]}
                 />
                 <Button
                   label="+ Add Menu Item"
@@ -1033,6 +1035,7 @@ export function OnboardingScreen() {
             <View style={styles.row}>
               <Button
                 variant="primary"
+                fullWidth={!isWide}
                 label="Publish 3D Cafe to Live App"
                 onPress={handlePublish}
               />

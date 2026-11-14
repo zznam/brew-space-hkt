@@ -13,11 +13,13 @@ import {
   Heading,
   StatTile,
   styles,
+  useResponsive,
 } from '@/components/ui';
 import { MerchantNav } from './MerchantNav';
 
 export function LiveFloorScreen() {
   const store = useAppStore((state) => state);
+  const { isWide } = useResponsive();
   const venue = getVenue(store.venueId);
   const sessions = store.sessions.filter(
     (session) => session.venueId === venue.id,
@@ -36,56 +38,34 @@ export function LiveFloorScreen() {
       <MerchantNav current="live-floor" />
 
       <Card>
-        <View style={styles.rowBetween}>
-          <View style={{ gap: 4 }}>
-            <Eyebrow color={venue.accent}>MERCHANT / LIVE FLOOR</Eyebrow>
-            <Heading>{venue.name}</Heading>
-          </View>
-          <Badge
-            label={`${sessions.length} of ${venue.seats.length} seats occupied`}
-            tone={sessions.length > 0 ? 'info' : 'neutral'}
-          />
+        <View style={{ gap: 4 }}>
+          <Eyebrow color={venue.accent}>MERCHANT / LIVE FLOOR</Eyebrow>
+          <Heading>{venue.name}</Heading>
+          <Text style={styles.text}>
+            {sessions.length} of {venue.seats.length} seats occupied ·{' '}
+            {venue.description}
+          </Text>
         </View>
-
-        <Text style={styles.text}>
-          {sessions.length} of {venue.seats.length} seats occupied ·{' '}
-          {venue.description}
-        </Text>
 
         <View style={styles.grid}>
           <StatTile
-            label="Active Sessions"
+            label="Active"
             value={`${sessions.length}`}
-            sublabel={`of ${venue.seats.length} total seats`}
+            sublabel={`of ${venue.seats.length} seats`}
             accentColor={venue.accent}
           />
           <StatTile
-            label="Available Seats"
+            label="Available"
             value={`${freeSeats}`}
-            sublabel="Ready for check-in"
+            sublabel="Ready now"
             accentColor={colors.green}
           />
           <StatTile
-            label="Open Tab Estimate"
+            label="Open Tabs"
             value={formatMoney(liveRevenue)}
-            sublabel="Accrued seat + menu"
+            sublabel="Seat + menu"
           />
         </View>
-
-        {selectedSeat && (
-          <View style={styles.row}>
-            <Button
-              label={`Sell to ${selectedSeat.label}`}
-              selected
-              onPress={() =>
-                router.push({
-                  pathname: '/merchant/pos',
-                  params: { seatId: selectedSeat.id },
-                })
-              }
-            />
-          </View>
-        )}
 
         <Divider />
 
@@ -95,6 +75,22 @@ export function LiveFloorScreen() {
           selectedSeatId={store.selectedSeatId}
           onSelect={store.selectSeat}
         />
+
+        {selectedSeat && (
+          <View style={styles.row}>
+            <Button
+              label={`Sell to ${selectedSeat.label}`}
+              variant="primary"
+              fullWidth={!isWide}
+              onPress={() =>
+                router.push({
+                  pathname: '/merchant/pos',
+                  params: { seatId: selectedSeat.id },
+                })
+              }
+            />
+          </View>
+        )}
       </Card>
 
       <Card>
@@ -121,7 +117,7 @@ export function LiveFloorScreen() {
               style={[
                 styles.rowBetween,
                 {
-                  padding: 14,
+                  padding: 12,
                   borderRadius: 12,
                   borderWidth: 1,
                   borderColor: isSelected ? venue.accent : colors.border,
@@ -131,7 +127,7 @@ export function LiveFloorScreen() {
                 },
               ]}
             >
-              <View style={{ gap: 2 }}>
+              <View style={{ gap: 2, flex: 1 }}>
                 <Text
                   style={[
                     styles.text,
@@ -142,15 +138,15 @@ export function LiveFloorScreen() {
                   {formatMoney(total)}
                   {isSelected ? ' · Selected' : ''}
                 </Text>
-                <Text style={{ fontSize: 13, color: colors.muted }}>
-                  Mode: {session.mode} · {session.orders.length} order line(s)
+                <Text style={{ fontSize: 12, color: colors.muted }}>
+                  {session.mode} · {session.orders.length} order line(s)
                 </Text>
               </View>
               {seat ? (
                 <Button
                   size="sm"
+                  variant={isSelected ? 'secondary' : 'default'}
                   label={isSelected ? 'Selected' : 'Select seat'}
-                  selected={isSelected}
                   onPress={() => store.selectSeat(seat.id)}
                 />
               ) : null}

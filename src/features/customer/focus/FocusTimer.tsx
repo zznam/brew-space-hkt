@@ -69,13 +69,13 @@ export function FocusTimer({ venueId }: { venueId: string }) {
 
       <View
         style={{
-          padding: 16,
+          padding: 14,
           borderRadius: 14,
           backgroundColor: colors.surface,
           borderWidth: 1,
           borderColor: colors.border,
           alignItems: 'center',
-          gap: 6,
+          gap: 4,
         }}
       >
         <Text
@@ -84,7 +84,7 @@ export function FocusTimer({ venueId }: { venueId: string }) {
             clock: formatClock(state.remainingMs),
           })}
           style={{
-            fontSize: 38,
+            fontSize: 34,
             fontWeight: '800',
             color: colors.ink,
             letterSpacing: 1,
@@ -105,7 +105,7 @@ export function FocusTimer({ venueId }: { venueId: string }) {
 
       <View style={styles.row}>
         <Button
-          variant="primary"
+          variant="secondary"
           label={
             state.phase === 'idle'
               ? t('start')

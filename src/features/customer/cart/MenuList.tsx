@@ -14,9 +14,9 @@ export function MenuList({ venueId }: { venueId: string }) {
   const menu = getVenue(venueId).menu;
   const shown = searchMenu(menu, query);
   return (
-    <Card variant="subtle" style={{ gap: 12 }}>
+    <Card variant="subtle" style={{ gap: 10 }}>
       <View style={styles.rowBetween}>
-        <Heading style={{ fontSize: 22 }}>{t('menuTitle')}</Heading>
+        <Heading style={{ fontSize: 19 }}>{t('menuTitle')}</Heading>
         <Badge label={`${menu.length} items`} tone="neutral" />
       </View>
 
@@ -47,7 +47,6 @@ export function MenuList({ venueId }: { venueId: string }) {
             style={[
               styles.rowBetween,
               {
-                flexWrap: 'nowrap',
                 padding: 12,
                 borderRadius: 12,
                 backgroundColor: colors.surface,
@@ -56,7 +55,7 @@ export function MenuList({ venueId }: { venueId: string }) {
               },
             ]}
           >
-            <View style={{ flexShrink: 1, gap: 2 }}>
+            <View style={{ flex: 1, gap: 2 }}>
               <Text
                 style={{ color: colors.ink, fontWeight: '700', fontSize: 15 }}
               >
@@ -66,7 +65,7 @@ export function MenuList({ venueId }: { venueId: string }) {
             </View>
             <Button
               size="sm"
-              variant="primary"
+              variant="secondary"
               label={t('addItem', { name: item.name })}
               onPress={() => addItem(item)}
             />
