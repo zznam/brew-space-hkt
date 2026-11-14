@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vibing HKT — User Journeys Gallery</title>
+    <style>
+      :root {
+        --paper: #f7f4ee;
+        --surface: #ffffff;
+        --sunk: #ece8df;
+        --ink: #111815;
+        --ink-soft: #2e3833;
+        --muted: #58635d;
+        --line: #d8d2c5;
+        --green: #166534;
+        --green-soft: #eef7f1;
+        --green-border: #bbf7d0;
+        --blue: #1d4ed8;
+        --blue-soft: #eff6ff;
+        --blue-border: #bfdbfe;
+        --amber: #b45309;
+        --amber-soft: #fef9ec;
+        --amber-border: #fde68a;
+        --radius: 16px;
+        --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 76px;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font:
+          15px/1.6 system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          'Helvetica Neue',
+          Arial,
+          sans-serif;
+      }
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: rgba(247, 244, 238, 0.92);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--line);
+      }
+      .container {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+      .topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        min-height: 60px;
+        flex-wrap: wrap;
+        padding-top: 8px;
+        padding-bottom: 8px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        font-size: 18px;
+        letter-spacing: -0.4px;
+        text-decoration: none;
+        color: var(--ink);
+      }
+      .brand-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--green);
+      }
+      .nav-pills {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .nav-pill {
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ink-soft);
+        padding: 6px 13px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        transition: all 0.15s ease;
+      }
+      .nav-pill:hover {
+        border-color: var(--green);
+        color: var(--green);
+        background: var(--green-soft);
+      }
+      .hero {
+        margin: 28px 0 24px;
+        background: var(--ink);
+        color: #fff;
+        border-radius: 20px;
+        padding: 32px;
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 24px;
+        align-items: center;
+      }
+      @media (max-width: 840px) {
+        .hero {
+          grid-template-columns: 1fr;
+        }
+      }
+      .eyebrow {
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #86efac;
+        margin-bottom: 6px;
+      }
+      .hero h1 {
+        margin: 0 0 10px;
+        font-size: 32px;
+        letter-spacing: -0.7px;
+        line-height: 1.15;
+      }
+      .hero p {
+        margin: 0;
+        color: #cbd5e1;
+        font-size: 15px;
+      }
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      .kpi-card {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 14px;
+        padding: 14px 16px;
+      }
+      .kpi-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+        color: #94a3b8;
+        font-weight: 700;
+      }
+      .kpi-value {
+        font-size: 22px;
+        font-weight: 800;
+        color: #fff;
+        margin-top: 2px;
+      }
+      .kpi-sub {
+        font-size: 12px;
+        color: #86efac;
+      }
+      .journey-section {
+        margin: 36px 0;
+      }
+      .journey-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--line);
+      }
+      .journey-title-group h2 {
+        margin: 4px 0 0;
+        font-size: 24px;
+        letter-spacing: -0.5px;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        border: 1px solid transparent;
+      }
+      .badge.customer {
+        background: var(--green-soft);
+        color: var(--green);
+        border-color: var(--green-border);
+      }
+      .badge.merchant {
+        background: var(--blue-soft);
+        color: var(--blue);
+        border-color: var(--blue-border);
+      }
+      .badge.route {
+        font-family: var(--mono);
+        background: var(--sunk);
+        color: var(--ink-soft);
+        border-color: var(--line);
+      }
+      .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 20px;
+      }
+      @media (max-width: 600px) {
+        .steps-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .step-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 6px 18px rgba(17, 24, 21, 0.05);
+      }
+      .step-shot {
+        background: var(--sunk);
+        border-bottom: 1px solid var(--line);
+        position: relative;
+        overflow: hidden;
+        cursor: zoom-in;
+      }
+      .step-shot img {
+        display: block;
+        width: 100%;
+        height: auto;
+        transition: transform 0.25s ease;
+      }
+      .step-shot:hover img {
+        transform: scale(1.015);
+      }
+      .step-body {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        flex: 1;
+      }
+      .step-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .step-body h3 {
+        margin: 0;
+        font-size: 18px;
+        letter-spacing: -0.3px;
+      }
+      .step-body p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .highlights {
+        margin: 4px 0 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 6px;
+      }
+      .highlights li {
+        font-size: 13px;
+        color: var(--ink-soft);
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+      }
+      .highlights li::before {
+        content: '✓';
+        color: var(--green);
+        font-weight: 800;
+      }
+      /* Lightbox modal */
+      .lightbox {
+        position: fixed;
+        inset: 0;
+        background: rgba(17, 24, 21, 0.88);
+        z-index: 100;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        cursor: zoom-out;
+      }
+      .lightbox.open {
+        display: flex;
+      }
+      .lightbox img {
+        max-width: 95vw;
+        max-height: 92vh;
+        border-radius: 12px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      }
+      footer {
+        margin: 48px 0 36px;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 13px;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="container topbar-inner">
+        <a href="#top" class="brand">
+          <span class="brand-dot"></span>
+          <span>vibing / HKT · User Journeys Gallery</span>
+        </a>
+        <nav class="nav-pills">
+          <a class="nav-pill" href="#in-app-gallery">In-App Gallery</a>
+          <a class="nav-pill" href="#journey-1">1. Customer Space &amp; Session</a>
+          <a class="nav-pill" href="#journey-2">2. Loyalty &amp; Concierge</a>
+          <a class="nav-pill" href="#journey-3">3. Merchant Floor &amp; POS</a>
+          <a class="nav-pill" href="#journey-4">4. AI 3D Studio</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="top" class="container">
+      <section class="hero">
+        <div>
+          <div class="eyebrow">UI Redesign Showcase · Expo SDK 58 Web &amp; Native</div>
+          <h1>End-to-End User Journeys Gallery</h1>
+          <p>
+            Visual walkthrough of all redesigned Customer and Merchant screens in
+            Vibing HKT. You can also explore and launch these steps live inside
+            the running Expo app at <code>/gallery</code>. Click any screenshot
+            below to inspect it full-screen.
+          </p>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">User Journeys</div>
+            <div class="kpi-value">4 Flows</div>
+            <div class="kpi-sub">Customer + Merchant</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Redesigned Routes</div>
+            <div class="kpi-value">11 Screens</div>
+            <div class="kpi-sub">+ In-App /gallery</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Automated Tests</div>
+            <div class="kpi-value">421 Unit</div>
+            <div class="kpi-sub">+ 20 Playwright E2E</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Spatial Engine</div>
+            <div class="kpi-value">3D + 2D</div>
+            <div class="kpi-sub">Three.js + A11y List</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- In-App Interactive Gallery Hub -->
+      <section id="in-app-gallery" class="journey-section">
+        <div class="journey-header">
+          <div class="journey-title-group">
+            <div class="eyebrow" style="color: var(--green)">Interactive Hub</div>
+            <h2>In-App User Journeys Gallery (<code>/gallery</code>)</h2>
+          </div>
+          <span class="badge route">app/gallery.tsx</span>
+        </div>
+        <div class="steps-grid">
+          <article class="step-card">
+            <div class="step-shot">
+              <img
+                src="previews/expo-journey-00-gallery.png"
+                alt="In-App User Journeys Gallery screen"
+              />
+            </div>
+            <div class="step-body">
+              <div class="step-meta">
+                <span class="badge customer">Interactive Launcher</span>
+                <span class="badge route">/gallery</span>
+              </div>
+              <h3>One-Click Journey Filter &amp; State Launcher</h3>
+              <p>
+                Accessible from the top header bar of the app from any screen.
+                Lets reviewers filter by journey and click any step to
+                automatically prepare demo state and jump straight into that
+                screen.
+              </p>
+              <ul class="highlights">
+                <li>Header toggle button switches between Workspace and Journey Gallery</li>
+                <li>Auto-provisions an active customer session when launching Session or Receipt steps</li>
+                <li>Filter tabs for Customer, Loyalty/Concierge, Merchant POS, and AI 3D Studio</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Journey 1 -->
+      <section id="journey-1" class="journey-section">
+        <div class="journey-header">
+          <div class="journey-title-group">
+            <div class="eyebrow" style="color: var(--green)">Journey 01 · Customer Experience</div>
+            <h2>Space Discovery, 3D Seat Picking &amp; Live Session</h2>
+          </div>
+          <span class="badge customer">Customer Role</span>
+        </div>
+
+        <div class="steps-grid">
+          <article class="step-card">
+            <div class="step-shot">
+              <img
+                src="previews/expo-journey-1-1-explore.png"
+                alt="Customer Explore & 3D Floor Map"
+              />
+            </div>
+            <div class="step-body">
+              <div class="step-meta">
+                <span class="badge customer">Step 1.1</span>
+                <span class="badge route">/customer/explore</span>
+              </div>
+              <h3>Explore &amp; 3D Floor Discovery</h3>
+              <p>
+                Real-time seat availability hero card, multi-amenity filter pills
+                (Quiet, Outlet, Monitor, Dual-Desk), interactive 3D orbit canvas,
+                and accessible seat list.
+              </p>
+              <ul class="highlights">
+                <li>Hero availability banner with free/occupied KPIs &amp; hourly rate range</li>
+                <li>Floating HUD camera controls on the 3D venue canvas</li>
+                <li>Seat Detail drawer with shareable deep link &amp; package vs hourly selector</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-shot">
+              <img
+                src="previews/expo-journey-1-2-venue.png"
+                alt="Dedicated Venue Showcase Page"
+              />
+            </div>
+            <div class="step-body">
+              <div class="step-meta">
+                <span class="badge customer">Step 1.2</span>
+                <span class="badge route">/customer/explore?venue=&amp;seat=</span>
+              </div>
+              <h3>Venue Showcase &amp; Deep-Linked Seat Picker</h3>
+              <p>
+                Detailed venue breakdown displaying zone cards, pricing tiers,
+                Wi-Fi credentials, house rules, and query-parameter seat preselection.
+              </p>
+              <ul class="highlights">
+                <li>Zone breakdown cards with seat counts and hourly rate ranges</li>
+                <li>Supports <code>?venue=</code> &amp; <code>?seat=</code> deep links shared by teammates</li>
+                <li>Contextual banner confirming the preselected seat on arrival</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-shot">
+              <img
+                src="previews/expo-journey-1-3-session.png"
+                alt="Customer Active Session Dashboard"
+              />
+            </div>
+            <div class="step-body">
+              <div class="step-meta">
+                <span class="badge customer">Step 1.3</span>
+                <span class="badge route">/customer/active-session</span>
+              </div>
+              <h3>Live Workspace Session, Drink Customizer &amp; Focus Timer</h3>
+              <p>
+                Active workspace dashboard combining live running bill breakdown,
+                Pomodoro focus timer, customized drink ordering, loyalty point
+                redemption, and table support requests.
+              </p>
+              <ul class="highlights">
+                <li>Dark elevated live-bill banner with itemized seat + menu charges</li>
+                <li>Pomodoro Focus Timer with 15m / 25m / 45m presets</li>
+                <li>Expandable drink modifier drawer (milk, ice, sweetness, notes)</li>
+                <li>One-tap staff call buttons (Water, Power/Adapter, Clean Table, Bill Help)</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-shot">
+              <img
+                src="previews/expo-journey-1-4-receipt.png"
+                alt="Digital Receipt, Refund Request & Rating"
+              />
+            </div>
+            <div class="step-body">
+              <div class="step-meta">
+                <span class="badge customer">Step 1.4</span>
+                <span class="badge route">/customer/receipt</span>
+              </div>
+              <h3>Digital Receipt, Refund Request &amp; 5-Star Rating</h3>
+              <p>
+                Post-checkout itemized invoice showing VAT breakdown, loyalty
+                points earned, self-serve issue/refund request tracking, and
+                session rating.
+              </p>
+              <ul class="highlights">
+                <li>Monospace invoice header with receipt ID, timestamps, and tax summary</li>
+                <li>Self-serve refund request card with live review status badge</li>
+                <li>Interactive 1–5 star rating form with feedback notes</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Journey 2 -->
+      <section id="journey-2" class="journey-section">
+        <div class="journey-header">
+          <div class="journey-title-group">
+            <div class="eyebrow" style="color: var(--green)">Journey 02 · Member Experience</div>
+            <h2>Loyalty Profile, Data Privacy &amp; Bilingual Concierge</h2>
+          </div>
+          <span class="badge customer">Customer Role</span>
+        </div>
+
+        <div class="steps-grid">
+          <article class="step-card">
+            <div class="step-shot">
+              <img
+                src="previews/expo-journey-2-1-loyalty.png"
+                alt="Member OTP Login & Loyalty Profile"
+              />
+            </div>
+            <div class="step-body">
+              <div class="step-meta">
+                <span class="badge customer">Step 2.1</span>
+                <span class="badge route">/customer/profile</span>
+              </div>
+              <h3>Member OTP Login, Tier Progress &amp; Barista Preferences</h3>
+              <p>
+                Phone + OTP verification flow (demo code <code>123456</code>),
+                Bronze/Silver/Gold tier progression, milestone badges, and saved
+                default drink preferences.
+              </p>
+              <ul class="highlights">
+                <li>Guest mode preview with instant OTP verification card</li>
+                <li>Tier progress bar with lifetime points and redeemable VND balance</li>
+                <li>Achievement badge grid with unlock progress indicators</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-shot">
+              <img
+                src="previews/expo-journey-2-2-privacy.png"
+                alt="Transparency & Personal Data Controls"
+              />
+            </div>
+            <div class="step-body">
+              <div class="step-meta">
+                <span class="badge customer">Step 2.2</span>
+                <span class="badge route">/customer/privacy</span>
+              </div>
+              <h3>Transparency &amp; Personal Data Controls</h3>
+              <p>
+                Clear inventory of locally stored session, loyalty, and
+                preference data with two-step personal data erasure.
+              </p>
+              <ul class="highlights">
+                <li>Transparent summary of stored profile &amp; session records</li>
+                <li>Two-step confirmation flow to wipe personal data cleanly</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-shot">
+              <img
+                src="previews/expo-journey-2-3-concierge.png"
+                alt="Bilingual Venue Concierge Assistant"
+              />
+            </div>
+            <div class="step-body">
+              <div class="step-meta">
+                <span class="badge customer">Step 2.3</span>
+                <span class="badge route">/customer/assistant</span>
+              </div>
+              <h3>Bilingual (EN / VI) Venue Concierge Assistant</h3>
+              <p>
+                Interactive Q&amp;A assistant answering Wi-Fi, quiet seat picks,
+                power outlet locations, pricing, and drink recommendations using
+                live venue state.
+              </p>
+              <ul class="highlights">
+                <li>Quick-tap topic chips for Wi-Fi, Quiet Seats, Power, Pricing, and Drinks</li>
+                <li>Conversational chat bubbles with live seat availability lookups</li>
+                <li>Segmented EN / VI language switcher in customer navigation</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Journey 3 -->
+      <section id="journey-3" class="journey-section">
+        <div class="journey-header">
+          <div class="journey-title-group">
+            <div class="eyebrow" style="color: var(--blue)">Journey 03 · Merchant Operations</div>
+            <h2>Live Floor Command Center, Counter POS &amp; Kitchen Ticket Board</h2>
+          </div>
+          <span class="badge merchant">Merchant Role</span>
+        </div>
+
+        <div class="steps-grid">
+          <article class="step-card">
+            <div class="step-shot">
+              <img
+                src="previews/expo-journey-3-1-floor.png"
+                alt="Merchant Live Floor Command Center"
+              />
+            </div>
+            <div class="step-body">
+              <div class="step-meta">
+                <span class="badge merchant">Step 3.1</span>
+                <span class="badge route">/merchant/live-floor</span>
+              </div>
+              <h3>Live Floor Command Center &amp; Seat Inspector</h3>
+              <p>
+                Real-time operational overview with occupancy rate, active tabs,
+                accrued revenue KPIs, 3D floor map, contextual seat inspector,
+                and active session table.
+              </p>
+              <ul class="highlights">
+                <li>4-tile KPI strip (Occupancy %, Occupied vs Free, Open Tabs, Accrued Revenue)</li>
+                <li>Side-by-side 3D floor map and contextual Seat Inspector panel</li>
+                <li>One-click Hourly or 3-Hour Study Pass check-in, quick drink add, and checkout</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-shot">
+              <img
+                src="previews/expo-journey-3-2-pos.png"
+                alt="Merchant Counter POS Terminal"
+              />
+            </div>
+            <div class="step-body">
+              <div class="step-meta">
+                <span class="badge merchant">Step 3.2</span>
+                <span class="badge route">/merchant/pos</span>
+              </div>
+              <h3>Counter POS Terminal &amp; Sold-Out Inventory Control</h3>
+              <p>
+                Fast barista point-of-sale terminal supporting walk-in or
+                seat-linked orders, category filtering, live sold-out switches,
+                and Cash / Online checkout.
+              </p>
+              <ul class="highlights">
+                <li>Category filter pills with instant stock status badges and sold-out toggles</li>
+                <li>Seat assignment selector linking orders directly to floor desks</li>
+                <li>Order confirmation modal with receipt number and Ticket Board shortcut</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-shot">
+              <img
+                src="previews/expo-journey-3-3-tickets.png"
+                alt="Merchant Kitchen Ticket Board"
+              />
+            </div>
+            <div class="step-body">
+              <div class="step-meta">
+                <span class="badge merchant">Step 3.3</span>
+                <span class="badge route">/merchant/tickets</span>
+              </div>
+              <h3>Barista &amp; Kitchen Ticket Board (KDS)</h3>
+              <p>
+                Fulfillment board tracking orders from Queued → Preparing → Ready
+                → Served with elapsed timers and one-tap status progression.
+              </p>
+              <ul class="highlights">
+                <li>Status filter tabs with live ticket counts per stage</li>
+                <li>Color-coded ticket cards showing seat badge, payment method, and line items</li>
+                <li>Single-tap progression (Start Preparing → Mark Ready → Mark Served)</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Journey 4 -->
+      <section id="journey-4" class="journey-section">
+        <div class="journey-header">
+          <div class="journey-title-group">
+            <div class="eyebrow" style="color: var(--blue)">Journey 04 · Spatial AI Studio</div>
+            <h2>Multimodal AI 3D Venue Onboarding &amp; Spatial Editor</h2>
+          </div>
+          <span class="badge merchant">Merchant Role</span>
+        </div>
+
+        <div class="steps-grid">
+          <article class="step-card">
+            <div class="step-shot">
+              <img
+                src="previews/expo-journey-4-1-onboarding.png"
+                alt="Merchant AI 3D Onboarding Studio"
+              />
+            </div>
+            <div class="step-body">
+              <div class="step-meta">
+                <span class="badge merchant">Step 4.1</span>
+                <span class="badge route">/merchant/onboarding</span>
+              </div>
+              <h3>AI 3D Venue Generator, Multi-Turn Chat &amp; Spatial Studio</h3>
+              <p>
+                End-to-end onboarding wizard where cafe owners upload photos,
+                videos, floorplans, or menus, generate a 3D venue with AI,
+                refine it via multi-turn prompts, and publish live.
+              </p>
+              <ul class="highlights">
+                <li>4-step visual progress tracker (Upload → AI Refine → 3D Studio → Publish)</li>
+                <li>Multimodal media upload cards + optional runtime OpenAI API key input</li>
+                <li>Multi-turn conversational refinement with saved iteration snapshots</li>
+                <li>Interactive 3D room dimension, wall/floor palette, and furniture inspector</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <footer>
+        <span>Vibing HKT · Expo SDK 58 / React Native + Three.js</span>
+        <span>Open <code>/gallery</code> in the live app or click any screenshot to zoom</span>
+      </footer>
+    </main>
+
+    <div id="lightbox" class="lightbox" role="dialog" aria-label="Screenshot preview">
+      <img id="lightbox-img" src="" alt="Expanded preview" />
+    </div>
+
+    <script>
+      const lightbox = document.getElementById('lightbox');
+      const lightboxImg = document.getElementById('lightbox-img');
+      document.querySelectorAll('.step-shot img').forEach((img) => {
+        img.addEventListener('click', () => {
+          lightboxImg.src = img.src;
+          lightboxImg.alt = img.alt;
+          lightbox.classList.add('open');
+        });
+      });
+      lightbox.addEventListener('click', () => {
+        lightbox.classList.remove('open');
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') lightbox.classList.remove('open');
+      });
+    </script>
+  </body>
+</html>

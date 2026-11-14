@@ -13,7 +13,16 @@ import {
 } from '@/core';
 import { useAppStore } from '@/core/useAppStore';
 import { CafeScene3D } from '@/components/canvas3d/CafeScene3D';
-import { Button, Card, colors, Heading, styles } from '@/components/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  colors,
+  Eyebrow,
+  Heading,
+  styles,
+} from '@/components/ui';
+import { MerchantNav } from '../MerchantNav';
 import {
   processUploadedFile,
   SAMPLE_ONBOARDING_BUNDLES,
@@ -333,10 +342,13 @@ export function OnboardingScreen() {
 
   return (
     <>
+      <MerchantNav current="onboarding" />
+
       <Card>
-        <Text style={{ color: colors.ink, fontWeight: '700' }}>
-          MERCHANT / AI 3D CAFE ONBOARDING & STUDIO
-        </Text>
+        <View style={styles.rowBetween}>
+          <Eyebrow>MERCHANT / AI 3D CAFE ONBOARDING & STUDIO</Eyebrow>
+          <Badge label="OpenAI Vision + 3D Engine" tone="info" />
+        </View>
         <Heading>Onboard Your Cafe with OpenAI & 3D Engine</Heading>
         <Text style={styles.text}>
           Upload photos, walkthrough videos, and menu or floorplan documents. AI
@@ -379,45 +391,30 @@ export function OnboardingScreen() {
         </View>
 
         <View style={{ gap: 8 }}>
-          <Text style={{ fontWeight: '700' }}>Cafe name</Text>
+          <Text style={styles.sectionLabel}>Cafe name</Text>
           <TextInput
             accessibilityLabel="Cafe name"
             value={ownerVenueName}
             onChangeText={setOwnerVenueName}
             placeholder="e.g. Saigon Roastery & Loft"
-            style={{
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 10,
-              padding: 10,
-              backgroundColor: colors.paper,
-            }}
+            style={styles.input}
           />
         </View>
 
         <View style={{ gap: 8 }}>
-          <Text style={{ fontWeight: '700' }}>
-            Owner context & spatial notes
-          </Text>
+          <Text style={styles.sectionLabel}>Owner context & spatial notes</Text>
           <TextInput
             accessibilityLabel="Owner context & spatial notes"
             value={ownerNotes}
             onChangeText={setOwnerNotes}
             multiline
             placeholder="Describe room layout, seating zones, lighting mood, or special amenities..."
-            style={{
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 10,
-              padding: 10,
-              minHeight: 68,
-              backgroundColor: colors.paper,
-            }}
+            style={[styles.input, { minHeight: 72 }]}
           />
         </View>
 
         <View style={{ gap: 8 }}>
-          <Text style={{ fontWeight: '700' }}>
+          <Text style={styles.sectionLabel}>
             OpenAI API Key (optional · runtime memory only)
           </Text>
           <TextInput
@@ -426,13 +423,7 @@ export function OnboardingScreen() {
             onChangeText={setApiKey}
             secureTextEntry
             placeholder="sk-... (leave blank to use deterministic context-aware AI synthesizer)"
-            style={{
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 10,
-              padding: 10,
-              backgroundColor: colors.paper,
-            }}
+            style={styles.input}
           />
           <Text style={{ fontSize: 12, color: colors.muted }}>
             Uses OpenAI gpt-4o Structured JSON Outputs when a key is provided;
@@ -516,6 +507,7 @@ export function OnboardingScreen() {
 
         <View style={styles.row}>
           <Button
+            variant="primary"
             label={
               generating
                 ? 'Generating 3D Environment…'
@@ -527,20 +519,40 @@ export function OnboardingScreen() {
         </View>
 
         {error ? (
-          <Text
-            accessibilityRole="alert"
-            style={{ color: '#b91c1c', fontWeight: '700' }}
+          <View
+            style={{
+              padding: 12,
+              borderRadius: 12,
+              backgroundColor: colors.dangerSurface,
+              borderWidth: 1,
+              borderColor: colors.dangerBorder,
+            }}
           >
-            {error}
-          </Text>
+            <Text
+              accessibilityRole="alert"
+              style={{ color: colors.danger, fontWeight: '700' }}
+            >
+              {error}
+            </Text>
+          </View>
         ) : null}
         {statusMessage ? (
-          <Text
-            accessibilityRole="alert"
-            style={{ color: '#15803d', fontWeight: '700' }}
+          <View
+            style={{
+              padding: 12,
+              borderRadius: 12,
+              backgroundColor: colors.greenSurface,
+              borderWidth: 1,
+              borderColor: colors.greenBorder,
+            }}
           >
-            {statusMessage}
-          </Text>
+            <Text
+              accessibilityRole="alert"
+              style={{ color: colors.green, fontWeight: '700' }}
+            >
+              {statusMessage}
+            </Text>
+          </View>
         ) : null}
       </Card>
 
@@ -1020,6 +1032,7 @@ export function OnboardingScreen() {
 
             <View style={styles.row}>
               <Button
+                variant="primary"
                 label="Publish 3D Cafe to Live App"
                 onPress={handlePublish}
               />

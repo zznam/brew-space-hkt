@@ -1,8 +1,18 @@
 import { router } from 'expo-router';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { calculateBill, DEMO_CUSTOMER_ID, formatMoney, getVenue } from '@/core';
 import { useAppStore } from '@/core/useAppStore';
-import { Button, Card, Heading, styles } from '@/components/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  colors,
+  Divider,
+  Eyebrow,
+  Heading,
+  StatTile,
+  styles,
+} from '@/components/ui';
 import { activeSessionMessages, MODE_KEYS } from './activeSessionMessages';
 import { CartPanel } from './cart/CartPanel';
 import { MenuList } from './cart/MenuList';
@@ -17,6 +27,7 @@ import { finishSession } from './shared/finishSession';
 import { SessionStatusBanner } from './support/SessionStatusBanner';
 import { SupportPanel } from './support/SupportPanel';
 import { VenueInfoCard } from './support/VenueInfoCard';
+
 export function ActiveSessionScreen() {
   const { t, lang } = useT(activeSessionMessages);
   const store = useAppStore((state) => state);
@@ -31,12 +42,16 @@ export function ActiveSessionScreen() {
     return (
       <Card>
         <CustomerNav current="session" />
+        <Eyebrow color={venue.accent}>CUSTOMER / ACTIVE SESSION</Eyebrow>
         <Heading>{t('nextSession')}</Heading>
         <Text style={styles.text}>{t('noSession', { venue: venue.name })}</Text>
-        <Button
-          label={t('exploreSeats')}
-          onPress={() => router.replace('/customer/explore')}
-        />
+        <View style={styles.row}>
+          <Button
+            variant="primary"
+            label={t('exploreSeats')}
+            onPress={() => router.replace('/customer/explore')}
+          />
+        </View>
       </Card>
     );
   const bill = calculateBill(session);
@@ -49,8 +64,19 @@ export function ActiveSessionScreen() {
     <Card>
       <CustomerNav current="session" />
       <OfflineBanner online={online} />
-      <Heading>{t('liveTab')}</Heading>
-      <Text style={styles.text}>
+
+      <View style={styles.rowBetween}>
+        <View style={{ gap: 4 }}>
+          <Eyebrow color={venue.accent}>CUSTOMER / ACTIVE SESSION</Eyebrow>
+          <Heading>{t('liveTab')}</Heading>
+        </View>
+        <Badge
+          label={`${seatLabel} · ${session.elapsedMinutes}m`}
+          tone="info"
+        />
+      </View>
+
+      <Text style={[styles.text, { color: colors.ink, fontWeight: '600' }]}>
         {t('header', {
           venue: venue.name,
           seat: seatLabel,
@@ -58,7 +84,28 @@ export function ActiveSessionScreen() {
           mode: t(MODE_KEYS[session.mode]),
         })}
       </Text>
+
       <SessionStatusBanner session={session} />
+
+      <View style={styles.grid}>
+        <StatTile
+          label="Seat Time"
+          value={formatMoney(bill.time)}
+          sublabel={`${session.elapsedMinutes}m elapsed`}
+        />
+        <StatTile
+          label="Menu Tab"
+          value={formatMoney(bill.items)}
+          sublabel={`${session.orders.length} item(s) added`}
+        />
+        <StatTile
+          label="Running Total"
+          value={formatMoney(bill.total)}
+          sublabel="VND demo estimate"
+          accentColor={venue.accent}
+        />
+      </View>
+
       <MenuList venueId={venue.id} />
       <CartPanel session={session} disabledReason={blocked} />
       <OrderHistory session={session} disabledReason={blocked} />
@@ -72,22 +119,31 @@ export function ActiveSessionScreen() {
         }}
       />
       <VenueInfoCard venueId={venue.id} />
-      <Text style={styles.text}>
-        {t('summary', {
-          count: session.orders.length,
-          time: formatMoney(bill.time),
-          menu: formatMoney(bill.items),
-        })}
-      </Text>
-      <Heading>{formatMoney(bill.total)}</Heading>
-      <Text style={styles.text}>{t('disclaimer')}</Text>
-      <Button
-        label={t('endSession')}
-        disabled={blocked !== null}
-        onPress={() => {
-          if (finishSession(session).ok) router.replace('/customer/receipt');
-        }}
-      />
+
+      <Divider />
+
+      <Card variant="accent" style={{ gap: 10 }}>
+        <Text style={[styles.text, { color: colors.ink, fontWeight: '600' }]}>
+          {t('summary', {
+            count: session.orders.length,
+            time: formatMoney(bill.time),
+            menu: formatMoney(bill.items),
+          })}
+        </Text>
+        <Heading>{formatMoney(bill.total)}</Heading>
+        <Text style={[styles.text, { fontSize: 13 }]}>{t('disclaimer')}</Text>
+        <View style={styles.row}>
+          <Button
+            variant="danger"
+            label={t('endSession')}
+            disabled={blocked !== null}
+            onPress={() => {
+              if (finishSession(session).ok)
+                router.replace('/customer/receipt');
+            }}
+          />
+        </View>
+      </Card>
     </Card>
   );
 }

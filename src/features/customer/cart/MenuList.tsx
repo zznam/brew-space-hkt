@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import { formatMoney, getVenue } from '@/core';
-import { Button, colors, Heading, styles } from '@/components/ui';
+import { Badge, Button, Card, colors, Heading, styles } from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
 import { searchMenu } from './cartModel';
 import { cartMessages } from './messages';
@@ -14,9 +14,14 @@ export function MenuList({ venueId }: { venueId: string }) {
   const menu = getVenue(venueId).menu;
   const shown = searchMenu(menu, query);
   return (
-    <View style={{ gap: 10 }}>
-      <Heading>{t('menuTitle')}</Heading>
+    <Card variant="subtle" style={{ gap: 12 }}>
+      <View style={styles.rowBetween}>
+        <Heading style={{ fontSize: 22 }}>{t('menuTitle')}</Heading>
+        <Badge label={`${menu.length} items`} tone="neutral" />
+      </View>
+
       {menu.length === 0 && <Text style={styles.text}>{t('menuEmpty')}</Text>}
+
       {menu.length > 0 && (
         <TextInput
           accessibilityLabel={t('searchLabel')}
@@ -25,41 +30,49 @@ export function MenuList({ venueId }: { venueId: string }) {
           onChangeText={setQuery}
           autoCapitalize="none"
           autoCorrect={false}
-          style={{
-            borderWidth: 1,
-            borderColor: colors.border,
-            borderRadius: 10,
-            paddingHorizontal: 12,
-            paddingVertical: 10,
-            color: colors.ink,
-          }}
+          style={[styles.input, { backgroundColor: colors.surface }]}
         />
       )}
+
       {menu.length > 0 && shown.length === 0 && (
         <Text accessibilityRole="alert" style={styles.text}>
           {t('noMatch')}
         </Text>
       )}
-      {shown.map((item) => (
-        <View
-          key={item.id}
-          style={[
-            styles.row,
-            { justifyContent: 'space-between', flexWrap: 'nowrap' },
-          ]}
-        >
-          <View style={{ flexShrink: 1 }}>
-            <Text style={{ color: colors.ink, fontWeight: '600' }}>
-              {item.name}
-            </Text>
-            <Text style={styles.text}>{formatMoney(item.price)}</Text>
+
+      <View style={{ gap: 8 }}>
+        {shown.map((item) => (
+          <View
+            key={item.id}
+            style={[
+              styles.rowBetween,
+              {
+                flexWrap: 'nowrap',
+                padding: 12,
+                borderRadius: 12,
+                backgroundColor: colors.surface,
+                borderWidth: 1,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <View style={{ flexShrink: 1, gap: 2 }}>
+              <Text
+                style={{ color: colors.ink, fontWeight: '700', fontSize: 15 }}
+              >
+                {item.name}
+              </Text>
+              <Text style={styles.text}>{formatMoney(item.price)}</Text>
+            </View>
+            <Button
+              size="sm"
+              variant="primary"
+              label={t('addItem', { name: item.name })}
+              onPress={() => addItem(item)}
+            />
           </View>
-          <Button
-            label={t('addItem', { name: item.name })}
-            onPress={() => addItem(item)}
-          />
-        </View>
-      ))}
-    </View>
+        ))}
+      </View>
+    </Card>
   );
 }

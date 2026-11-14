@@ -1,9 +1,18 @@
 import { useEffect, useState } from 'react';
-import { useLocalSearchParams } from 'expo-router';
-import { Text } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { Text, View } from 'react-native';
 import { formatMoney, getVenue } from '@/core';
 import { useAppStore } from '@/core/useAppStore';
-import { Button, Card, Heading, styles } from '@/components/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  colors,
+  Eyebrow,
+  Heading,
+  styles,
+} from '@/components/ui';
+import { MerchantNav } from '../MerchantNav';
 import { MenuGrid } from './MenuGrid';
 import { CartPanel } from './CartPanel';
 import { calculateOrderTotal } from './posStore';
@@ -48,16 +57,35 @@ export function PosScreen() {
 
   if (justPaid) {
     return (
-      <Card>
-        <Heading>Order sent to the kitchen.</Heading>
-        <Button
-          label="Start a new order"
-          onPress={() => {
-            posStore.getState().createOrder(venueId, selectedSeatId);
-            setJustPaid(false);
-          }}
-        />
-      </Card>
+      <>
+        <MerchantNav current="pos" />
+        <Card variant="accent">
+          <Eyebrow color={colors.green}>MERCHANT / POS CHECKOUT</Eyebrow>
+          <Heading>Order sent to the kitchen.</Heading>
+          <Text style={styles.text}>
+            The paid ticket is now queued on the fulfillment board for{' '}
+            {venue.name}.
+          </Text>
+          <View style={styles.row}>
+            <Button
+              label="Start a new order"
+              variant="primary"
+              onPress={() => {
+                posStore.getState().createOrder(venueId, selectedSeatId);
+                setJustPaid(false);
+              }}
+            />
+            <Button
+              label="Open Ticket Board"
+              onPress={() => router.push('/merchant/tickets')}
+            />
+            <Button
+              label="Back to Live Floor"
+              onPress={() => router.push('/merchant/live-floor')}
+            />
+          </View>
+        </Card>
+      </>
     );
   }
 
@@ -70,15 +98,41 @@ export function PosScreen() {
 
   return (
     <>
+      <MerchantNav current="pos" />
+
       <Card>
-        <Heading>
-          {seatLabel ? `Sell to ${seatLabel}` : 'Walk-in order'}
-        </Heading>
+        <View style={styles.rowBetween}>
+          <View style={{ gap: 4 }}>
+            <Eyebrow color={venue.accent}>MERCHANT / POINT OF SALE</Eyebrow>
+            <Heading>
+              {seatLabel ? `Sell to ${seatLabel}` : 'Walk-in order'}
+            </Heading>
+          </View>
+          <Badge
+            label={seatLabel ? `Target: ${seatLabel}` : 'Counter Walk-in'}
+            tone={seatLabel ? 'info' : 'neutral'}
+          />
+        </View>
+
         {actionError && (
-          <Text accessibilityRole="alert" style={styles.text}>
-            {actionError}
-          </Text>
+          <View
+            style={{
+              padding: 12,
+              borderRadius: 12,
+              backgroundColor: colors.dangerSurface,
+              borderWidth: 1,
+              borderColor: colors.dangerBorder,
+            }}
+          >
+            <Text
+              accessibilityRole="alert"
+              style={[styles.text, { color: colors.danger, fontWeight: '600' }]}
+            >
+              {actionError}
+            </Text>
+          </View>
         )}
+
         <MenuGrid
           venue={venue}
           soldOutItemIds={soldOutItemIds}
@@ -94,6 +148,7 @@ export function PosScreen() {
           }
         />
       </Card>
+
       <Card>
         <CartPanel
           order={draftOrder ?? null}
@@ -136,18 +191,35 @@ export function PosScreen() {
           }}
         />
       </Card>
+
       <Card>
-        <Heading>Other open orders</Heading>
+        <View style={styles.rowBetween}>
+          <Heading>Other open orders</Heading>
+          <Badge label={`${otherOpenOrders.length}`} tone="neutral" />
+        </View>
         {otherOpenOrders.length === 0 ? (
           <Text style={styles.text}>No other open orders.</Text>
         ) : (
           otherOpenOrders.map((order) => (
-            <Text key={order.id} style={styles.text}>
-              {order.seatId
-                ? venue.seats.find((seat) => seat.id === order.seatId)?.label
-                : 'Walk-in'}{' '}
-              · {formatMoney(calculateOrderTotal(order))}
-            </Text>
+            <View
+              key={order.id}
+              style={{
+                padding: 12,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: colors.border,
+                backgroundColor: colors.surfaceSubtle,
+              }}
+            >
+              <Text
+                style={[styles.text, { color: colors.ink, fontWeight: '600' }]}
+              >
+                {order.seatId
+                  ? venue.seats.find((seat) => seat.id === order.seatId)?.label
+                  : 'Walk-in'}{' '}
+                · {formatMoney(calculateOrderTotal(order))}
+              </Text>
+            </View>
           ))
         )}
       </Card>

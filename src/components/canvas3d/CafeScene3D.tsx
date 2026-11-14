@@ -258,6 +258,7 @@ export function CafeScene3D({
           {PRESET_LABELS.map((item) => (
             <Button
               key={item.id}
+              size="sm"
               label={item.label}
               selected={preset === item.id}
               onPress={() => {
@@ -267,6 +268,7 @@ export function CafeScene3D({
             />
           ))}
           <Button
+            size="sm"
             label="Zoom +"
             onPress={() =>
               setOrbit((prev) => ({
@@ -276,6 +278,7 @@ export function CafeScene3D({
             }
           />
           <Button
+            size="sm"
             label="Zoom −"
             onPress={() =>
               setOrbit((prev) => ({

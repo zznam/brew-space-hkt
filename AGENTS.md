@@ -73,6 +73,27 @@ Keep that boundary. Importing `useAppStore` from pure code makes the core tests 
 
 **Merchant AI onboarding is a client-side demo, not a backend integration.** `src/features/merchant/onboarding/openaiOnboarding.ts` calls the OpenAI API directly from the browser using a key the owner types into a form field at runtime — held only in component state, never persisted or read from `EXPO_PUBLIC_*`/env. With no key, the same file deterministically synthesizes a venue from the owner's notes/uploads, so the flow always works without a key; keep that path working for any change here.
 
+## UI direction: mobile-first, lean
+
+The phone is the product; wider screens are an enhancement. This applies to every screen in both roles, merchant included.
+
+**Mobile-first.**
+
+- Design and build each screen at 390pt wide first (the Playwright `mobile` project, 390×844). Base styles are the phone layout: one column, full-width cards, vertical scroll only. Add wider layouts on top with `useWindowDimensions`, never the reverse.
+- A screen is done when it works at 390pt with no horizontal scroll, no clipped text, and nothing reachable only by hover or keyboard. Verify in the `mobile` project (or a 390pt viewport) before the `desktop` one.
+- Touch targets are at least 44pt tall (the `md` `Button` default). Keep `sm` buttons for dense secondary actions with spacing around them.
+- Put the screen's primary action within thumb reach: bottom of the screen or directly under the content it acts on. Navigation is thumb-reachable too.
+- Size with flex and percentages. A fixed pixel width needs a `maxWidth: '100%'` beside it.
+- Respect safe areas and the on-screen keyboard: inputs stay visible while typing.
+
+**Lean.**
+
+- One job per screen, one `primary` button per view. Everything else is `default`, `secondary`, or `ghost`.
+- Show what the user needs for the current step; move detail behind a tap (a detail screen or an expandable row). When adding to a screen, look for something to remove or collapse first.
+- Build from `src/components/ui.tsx`: `Button`, `Card`, `Heading`, `Eyebrow`, `Badge`, `StatTile`, `Divider`, plus `colors` and the shared `styles`. Extend a primitive there when one is missing, so screens stay free of one-off colors, radii, and font sizes.
+- Keep the type scale to what `styles` defines (heading, subheading, section label, text, eyebrow). Hierarchy comes from spacing and weight; borders, shadows, and tinted surfaces are for the few things that need to stand out.
+- Copy is short: a label says the action ("Start session"), a line of helper text at most. Every list has an empty state and every action shows its `ActionResult` message inline.
+
 ## Conventions
 
 - Money is integer VND. Sessions snapshot the hourly rate and menu prices when created, so later fixture changes don't alter open tabs.

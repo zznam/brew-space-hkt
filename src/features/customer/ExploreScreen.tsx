@@ -4,7 +4,16 @@ import { Text, View } from 'react-native';
 import { formatMoney, getVenue, type BillingMode, type Seat } from '@/core';
 import { appStore, useAppStore } from '@/core/useAppStore';
 import { SeatMap } from '@/components/SeatMap';
-import { Button, Card, Heading, styles } from '@/components/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  colors,
+  Divider,
+  Eyebrow,
+  Heading,
+  styles,
+} from '@/components/ui';
 import {
   describeOccupancy,
   filterSeats,
@@ -128,32 +137,85 @@ export function ExploreScreen() {
   return (
     <Card>
       <CustomerNav current="explore" />
-      <Text style={{ color: venue.accent, fontWeight: '700' }}>
-        {t('eyebrow')}
-      </Text>
-      <Heading>{venue.name}</Heading>
+
+      <View style={styles.rowBetween}>
+        <View style={{ gap: 4 }}>
+          <Eyebrow color={venue.accent}>{t('eyebrow')}</Eyebrow>
+          <Heading>{venue.name}</Heading>
+        </View>
+        <Badge
+          label={`${summary.free}/${summary.total} free`}
+          tone={summary.free > 0 ? 'success' : 'warning'}
+        />
+      </View>
+
       <Text style={styles.text}>
         {t('intro', { description: descriptionText(venue.description, lang) })}
       </Text>
+
       {warning ? (
-        <Text accessibilityRole="alert" style={styles.text}>
-          {loyaltyWarningText(warning, lang)}
-        </Text>
+        <View
+          style={{
+            padding: 12,
+            borderRadius: 12,
+            backgroundColor: colors.amberSurface,
+            borderWidth: 1,
+            borderColor: colors.amberBorder,
+          }}
+        >
+          <Text
+            accessibilityRole="alert"
+            style={[styles.text, { color: colors.amber, fontWeight: '600' }]}
+          >
+            {loyaltyWarningText(warning, lang)}
+          </Text>
+        </View>
       ) : null}
+
       {linkNotice ? (
-        <Text accessibilityRole="alert" style={styles.text}>
-          {linkNotice}
-        </Text>
+        <View
+          style={{
+            padding: 12,
+            borderRadius: 12,
+            backgroundColor: colors.blueSurface,
+            borderWidth: 1,
+            borderColor: colors.blueBorder,
+          }}
+        >
+          <Text
+            accessibilityRole="alert"
+            style={[styles.text, { color: colors.blue, fontWeight: '600' }]}
+          >
+            {linkNotice}
+          </Text>
+        </View>
       ) : null}
-      <Text accessibilityLiveRegion="polite" style={styles.text}>
-        {describeOccupancy(summary, lang)}
-      </Text>
+
+      <View
+        style={{
+          padding: 12,
+          borderRadius: 12,
+          backgroundColor: colors.greenSurface,
+          borderWidth: 1,
+          borderColor: colors.greenBorder,
+        }}
+      >
+        <Text
+          accessibilityLiveRegion="polite"
+          style={[styles.text, { color: colors.green, fontWeight: '700' }]}
+        >
+          {describeOccupancy(summary, lang)}
+        </Text>
+      </View>
+
       <VenuePage venue={venue} />
 
       {usual ? (
-        <Card>
-          <Text style={{ fontWeight: '700' }}>{t('usualTitle')}</Text>
-          <Text style={styles.text}>
+        <Card variant="accent">
+          <Text style={[styles.subheading, { color: colors.green }]}>
+            {t('usualTitle')}
+          </Text>
+          <Text style={[styles.text, { color: colors.ink }]}>
             {t('usualBody', {
               count: usual.visitCount,
               kind: kindWord(usual.seatKind, lang),
@@ -165,7 +227,9 @@ export function ExploreScreen() {
           </Text>
           {usual.seat ? (
             <>
-              <Text style={styles.text}>
+              <Text
+                style={[styles.text, { color: colors.ink, fontWeight: '600' }]}
+              >
                 {t('usualFree', {
                   seat: seatText(usual.seat.label),
                   pinned: usual.viaFavourite ? t('usualPinned') : '',
@@ -173,6 +237,7 @@ export function ExploreScreen() {
               </Text>
               <View style={styles.row}>
                 <Button
+                  variant="primary"
                   label={t('usualSelect', { seat: seatText(usual.seat.label) })}
                   onPress={() => choose(usual.seat!.id)}
                 />
@@ -184,8 +249,8 @@ export function ExploreScreen() {
         </Card>
       ) : null}
 
-      <View style={{ gap: 8 }}>
-        <Text style={{ fontWeight: '700' }}>{t('pinnedTitle')}</Text>
+      <Card variant="subtle" style={{ gap: 10 }}>
+        <Text style={styles.subheading}>{t('pinnedTitle')}</Text>
         {favouriteIds.length === 0 ? (
           <Text style={styles.text}>{t('pinnedNone')}</Text>
         ) : (
@@ -197,6 +262,7 @@ export function ExploreScreen() {
               return (
                 <Button
                   key={id}
+                  size="sm"
                   label={
                     busy
                       ? t('pinnedOccupied', { seat: seatText(seat.label) })
@@ -209,10 +275,24 @@ export function ExploreScreen() {
             })}
           </View>
         )}
-      </View>
+      </Card>
 
-      <View style={{ gap: 8 }}>
-        <Text style={{ fontWeight: '700' }}>{t('filterTitle')}</Text>
+      <Card variant="subtle" style={{ gap: 12 }}>
+        <View style={styles.rowBetween}>
+          <Text style={styles.subheading}>{t('filterTitle')}</Text>
+          {hasActiveFilters(filters) ? (
+            <Text
+              accessibilityLiveRegion="polite"
+              style={[styles.text, { color: colors.green, fontWeight: '700' }]}
+            >
+              {t('showing', {
+                shown: visibleSeats.length,
+                total: venue.seats.length,
+              })}
+            </Text>
+          ) : null}
+        </View>
+
         <View style={styles.row}>
           {KINDS.map((kind) => {
             const label = kindName(kind, lang);
@@ -220,6 +300,7 @@ export function ExploreScreen() {
             return (
               <Button
                 key={kind}
+                size="sm"
                 label={on ? `✓ ${label}` : label}
                 selected={on}
                 onPress={() =>
@@ -234,6 +315,7 @@ export function ExploreScreen() {
             );
           })}
         </View>
+
         <View style={styles.row}>
           {[null, ...priceCaps].map((cap) => {
             const on = filters.maxRate === cap;
@@ -244,6 +326,7 @@ export function ExploreScreen() {
             return (
               <Button
                 key={cap ?? 'any'}
+                size="sm"
                 label={on ? `✓ ${label}` : label}
                 selected={on}
                 onPress={() => setFilters({ ...filters, maxRate: cap })}
@@ -251,6 +334,7 @@ export function ExploreScreen() {
             );
           })}
           <Button
+            size="sm"
             label={
               filters.availableOnly
                 ? `✓ ${t('availableOnly')}`
@@ -262,6 +346,7 @@ export function ExploreScreen() {
             }
           />
         </View>
+
         <View style={styles.row}>
           {AMENITIES.map(({ key }) => {
             const label = amenityLabel(key, lang);
@@ -269,6 +354,7 @@ export function ExploreScreen() {
             return (
               <Button
                 key={key}
+                size="sm"
                 label={on ? `✓ ${label}` : label}
                 selected={on}
                 onPress={() => toggleAmenity(key)}
@@ -276,19 +362,14 @@ export function ExploreScreen() {
             );
           })}
         </View>
-        {hasActiveFilters(filters) ? (
-          <Text accessibilityLiveRegion="polite" style={styles.text}>
-            {t('showing', {
-              shown: visibleSeats.length,
-              total: venue.seats.length,
-            })}
-          </Text>
-        ) : null}
-      </View>
+      </Card>
 
       {visibleSeats.length === 0 ? (
-        <View style={{ gap: 10 }}>
-          <Text accessibilityRole="alert" style={styles.text}>
+        <Card variant="subtle" style={{ gap: 10 }}>
+          <Text
+            accessibilityRole="alert"
+            style={[styles.text, { color: colors.ink, fontWeight: '600' }]}
+          >
             {t('noMatch')}
           </Text>
           <View style={styles.row}>
@@ -297,7 +378,7 @@ export function ExploreScreen() {
               onPress={() => setFilters(noFilters())}
             />
           </View>
-        </View>
+        </Card>
       ) : (
         <SeatMap
           venue={filteredVenue}
@@ -308,14 +389,26 @@ export function ExploreScreen() {
       )}
 
       {selectedSeat ? (
-        <View style={styles.row}>
-          <Text style={styles.text}>
+        <View
+          style={[
+            styles.rowBetween,
+            {
+              padding: 12,
+              borderRadius: 12,
+              backgroundColor: colors.surfaceSubtle,
+              borderWidth: 1,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Text style={[styles.text, { color: colors.ink, fontWeight: '700' }]}>
             {t('selected', { seat: seatText(selectedSeat.label) })}
             {visibleSeats.some((seat) => seat.id === selectedSeat.id)
               ? ''
               : t('hiddenByFilters')}
           </Text>
           <Button
+            size="sm"
             label={selectedPinned ? t('unpin') : t('pin')}
             selected={selectedPinned}
             onPress={() => {
@@ -329,6 +422,7 @@ export function ExploreScreen() {
           />
         </View>
       ) : null}
+
       {selectedSeat ? (
         <SeatDetailCard
           key={selectedSeat.id}
@@ -337,16 +431,47 @@ export function ExploreScreen() {
         />
       ) : null}
 
-      <View style={styles.row}>
-        <Button
-          label={t('startMetered')}
-          onPress={() => start('METERED_OPEN')}
-        />
-        <Button label={t('startBundle2h')} onPress={() => start('BUNDLE_2H')} />
-        <Button label={t('startBundle4h')} onPress={() => start('BUNDLE_4H')} />
+      <Divider />
+
+      <View style={{ gap: 10 }}>
+        <Text style={styles.sectionLabel}>Start Your Session</Text>
+        <View style={styles.row}>
+          <Button
+            variant="primary"
+            label={t('startMetered')}
+            onPress={() => start('METERED_OPEN')}
+          />
+          <Button
+            label={t('startBundle2h')}
+            onPress={() => start('BUNDLE_2H')}
+          />
+          <Button
+            label={t('startBundle4h')}
+            onPress={() => start('BUNDLE_4H')}
+          />
+        </View>
       </View>
-      {error ? <Text accessibilityRole="alert">{error}</Text> : null}
-      <Text style={styles.text}>{t('footnote')}</Text>
+
+      {error ? (
+        <View
+          style={{
+            padding: 12,
+            borderRadius: 12,
+            backgroundColor: colors.dangerSurface,
+            borderWidth: 1,
+            borderColor: colors.dangerBorder,
+          }}
+        >
+          <Text
+            accessibilityRole="alert"
+            style={{ color: colors.danger, fontWeight: '700' }}
+          >
+            {error}
+          </Text>
+        </View>
+      ) : null}
+
+      <Text style={[styles.text, { fontSize: 13 }]}>{t('footnote')}</Text>
     </Card>
   );
 }
