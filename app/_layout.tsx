@@ -70,7 +70,7 @@ export default function RootLayout() {
                     letterSpacing: -0.6,
                   }}
                 >
-                  vibing / HKT
+                  BrewSpace
                 </Text>
               </View>
               <View style={styles.row}>

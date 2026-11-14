@@ -1,4 +1,4 @@
-# Vibing HKT
+# BrewSpace
 
 Shared Expo / React Native foundation for the 3D cafe and coworking platform. One application contains merchant and customer experiences, backed by a local demo core.
 
