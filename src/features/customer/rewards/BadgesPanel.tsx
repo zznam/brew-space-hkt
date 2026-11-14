@@ -6,8 +6,9 @@ import {
   radius,
   styles,
   useResponsive,
+  space,
 } from '@/components/ui';
-import { useT } from '../i18n/useLanguage';
+import { useT } from '../../../i18n/useLanguage';
 import type { VisitSnapshot } from '../shared/visit';
 import {
   STREAK_MIN_MINUTES,
@@ -47,7 +48,7 @@ export function BadgesPanel({ visits }: { visits: VisitSnapshot[] }) {
         style={{
           flexDirection: isWide ? 'row' : 'column',
           flexWrap: isWide ? 'wrap' : 'nowrap',
-          gap: 8,
+          gap: space.sm,
         }}
       >
         {badges.map((badge) => (
@@ -59,21 +60,21 @@ export function BadgesPanel({ visits }: { visits: VisitSnapshot[] }) {
               width: isWide ? 220 : '100%',
               maxWidth: '100%',
               flexGrow: isWide ? 1 : 0,
-              padding: 12,
+              padding: space.md,
               borderRadius: radius.md,
               borderWidth: 1,
               borderColor: badge.earned ? colors.greenBorder : colors.border,
               backgroundColor: badge.earned
                 ? colors.greenSurface
                 : colors.surface,
-              gap: 4,
+              gap: space.xs,
             }}
           >
             <Text
-              style={{
-                fontWeight: '700',
-                color: badge.earned ? colors.green : colors.ink,
-              }}
+              style={[
+                styles.textStrong,
+                badge.earned && { color: colors.green },
+              ]}
             >
               {badge.earned ? t('earnedLabel') : t('lockedLabel')} ·{' '}
               {badge.name}

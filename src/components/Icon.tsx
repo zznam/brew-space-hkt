@@ -11,6 +11,7 @@ export type IconName =
   | 'tickets'
   | 'studio'
   | 'journeys'
+  | 'check'
   | 'chevronDown'
   | 'chevronUp';
 
@@ -195,6 +196,23 @@ export function Icon({
             transform: [{ rotate: '-45deg' }],
           })}
         </>
+      );
+      break;
+    case 'check':
+      glyph = (
+        <View
+          style={{
+            position: 'absolute',
+            left: 8,
+            top: 3,
+            width: 7,
+            height: 12,
+            borderRightWidth: STROKE,
+            borderBottomWidth: STROKE,
+            borderColor: color,
+            transform: [{ rotate: '45deg' }],
+          }}
+        />
       );
       break;
     case 'chevronDown':

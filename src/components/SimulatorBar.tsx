@@ -2,6 +2,8 @@ import { router } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
 import { getAllVenues } from '@/core';
 import { useAppStore } from '@/core/useAppStore';
+import { useT } from '@/i18n/useLanguage';
+import { shellMessages } from './messages';
 import { Chip, colors, radius, SegmentedControl, space, styles } from './ui';
 
 /**
@@ -10,6 +12,7 @@ import { Chip, colors, radius, SegmentedControl, space, styles } from './ui';
  */
 export function SimulatorBar() {
   const store = useAppStore((state) => state);
+  const { t } = useT(shellMessages);
   const allVenues = getAllVenues(store.customVenues);
 
   return (
@@ -31,7 +34,7 @@ export function SimulatorBar() {
           paddingVertical: space.sm,
         }}
       >
-        <Text style={styles.sectionLabel}>Demo</Text>
+        <Text style={styles.sectionLabel}>{t('demo')}</Text>
         <View
           style={{
             backgroundColor: colors.surface,
@@ -42,8 +45,8 @@ export function SimulatorBar() {
             size="sm"
             value={store.role}
             options={[
-              { value: 'merchant', label: 'Merchant' },
-              { value: 'customer', label: 'Customer' },
+              { value: 'merchant', label: t('merchant') },
+              { value: 'customer', label: t('customer') },
             ]}
             onChange={(role) => {
               store.setRole(role);
@@ -64,18 +67,18 @@ export function SimulatorBar() {
           />
         ))}
         <Chip
-          label="Morning · 7/8 seats"
+          label={t('morning')}
           selected={store.scenario === 'morning'}
           onPress={() => store.setScenario('morning')}
         />
         <Chip
-          label="Afternoon · 2/8 seats"
+          label={t('afternoon')}
           selected={store.scenario === 'afternoon'}
           onPress={() => store.setScenario('afternoon')}
         />
-        <Chip label="+30m · all venues" onPress={store.advanceTime} />
+        <Chip label={t('advance')} onPress={store.advanceTime} />
         <Chip
-          label="Reset all demo data"
+          label={t('reset')}
           onPress={() => {
             store.reset();
             router.replace('/merchant/live-floor');

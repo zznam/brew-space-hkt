@@ -9,7 +9,7 @@ import {
   styles,
   useResponsive,
 } from '@/components/ui';
-import { useT } from '../i18n/useLanguage';
+import { useT } from '../../../i18n/useLanguage';
 import { supportMessages } from './messages';
 import { RatingForm } from './RatingForm';
 import { RefundRequestCard } from './RefundRequestCard';
@@ -24,7 +24,7 @@ export function ReceiptScreen() {
     return (
       <Screen>
         <ScreenHeader
-          overline="CUSTOMER / VISIT SUMMARY"
+          overline={t('receiptOverline')}
           title={t('noVisitHeading')}
         />
         <EmptyState message={t('noVisitBody')}>

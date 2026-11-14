@@ -1,4 +1,4 @@
-import { defineMessages, translator, type Lang } from '../i18n/i18n';
+import { defineMessages, translator, type Lang } from '../../../i18n/i18n';
 
 /** Badge and streak copy. Pure so badgesModel can use it. */
 export const badgesMessages = defineMessages(

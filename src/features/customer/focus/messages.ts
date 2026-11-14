@@ -1,4 +1,4 @@
-import { defineMessages } from '../i18n/i18n';
+import { defineMessages } from '../../../i18n/i18n';
 
 /** Focus timer copy. English is what users and e2e tests see today. */
 export const focusMessages = defineMessages(

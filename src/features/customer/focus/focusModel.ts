@@ -3,7 +3,7 @@
  * wall clock through explicit `nowMs` values passed by the caller and never
  * touches billing or the demo session time. No timers or React in here.
  */
-import { translate, type Lang, type Params } from '../i18n/i18n';
+import { translate, type Lang, type Params } from '../../../i18n/i18n';
 import { focusMessages } from './messages';
 
 export const FOCUS_PRESETS = [

@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { TabBar, type TabItem } from '@/components/ui';
-import { defineMessages } from '../i18n/i18n';
-import { useT } from '../i18n/useLanguage';
+import { defineMessages } from '../../../i18n/i18n';
+import { useT } from '../../../i18n/useLanguage';
 
 export type CustomerTab = 'explore' | 'session' | 'member' | 'assistant';
 const TABS: {

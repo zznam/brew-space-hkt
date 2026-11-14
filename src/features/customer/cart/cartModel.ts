@@ -7,7 +7,7 @@ import {
   type Preferences,
   type Sweetness,
 } from '../loyalty/loyaltyModel';
-import { translate, type Lang } from '../i18n/i18n';
+import { translate, type Lang } from '../../../i18n/i18n';
 import { MAX_NOTE_LENGTH as SUPPORT_NOTE_LIMIT } from '../support/supportModel';
 import { cartMessages } from './messages';
 

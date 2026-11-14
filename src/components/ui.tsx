@@ -674,6 +674,11 @@ export const styles = StyleSheet.create({
     ...type.caption,
     color: colors.muted,
   },
+  captionStrong: {
+    ...type.caption,
+    fontWeight: '600',
+    color: colors.ink,
+  },
 
   // Controls
   button: {

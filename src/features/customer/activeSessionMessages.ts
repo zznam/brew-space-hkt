@@ -1,9 +1,17 @@
-import { defineMessages } from './i18n/i18n';
+import { defineMessages } from '../../i18n/i18n';
 
 /** Active session screen copy. English keeps the raw billing-mode code shown
  * today; only Vietnamese gets a readable mode name. */
 export const activeSessionMessages = defineMessages(
   {
+    overline: 'CUSTOMER / ACTIVE SESSION',
+    statSeat: 'Seat Time',
+    statSeatSub: '{minutes}m elapsed',
+    statMenu: 'Menu Tab',
+    statMenuSub: '{n} item(s)',
+    statTotal: 'Running Total',
+    statTotalSub: 'VND estimate',
+    badge: '{seat} · {minutes}m',
     nextSession: 'Your next focus session',
     noSession: 'You have no active demo session at {venue}.',
     exploreSeats: 'Explore seats',
@@ -18,6 +26,14 @@ export const activeSessionMessages = defineMessages(
     endSession: 'End demo session',
   },
   {
+    overline: 'KHÁCH / PHIÊN ĐANG MỞ',
+    statSeat: 'Tiền chỗ',
+    statSeatSub: 'Đã ngồi {minutes} phút',
+    statMenu: 'Tiền món',
+    statMenuSub: '{n} món',
+    statTotal: 'Tạm tính',
+    statTotalSub: 'Ước tính VND',
+    badge: '{seat} · {minutes} phút',
     nextSession: 'Phiên tập trung tiếp theo của bạn',
     noSession: 'Bạn chưa có phiên demo nào đang diễn ra tại {venue}.',
     exploreSeats: 'Khám phá chỗ ngồi',

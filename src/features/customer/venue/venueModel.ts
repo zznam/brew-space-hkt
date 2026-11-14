@@ -1,6 +1,6 @@
 import { calculateBill } from '../../../core/billing';
 import type { BillingMode, Seat, Session, Venue } from '../../../core/domain';
-import type { Lang } from '../i18n/i18n';
+import type { Lang } from '../../../i18n/i18n';
 import { venueT } from './messages';
 import { getVenueInfo, type DayHours } from '../support/venueInfo';
 

@@ -1,4 +1,4 @@
-import type { Lang } from '../i18n/i18n';
+import type { Lang } from '../../../i18n/i18n';
 
 /** Static demo venue details shown after check-in. No Wi-Fi credentials live
  * in client code; the card only says where guests find them. Real values must

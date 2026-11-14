@@ -1,8 +1,12 @@
+import { useMemo } from 'react';
 import { Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { calculateBill, formatMoney, getVenue } from '@/core';
 import { useAppStore } from '@/core/useAppStore';
 import { SeatMap } from '@/components/SeatMap';
+import { seatLabelText } from '@/i18n/seatLabel';
+import { useT } from '@/i18n/useLanguage';
+import { merchantMessages, MODE_KEYS } from './messages';
 import {
   Badge,
   Button,
@@ -19,15 +23,19 @@ import {
 } from '@/components/ui';
 
 export function LiveFloorScreen() {
-  const store = useAppStore((state) => state);
+  const venueId = useAppStore((state) => state.venueId);
+  const allSessions = useAppStore((state) => state.sessions);
+  const selectedSeatId = useAppStore((state) => state.selectedSeatId);
+  const selectSeat = useAppStore((state) => state.selectSeat);
   const { isWide } = useResponsive();
-  const venue = getVenue(store.venueId);
-  const sessions = store.sessions.filter(
-    (session) => session.venueId === venue.id,
+  const { t, lang } = useT(merchantMessages);
+  const venue = getVenue(venueId);
+  // Stable identity: the 3D viewer rebuilds its scene when `sessions` changes.
+  const sessions = useMemo(
+    () => allSessions.filter((session) => session.venueId === venue.id),
+    [allSessions, venue.id],
   );
-  const selectedSeat = venue.seats.find(
-    (seat) => seat.id === store.selectedSeatId,
-  );
+  const selectedSeat = venue.seats.find((seat) => seat.id === selectedSeatId);
   const liveRevenue = sessions.reduce(
     (sum, session) => sum + calculateBill(session).total,
     0,
@@ -37,29 +45,33 @@ export function LiveFloorScreen() {
   return (
     <Screen>
       <ScreenHeader
-        overline="MERCHANT / LIVE FLOOR"
+        overline={t('floorOverline')}
         accentColor={venue.accent}
         title={venue.name}
-        subtitle={`${sessions.length} of ${venue.seats.length} seats occupied · ${venue.description}`}
+        subtitle={t('floorSubtitle', {
+          occupied: sessions.length,
+          total: venue.seats.length,
+          description: venue.description,
+        })}
       />
 
       <View style={styles.grid}>
         <StatTile
-          label="Active"
+          label={t('statActive')}
           value={`${sessions.length}`}
-          sublabel={`of ${venue.seats.length} seats`}
+          sublabel={t('statActiveSub', { total: venue.seats.length })}
           accentColor={venue.accent}
         />
         <StatTile
-          label="Available"
+          label={t('statAvailable')}
           value={`${freeSeats}`}
-          sublabel="Ready now"
+          sublabel={t('statAvailableSub')}
           accentColor={colors.green}
         />
         <StatTile
-          label="Open Tabs"
+          label={t('statTabs')}
           value={formatMoney(liveRevenue)}
-          sublabel="Seat + menu"
+          sublabel={t('statTabsSub')}
         />
       </View>
 
@@ -67,14 +79,16 @@ export function LiveFloorScreen() {
         <SeatMap
           venue={venue}
           sessions={sessions}
-          selectedSeatId={store.selectedSeatId}
-          onSelect={store.selectSeat}
+          selectedSeatId={selectedSeatId}
+          onSelect={selectSeat}
         />
 
         {selectedSeat && (
           <View style={styles.row}>
             <Button
-              label={`Sell to ${selectedSeat.label}`}
+              label={t('sellTo', {
+                seat: seatLabelText(selectedSeat.label, lang),
+              })}
               variant="primary"
               fullWidth={!isWide}
               onPress={() =>
@@ -90,17 +104,18 @@ export function LiveFloorScreen() {
 
       <Card>
         <View style={styles.rowBetween}>
-          <Heading level={2}>Live tabs</Heading>
-          <Badge label={`${sessions.length} active`} tone="neutral" />
+          <Heading level={2}>{t('liveTabs')}</Heading>
+          <Badge
+            label={t('activeCount', { n: sessions.length })}
+            tone="neutral"
+          />
         </View>
 
-        {sessions.length === 0 && (
-          <EmptyState message="No active sessions. Switch to Customer to start one." />
-        )}
+        {sessions.length === 0 && <EmptyState message={t('noSessions')} />}
 
         {sessions.map((session) => {
           const seat = venue.seats.find((s) => s.id === session.seatId);
-          const isSelected = store.selectedSeatId === session.seatId;
+          const isSelected = selectedSeatId === session.seatId;
           const total = calculateBill(session).total;
           return (
             <View
@@ -113,20 +128,26 @@ export function LiveFloorScreen() {
             >
               <View style={{ gap: space.xxs, flex: 1 }}>
                 <Text style={styles.textStrong}>
-                  {seat?.label} · {session.elapsedMinutes} min ·{' '}
-                  {formatMoney(total)}
-                  {isSelected ? ' · Selected' : ''}
+                  {t('tabLine', {
+                    seat: seatLabelText(seat?.label ?? '', lang),
+                    minutes: session.elapsedMinutes,
+                    total: formatMoney(total),
+                  })}
+                  {isSelected ? t('tabLineSelected') : ''}
                 </Text>
                 <Text style={styles.caption}>
-                  {session.mode} · {session.orders.length} order line(s)
+                  {t('tabMeta', {
+                    mode: t(MODE_KEYS[session.mode]),
+                    n: session.orders.length,
+                  })}
                 </Text>
               </View>
               {seat ? (
                 <Button
                   size="sm"
                   variant={isSelected ? 'secondary' : 'default'}
-                  label={isSelected ? 'Selected' : 'Select seat'}
-                  onPress={() => store.selectSeat(seat.id)}
+                  label={isSelected ? t('selected') : t('selectSeat')}
+                  onPress={() => selectSeat(seat.id)}
                 />
               ) : null}
             </View>

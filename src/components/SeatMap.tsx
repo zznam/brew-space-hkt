@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { formatMoney, type Seat, type Session, type Venue } from '@/core';
+import { seatLabelText } from '@/i18n/seatLabel';
+import { useT } from '@/i18n/useLanguage';
 import { CafeScene3D } from './canvas3d/CafeScene3D';
+import { seatMapMessages } from './messages';
 import {
   Badge,
   Button,
@@ -27,6 +30,7 @@ export function SeatMap({
   selectedSeatId,
   onSelect,
 }: SeatMapProps) {
+  const { t, lang } = useT(seatMapMessages);
   const [show3D, setShow3D] = useState(true);
   const { isWide } = useResponsive();
   const occupiedCount = venue.seats.filter((seat) =>
@@ -39,17 +43,23 @@ export function SeatMap({
       <View style={styles.rowBetween}>
         <View style={{ gap: space.xs, flex: 1 }}>
           <Text style={styles.subheading}>
-            {show3D ? '3D Floor & Seat List' : 'Seat List (3D hidden)'}
+            {show3D ? t('titleWith3D') : t('titleListOnly')}
           </Text>
           <View style={styles.row}>
-            <Badge label={`${freeCount} Available`} tone="success" />
-            <Badge label={`${occupiedCount} Occupied`} tone="info" />
+            <Badge
+              label={t('availableCount', { n: freeCount })}
+              tone="success"
+            />
+            <Badge
+              label={t('occupiedCount', { n: occupiedCount })}
+              tone="info"
+            />
           </View>
         </View>
         <Button
           size="sm"
           variant="ghost"
-          label={show3D ? 'Hide 3D View' : 'Show 3D View'}
+          label={show3D ? t('hide3D') : t('show3D')}
           onPress={() => setShow3D((prev) => !prev)}
         />
       </View>
@@ -76,11 +86,17 @@ export function SeatMap({
               session.venueId === venue.id && session.seatId === seat.id,
           );
           const selected = selectedSeatId === seat.id;
+          const status = occupied ? t('occupied') : t('available');
           return (
             <Pressable
               key={seat.id}
               accessibilityRole="button"
-              accessibilityLabel={`${seat.label}, ${seat.kind}, ${occupied ? 'Occupied' : 'Available'}, ${formatMoney(seat.hourlyRate)} per hour`}
+              accessibilityLabel={t('seatA11y', {
+                seat: seatLabelText(seat.label, lang),
+                kind: t(seat.kind),
+                status,
+                rate: formatMoney(seat.hourlyRate),
+              })}
               accessibilityState={{ selected }}
               onPress={() => onSelect(seat.id)}
               style={({ pressed }) => ({
@@ -104,7 +120,11 @@ export function SeatMap({
             >
               <View style={styles.rowBetween}>
                 <View
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: space.sm,
+                  }}
                 >
                   <View
                     style={{
@@ -114,27 +134,26 @@ export function SeatMap({
                       backgroundColor: occupied ? colors.blue : colors.green,
                     }}
                   />
-                  <Text style={styles.textStrong}>{seat.label}</Text>
-                  <Text style={styles.caption}>· {seat.kind}</Text>
+                  <Text style={styles.textStrong}>
+                    {seatLabelText(seat.label, lang)}
+                  </Text>
+                  <Text style={styles.caption}>· {t(seat.kind)}</Text>
                 </View>
 
                 <Text
                   style={[
-                    styles.caption,
-                    {
-                      fontWeight: '700',
-                      color: occupied ? colors.blue : colors.green,
-                    },
+                    styles.captionStrong,
+                    { color: occupied ? colors.blue : colors.green },
                   ]}
                 >
-                  {occupied ? 'Occupied' : 'Available'} ·{' '}
-                  {formatMoney(seat.hourlyRate)}/h
+                  {status} ·{' '}
+                  {t('perHour', { rate: formatMoney(seat.hourlyRate) })}
                 </Text>
               </View>
 
               {seat.zone ? (
                 <Text style={styles.caption} numberOfLines={1}>
-                  {seat.zone} · Grid ({seat.x},{seat.z})
+                  {t('zoneGrid', { zone: seat.zone, x: seat.x, z: seat.z })}
                 </Text>
               ) : null}
             </Pressable>

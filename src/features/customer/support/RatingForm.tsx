@@ -8,9 +8,9 @@ import {
   Heading,
   radius,
   styles,
-  type,
+  space,
 } from '@/components/ui';
-import { useT } from '../i18n/useLanguage';
+import { useT } from '../../../i18n/useLanguage';
 import { supportMessages, type SupportMessageKey } from './messages';
 import { MAX_NOTE_LENGTH, failureText } from './supportModel';
 import { useSupport } from './useSupport';
@@ -33,7 +33,7 @@ function Selector({
 }) {
   const { t } = useT(supportMessages);
   return (
-    <View style={{ gap: 6 }}>
+    <View style={{ gap: space.sm }}>
       <Text style={styles.sectionLabel}>{label}</Text>
       <View style={styles.row}>
         {[1, 2, 3, 4, 5].map((n) => (
@@ -56,11 +56,10 @@ function Selector({
             }}
           >
             <Text
-              style={{
-                color: value === n ? colors.onPrimary : colors.ink,
-                fontWeight: '700',
-                fontSize: type.body.fontSize,
-              }}
+              style={[
+                styles.textStrong,
+                value === n && { color: colors.onPrimary },
+              ]}
             >
               {n}
             </Text>
@@ -91,7 +90,7 @@ export function RatingForm({ sessionId }: { sessionId: string }) {
       <Card variant="accent">
         <View style={styles.rowBetween}>
           <Heading>{t('thankYou')}</Heading>
-          <Badge label="Rated" tone="success" />
+          <Badge label={t('ratedBadge')} tone="success" />
         </View>
         <Text style={styles.textStrong}>
           {t('yourRating', {
@@ -143,11 +142,10 @@ export function RatingForm({ sessionId }: { sessionId: string }) {
       />
       <View style={styles.rowBetween}>
         <Text
-          style={{
-            fontSize: type.caption.fontSize,
-            color:
-              comment.length > MAX_NOTE_LENGTH ? colors.danger : colors.muted,
-          }}
+          style={[
+            styles.caption,
+            comment.length > MAX_NOTE_LENGTH && { color: colors.danger },
+          ]}
         >
           {t('characters', { n: comment.length, max: MAX_NOTE_LENGTH })}
         </Text>
@@ -167,7 +165,7 @@ export function RatingForm({ sessionId }: { sessionId: string }) {
       {error ? (
         <Text
           accessibilityRole="alert"
-          style={{ color: colors.danger, fontWeight: '700' }}
+          style={[styles.textStrong, { color: colors.danger }]}
         >
           {error}
         </Text>

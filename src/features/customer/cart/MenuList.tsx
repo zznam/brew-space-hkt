@@ -1,8 +1,16 @@
 import { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import { formatMoney, getVenue } from '@/core';
-import { Badge, Button, Card, colors, Heading, styles } from '@/components/ui';
-import { useT } from '../i18n/useLanguage';
+import {
+  Badge,
+  Button,
+  Card,
+  colors,
+  Heading,
+  styles,
+  space,
+} from '@/components/ui';
+import { useT } from '../../../i18n/useLanguage';
 import { searchMenu } from './cartModel';
 import { cartMessages } from './messages';
 import { useCart } from './useCart';
@@ -41,10 +49,10 @@ export function MenuList({ venueId }: { venueId: string }) {
         </Text>
       )}
 
-      <View style={{ gap: 8 }}>
+      <View style={{ gap: space.sm }}>
         {shown.map((item) => (
           <View key={item.id} style={[styles.inset, styles.insetRow]}>
-            <View style={{ flex: 1, gap: 2 }}>
+            <View style={{ flex: 1, gap: space.xxs }}>
               <Text style={styles.textStrong}>{item.name}</Text>
               <Text style={styles.text}>{formatMoney(item.price)}</Text>
             </View>

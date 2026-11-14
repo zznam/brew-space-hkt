@@ -1,42 +1,52 @@
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { DEMO_CUSTOMER_ID, getVenue } from '@/core';
 import { appStore, useAppStore } from '@/core/useAppStore';
 import {
   Badge,
+  Banner,
   Button,
   Card,
+  Chip,
+  CollapsibleSection,
   colors,
-  Divider,
-  Eyebrow,
+  Heading,
   radius,
-  StatTile,
-  styles,
-  type,
-  useResponsive,
+  Screen,
+  ScreenHeader,
   space,
+  styles,
+  useResponsive,
 } from '@/components/ui';
+import { seatLabelText } from '@/i18n/seatLabel';
+import { useT } from '@/i18n/useLanguage';
+import { galleryMessages, type GalleryKey } from './messages';
 
 type JourneyCategory = 'all' | 'customer' | 'loyalty' | 'merchant' | 'ai3d';
 
 interface JourneyStep {
   id: string;
+  key: string;
+  highlightCount: number;
   stepNumber: string;
   journey: Exclude<JourneyCategory, 'all'>;
-  journeyLabel: string;
-  title: string;
   route: string;
   roleBadge: 'Customer' | 'Merchant';
-  summary: string;
-  highlights: string[];
-  ctaLabel: string;
   onLaunch: () => void;
 }
+
+const JOURNEY_KEYS = {
+  customer: 'journeyCustomer',
+  loyalty: 'journeyLoyalty',
+  merchant: 'journeyMerchant',
+  ai3d: 'journeyAi3d',
+} as const;
 
 export function UserJourneysGalleryScreen() {
   const router = useRouter();
   const { isWide } = useResponsive();
+  const { t, lang } = useT(galleryMessages);
   const venueId = useAppStore((s) => s.venueId);
   const sessions = useAppStore((s) => s.sessions);
   const setRole = useAppStore((s) => s.setRole);
@@ -92,21 +102,12 @@ export function UserJourneysGalleryScreen() {
     // Journey 1: Customer Space Discovery, 3D Seat Picking & Live Session
     {
       id: 'cust-explore',
+      key: 'custExplore',
+      highlightCount: 4,
       stepNumber: '1.1',
       journey: 'customer',
-      journeyLabel: 'Journey 1 · Customer Space & Session',
-      title: 'Explore & 3D Floor Discovery',
       route: '/customer/explore',
       roleBadge: 'Customer',
-      summary:
-        'Browse real-time seat availability, filter by amenity tags (Quiet, Power Outlet, Monitor, Window), and inspect the interactive 3D floor map or accessible seat list.',
-      highlights: [
-        'Hero availability banner with free/occupied KPIs & hourly pricing range',
-        'Multi-amenity filter pills with live match counter',
-        'Interactive 3D Orbit Floor Map with floating HUD & accessible list fallback',
-        'Seat Detail preview drawer with deep-link share URL & package vs hourly selector',
-      ],
-      ctaLabel: 'Open Explore & 3D Map',
       onLaunch: () => {
         setRole('customer');
         router.push('/customer/explore' as never);
@@ -114,20 +115,12 @@ export function UserJourneysGalleryScreen() {
     },
     {
       id: 'cust-deeplink',
+      key: 'custDeeplink',
+      highlightCount: 3,
       stepNumber: '1.2',
       journey: 'customer',
-      journeyLabel: 'Journey 1 · Customer Space & Session',
-      title: 'Shared Seat Deep Link (?venue & ?seat)',
       route: `/customer/explore?venue=${venueId}&seat=${venue.seats[0]?.id ?? 's-1'}`,
       roleBadge: 'Customer',
-      summary:
-        'Deep-linked seat invitation shared by a teammate that preselects the venue and seat, highlights zone details, and opens the check-in card immediately.',
-      highlights: [
-        'Automatic venue and seat preselection via query parameters',
-        'Contextual deep-link banner confirming the shared seat selection',
-        'Venue showcase card with zone breakdown, Wi-Fi credentials, and house rules',
-      ],
-      ctaLabel: 'Launch Shared Seat Link',
       onLaunch: () => {
         setRole('customer');
         const seatId = venue.seats[0]?.id ?? 's-1';
@@ -138,43 +131,26 @@ export function UserJourneysGalleryScreen() {
     },
     {
       id: 'cust-session',
+      key: 'custSession',
+      highlightCount: 4,
       stepNumber: '1.3',
       journey: 'customer',
-      journeyLabel: 'Journey 1 · Customer Space & Session',
-      title: 'Live Workspace Session, Menu Cart & Focus Timer',
       route: '/customer/active-session',
       roleBadge: 'Customer',
-      summary:
-        'Active customer dashboard displaying running bill breakdown, Pomodoro focus timer, customized drink ordering (milk/ice/sweetness), order history, and table support.',
-      highlights: [
-        'Elevated dark live-bill summary with seat charge + itemized orders',
-        'Interactive Focus Timer with preset durations (15m / 25m / 45m)',
-        'Expandable drink customization drawer & cart with loyalty point redemption',
-        'Quick staff call buttons (Water, Power/Adapter, Clean Table, Bill Help)',
-      ],
-      ctaLabel: 'Launch Active Session',
       onLaunch: () => {
         ensureCustomerSession();
-        setStatusMessage('Prepared active customer session with sample drink.');
+        setStatusMessage(t('prepared'));
         router.push('/customer/active-session' as never);
       },
     },
     {
       id: 'cust-receipt',
+      key: 'custReceipt',
+      highlightCount: 3,
       stepNumber: '1.4',
       journey: 'customer',
-      journeyLabel: 'Journey 1 · Customer Space & Session',
-      title: 'Digital Receipt, Refund Request & 5-Star Rating',
       route: '/customer/receipt',
       roleBadge: 'Customer',
-      summary:
-        'Post-checkout itemized invoice showing VAT breakdown, loyalty points earned, self-serve refund request tracking, and customer feedback rating.',
-      highlights: [
-        'Monospace receipt header with invoice ID, timestamps, and tax summary',
-        'Self-serve issue & refund request card with live review status badge',
-        'Interactive 1–5 star rating widget with comment submission',
-      ],
-      ctaLabel: 'Open Receipt & Feedback',
       onLaunch: () => {
         ensureCustomerSession();
         router.push('/customer/receipt' as never);
@@ -184,21 +160,12 @@ export function UserJourneysGalleryScreen() {
     // Journey 2: Customer Loyalty, Privacy & Bilingual Concierge
     {
       id: 'loyalty-profile',
+      key: 'loyaltyProfile',
+      highlightCount: 4,
       stepNumber: '2.1',
       journey: 'loyalty',
-      journeyLabel: 'Journey 2 · Loyalty, Privacy & Concierge',
-      title: 'Member OTP Login, Loyalty Tier & Drink Preferences',
       route: '/customer/profile',
       roleBadge: 'Customer',
-      summary:
-        'Phone + OTP verification flow (demo code 123456), member tier progression (Bronze → Silver → Gold), milestone badges, and saved barista preferences.',
-      highlights: [
-        'One-tap demo OTP verification or guest preview mode',
-        'Tier progress bar with lifetime points and redeemable VND balance',
-        'Saved default milk, ice, sweetness, and dietary notes for faster ordering',
-        'Achievement badge grid with unlock progress bars',
-      ],
-      ctaLabel: 'Open Loyalty Profile',
       onLaunch: () => {
         setRole('customer');
         router.push('/customer/profile' as never);
@@ -206,19 +173,12 @@ export function UserJourneysGalleryScreen() {
     },
     {
       id: 'loyalty-privacy',
+      key: 'loyaltyPrivacy',
+      highlightCount: 2,
       stepNumber: '2.2',
       journey: 'loyalty',
-      journeyLabel: 'Journey 2 · Loyalty, Privacy & Concierge',
-      title: 'Transparency & Personal Data Controls',
       route: '/customer/privacy',
       roleBadge: 'Customer',
-      summary:
-        'Clear breakdown of locally stored session, loyalty, and preference records with one-click personal data erasure.',
-      highlights: [
-        'Structured inventory of stored data categories',
-        'Two-step confirmation flow to wipe personal profile & local history',
-      ],
-      ctaLabel: 'Open Privacy Controls',
       onLaunch: () => {
         setRole('customer');
         router.push('/customer/privacy' as never);
@@ -226,20 +186,12 @@ export function UserJourneysGalleryScreen() {
     },
     {
       id: 'loyalty-concierge',
+      key: 'loyaltyConcierge',
+      highlightCount: 3,
       stepNumber: '2.3',
       journey: 'loyalty',
-      journeyLabel: 'Journey 2 · Loyalty, Privacy & Concierge',
-      title: 'Bilingual (EN / VI) Venue Concierge Assistant',
       route: '/customer/assistant',
       roleBadge: 'Customer',
-      summary:
-        'Instant Q&A assistant answering Wi-Fi, quiet seat recommendations, power outlets, pricing, and drink picks using live venue state.',
-      highlights: [
-        'Quick-tap topic chips for Wi-Fi, Quiet Seats, Power, Pricing, and Drinks',
-        'Conversational message bubbles with live seat availability lookups',
-        'Full English & Tiếng Việt language toggle support across customer chrome',
-      ],
-      ctaLabel: 'Open Venue Concierge',
       onLaunch: () => {
         setRole('customer');
         router.push('/customer/assistant' as never);
@@ -249,20 +201,12 @@ export function UserJourneysGalleryScreen() {
     // Journey 3: Merchant Live Floor, POS & Ticket Board
     {
       id: 'merch-floor',
+      key: 'merchFloor',
+      highlightCount: 3,
       stepNumber: '3.1',
       journey: 'merchant',
-      journeyLabel: 'Journey 3 · Merchant Floor, POS & Kitchen',
-      title: 'Live Floor Command Center & Session Inspector',
       route: '/merchant/live-floor',
       roleBadge: 'Merchant',
-      summary:
-        'Real-time operational overview with occupancy rate, active tabs, accrued revenue KPIs, 3D floor map, seat inspector, and active session table.',
-      highlights: [
-        '4-tile KPI strip (Occupancy %, Occupied vs Free, Open Tabs, Live Revenue)',
-        'Side-by-side 3D floor map and contextual Seat Inspector panel',
-        'One-click Hourly or 3-Hour Study Pass check-in, quick drink add, and checkout',
-      ],
-      ctaLabel: 'Open Merchant Floor',
       onLaunch: () => {
         setRole('merchant');
         router.push('/merchant/live-floor' as never);
@@ -270,20 +214,12 @@ export function UserJourneysGalleryScreen() {
     },
     {
       id: 'merch-pos',
+      key: 'merchPos',
+      highlightCount: 3,
       stepNumber: '3.2',
       journey: 'merchant',
-      journeyLabel: 'Journey 3 · Merchant Floor, POS & Kitchen',
-      title: 'Counter POS Terminal & Sold-Out Inventory Control',
       route: '/merchant/pos',
       roleBadge: 'Merchant',
-      summary:
-        'Fast barista point-of-sale terminal supporting walk-in or seat-linked orders, category filtering, live sold-out toggles, and Cash / Online checkout.',
-      highlights: [
-        'Category filter pills with instant stock status badges and sold-out switches',
-        'Seat assignment selector linking orders directly to occupied floor desks',
-        'Order confirmation modal with receipt number and direct Ticket Board link',
-      ],
-      ctaLabel: 'Open POS Terminal',
       onLaunch: () => {
         setRole('merchant');
         router.push('/merchant/pos' as never);
@@ -291,20 +227,12 @@ export function UserJourneysGalleryScreen() {
     },
     {
       id: 'merch-tickets',
+      key: 'merchTickets',
+      highlightCount: 3,
       stepNumber: '3.3',
       journey: 'merchant',
-      journeyLabel: 'Journey 3 · Merchant Floor, POS & Kitchen',
-      title: 'Barista & Kitchen Ticket Board (KDS)',
       route: '/merchant/tickets',
       roleBadge: 'Merchant',
-      summary:
-        'Kanban-style fulfillment board tracking orders from Queued → Preparing → Ready → Served with elapsed timers and one-tap status progression.',
-      highlights: [
-        'Status filter tabs with live ticket counts per stage',
-        'Color-coded ticket cards showing seat badge, payment method, and line items',
-        'Single-tap progression (Start Preparing → Mark Ready → Mark Served)',
-      ],
-      ctaLabel: 'Open Ticket Board',
       onLaunch: () => {
         setRole('merchant');
         router.push('/merchant/tickets' as never);
@@ -314,21 +242,12 @@ export function UserJourneysGalleryScreen() {
     // Journey 4: Merchant AI 3D Onboarding Studio
     {
       id: 'ai-onboarding',
+      key: 'aiOnboarding',
+      highlightCount: 4,
       stepNumber: '4.1',
       journey: 'ai3d',
-      journeyLabel: 'Journey 4 · AI 3D Onboarding & Spatial Studio',
-      title: 'Multimodal AI 3D Venue Generator & Spatial Editor',
       route: '/merchant/onboarding',
       roleBadge: 'Merchant',
-      summary:
-        'End-to-end onboarding wizard where cafe owners upload photos, videos, floorplans, or menus, generate a 3D venue with AI, refine it via chat prompts, and publish live.',
-      highlights: [
-        '4-step visual progress tracker (Upload → AI Refine → 3D Studio → Publish)',
-        'Multimodal media upload cards + optional runtime OpenAI API key input',
-        'Multi-turn conversational refinement with saved iteration snapshots',
-        'Interactive 3D room dimension, wall/floor palette, and furniture inspector',
-      ],
-      ctaLabel: 'Open 3D Onboarding Studio',
       onLaunch: () => {
         setRole('merchant');
         router.push('/merchant/onboarding' as never);
@@ -341,316 +260,162 @@ export function UserJourneysGalleryScreen() {
       ? steps
       : steps.filter((step) => step.journey === activeCategory);
 
-  const categories: { id: JourneyCategory; label: string; count: number }[] = [
-    { id: 'all', label: 'All Journeys', count: steps.length },
-    {
-      id: 'customer',
-      label: '1. Customer Space & Session',
-      count: steps.filter((s) => s.journey === 'customer').length,
-    },
-    {
-      id: 'loyalty',
-      label: '2. Loyalty & Concierge',
-      count: steps.filter((s) => s.journey === 'loyalty').length,
-    },
-    {
-      id: 'merchant',
-      label: '3. Merchant Floor & POS',
-      count: steps.filter((s) => s.journey === 'merchant').length,
-    },
-    {
-      id: 'ai3d',
-      label: '4. AI 3D Studio',
-      count: steps.filter((s) => s.journey === 'ai3d').length,
-    },
+  const categories: { id: JourneyCategory; label: GalleryKey }[] = [
+    { id: 'all', label: 'catAll' },
+    { id: 'customer', label: 'catCustomer' },
+    { id: 'loyalty', label: 'catLoyalty' },
+    { id: 'merchant', label: 'catMerchant' },
+    { id: 'ai3d', label: 'catAi3d' },
   ];
+  const countFor = (id: JourneyCategory) =>
+    id === 'all'
+      ? steps.length
+      : steps.filter((step) => step.journey === id).length;
+  const copy = (step: JourneyStep, part: string) =>
+    t(`${step.key}.${part}` as GalleryKey);
+
+  // Steps arrive ordered by journey, so consecutive runs form the groups.
+  const groups: { journey: JourneyStep['journey']; steps: JourneyStep[] }[] =
+    [];
+  for (const step of visibleSteps) {
+    const last = groups[groups.length - 1];
+    if (last && last.journey === step.journey) last.steps.push(step);
+    else groups.push({ journey: step.journey, steps: [step] });
+  }
 
   return (
-    <View style={{ gap: space.lg }}>
-      {/* Hero Banner */}
-      <Card
-        style={{
-          backgroundColor: colors.ink,
-          gap: space.lg,
-        }}
-      >
-        <View
-          style={
-            isWide
-              ? styles.rowBetween
-              : { gap: space.md, alignItems: 'stretch' }
+    <Screen>
+      <ScreenHeader
+        overline={t('overline')}
+        title={t('title')}
+        subtitle={t('subtitle')}
+      />
+
+      <View style={styles.row}>
+        <Badge label={venue.name} tone="success" />
+        <Badge
+          label={t('activeSessions', { n: venueSessions.length })}
+          tone="info"
+        />
+        <Badge
+          label={
+            customerSession
+              ? t('yourSession', {
+                  seat: seatLabelText(
+                    customerSeat?.label ?? customerSession.seatId,
+                    lang,
+                  ),
+                  minutes: customerSession.elapsedMinutes,
+                })
+              : t('noSession')
           }
-        >
-          <View style={{ gap: space.xs, flex: isWide ? 1 : undefined }}>
-            <Text
-              style={{
-                fontSize: type.overline.fontSize,
-                fontWeight: '800',
-                letterSpacing: 1,
-                textTransform: 'uppercase',
-                color: colors.greenBorder,
-              }}
-            >
-              Interactive Product Tour · 4 End-to-End Flows
-            </Text>
-            <Text
-              style={{
-                fontSize: type.display.fontSize,
-                fontWeight: '800',
-                color: colors.surface,
-                letterSpacing: -0.6,
-              }}
-            >
-              BrewSpace — User Journeys Gallery
-            </Text>
-            <Text
-              style={{
-                fontSize: type.body.fontSize,
-                color: colors.border,
-                lineHeight: 20,
-              }}
-            >
-              Explore every redesigned screen across the Customer and Merchant
-              experiences. Click any step card below to auto-configure the demo
-              state and jump straight into the live screen.
-            </Text>
-          </View>
-          <View
-            style={{
-              gap: space.sm,
-              alignItems: isWide ? 'flex-end' : 'flex-start',
-            }}
-          >
-            <Badge label={`Active Venue: ${venue.name}`} tone="success" />
-            <Badge
-              label={`${venueSessions.length} active floor sessions`}
-              tone="info"
-            />
-          </View>
-        </View>
+          tone={customerSession ? 'success' : 'neutral'}
+        />
+      </View>
 
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-          <StatTile
-            label="Total Journeys"
-            value="4 Flows"
-            sublabel="Customer + Merchant"
-            accentColor={colors.green}
+      {statusMessage ? (
+        <Banner tone="success" role="alert">
+          {statusMessage}
+        </Banner>
+      ) : null}
+
+      <View style={styles.row}>
+        {categories.map((cat) => (
+          <Chip
+            key={cat.id}
+            label={t('catChip', { label: t(cat.label), n: countFor(cat.id) })}
+            accessibilityLabel={t('catA11y', {
+              label: t(cat.label),
+              n: countFor(cat.id),
+            })}
+            selected={activeCategory === cat.id}
+            onPress={() => setActiveCategory(cat.id)}
           />
-          <StatTile
-            label="Redesigned Screens"
-            value="11 Routes"
-            sublabel="25+ UI modules"
-          />
-          <StatTile
-            label="Customer Session"
-            value={customerSession ? 'Active' : 'Ready'}
-            sublabel={
-              customerSession
-                ? `${customerSeat?.label ?? customerSession.seatId} · ${customerSession.elapsedMinutes}m`
-                : 'Auto-created on launch'
-            }
-            accentColor={customerSession ? colors.green : colors.amber}
-          />
-        </View>
-      </Card>
-
-      {statusMessage && (
-        <Card variant="accent" style={{ padding: 12 }}>
-          <Text style={{ color: colors.green, fontWeight: '700' }}>
-            {statusMessage}
-          </Text>
-        </Card>
-      )}
-
-      {/* Journey Category Filter Tabs */}
-      <Card variant="subtle" style={{ padding: 14, gap: 10 }}>
-        <Eyebrow>Filter by User Journey</Eyebrow>
-        <View style={styles.row}>
-          {categories.map((cat) => {
-            const active = activeCategory === cat.id;
-            return (
-              <Pressable
-                key={cat.id}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: active }}
-                onPress={() => setActiveCategory(cat.id)}
-                style={{
-                  paddingHorizontal: 14,
-                  paddingVertical: 9,
-                  borderRadius: radius.pill,
-                  borderWidth: 1,
-                  borderColor: active ? colors.green : colors.border,
-                  backgroundColor: active ? colors.green : colors.surface,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 8,
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: type.caption.fontSize,
-                    fontWeight: '700',
-                    color: active ? colors.surface : colors.ink,
-                  }}
-                >
-                  {cat.label}
-                </Text>
-                <View
-                  style={{
-                    paddingHorizontal: 7,
-                    paddingVertical: 1,
-                    borderRadius: radius.pill,
-                    backgroundColor: active
-                      ? 'rgba(255,255,255,0.22)'
-                      : colors.paperAlt,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: type.overline.fontSize,
-                      fontWeight: '800',
-                      color: active ? colors.surface : colors.muted,
-                    }}
-                  >
-                    {cat.count}
-                  </Text>
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
-      </Card>
-
-      {/* Journey Step Cards Grid */}
-      <View
-        style={{
-          flexDirection: isWide ? 'row' : 'column',
-          flexWrap: isWide ? 'wrap' : 'nowrap',
-          gap: 12,
-        }}
-      >
-        {visibleSteps.map((step, index) => (
-          <Card
-            key={step.id}
-            style={{
-              gap: 10,
-              width: isWide ? '48.5%' : '100%',
-              flexGrow: isWide ? 1 : 0,
-            }}
-          >
-            <View style={styles.rowBetween}>
-              <View style={styles.row}>
-                <View
-                  style={{
-                    paddingHorizontal: 10,
-                    paddingVertical: 4,
-                    borderRadius: radius.sm,
-                    backgroundColor:
-                      step.roleBadge === 'Customer'
-                        ? colors.greenSurface
-                        : colors.blueSurface,
-                    borderWidth: 1,
-                    borderColor:
-                      step.roleBadge === 'Customer'
-                        ? colors.greenBorder
-                        : colors.blueBorder,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: type.caption.fontSize,
-                      fontWeight: '800',
-                      color:
-                        step.roleBadge === 'Customer'
-                          ? colors.green
-                          : colors.blue,
-                    }}
-                  >
-                    Step {step.stepNumber}
-                  </Text>
-                </View>
-                <Badge
-                  label={step.roleBadge}
-                  tone={step.roleBadge === 'Customer' ? 'success' : 'info'}
-                />
-              </View>
-              <View
-                style={{
-                  paddingHorizontal: 8,
-                  paddingVertical: 3,
-                  borderRadius: radius.sm,
-                  backgroundColor: colors.paperAlt,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  maxWidth: '100%',
-                }}
-              >
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    fontSize: type.overline.fontSize,
-                    fontWeight: '700',
-                    color: colors.ink,
-                    fontFamily: 'monospace',
-                  }}
-                >
-                  {step.route}
-                </Text>
-              </View>
-            </View>
-
-            <View style={{ gap: 4 }}>
-              <Text style={styles.subheading}>{step.title}</Text>
-              <Text style={styles.text}>{step.summary}</Text>
-            </View>
-
-            <Divider />
-
-            <View style={{ gap: 6, flex: 1 }}>
-              <Eyebrow>Mobile-First Highlights</Eyebrow>
-              {step.highlights.map((item, idx) => (
-                <View
-                  key={idx}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'flex-start',
-                    gap: 8,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: colors.green,
-                      fontWeight: '800',
-                      fontSize: type.caption.fontSize,
-                    }}
-                  >
-                    ✓
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: type.caption.fontSize,
-                      color: colors.ink,
-                      flex: 1,
-                      lineHeight: 19,
-                    }}
-                  >
-                    {item}
-                  </Text>
-                </View>
-              ))}
-            </View>
-
-            <View style={{ paddingTop: 4 }}>
-              <Button
-                label={`${step.ctaLabel} →`}
-                onPress={step.onLaunch}
-                variant={index === 0 ? 'primary' : 'secondary'}
-                fullWidth={!isWide}
-              />
-            </View>
-          </Card>
         ))}
       </View>
-    </View>
+
+      {groups.map((group) => (
+        <View key={group.journey} style={{ gap: space.md }}>
+          <Heading style={{ marginTop: space.sm }}>
+            {t(JOURNEY_KEYS[group.journey])}
+          </Heading>
+          <View
+            style={{
+              flexDirection: isWide ? 'row' : 'column',
+              flexWrap: isWide ? 'wrap' : 'nowrap',
+              gap: space.md,
+            }}
+          >
+            {group.steps.map((step) => (
+              <Card
+                key={step.id}
+                style={
+                  isWide ? { width: '48.5%', flexGrow: 1 } : { width: '100%' }
+                }
+              >
+                <View style={{ gap: space.xs }}>
+                  <View style={styles.row}>
+                    <Badge
+                      label={t('stepBadge', {
+                        n: step.stepNumber,
+                        role: t(
+                          step.roleBadge === 'Customer'
+                            ? 'roleCustomer'
+                            : 'roleMerchant',
+                        ),
+                      })}
+                      tone={step.roleBadge === 'Customer' ? 'success' : 'info'}
+                    />
+                  </View>
+                  <Heading level={2}>{copy(step, 'title')}</Heading>
+                  <Text style={styles.text}>{copy(step, 'summary')}</Text>
+                </View>
+
+                <CollapsibleSection
+                  title={t('lookFor')}
+                  summary={t('highlightCount', { n: step.highlightCount })}
+                >
+                  {Array.from({ length: step.highlightCount }, (_, index) => (
+                    <View
+                      key={index}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'flex-start',
+                        gap: space.sm,
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: 6,
+                          height: 6,
+                          marginTop: space.sm - 2,
+                          borderRadius: radius.pill,
+                          backgroundColor: colors.green,
+                        }}
+                      />
+                      <Text
+                        style={[styles.caption, { flex: 1, color: colors.ink }]}
+                      >
+                        {copy(step, `h${index + 1}`)}
+                      </Text>
+                    </View>
+                  ))}
+                  <Text style={styles.caption} numberOfLines={1}>
+                    {t('opens', { route: step.route })}
+                  </Text>
+                </CollapsibleSection>
+
+                <Button
+                  label={copy(step, 'cta')}
+                  onPress={step.onLaunch}
+                  variant="secondary"
+                  fullWidth={!isWide}
+                />
+              </Card>
+            ))}
+          </View>
+        </View>
+      ))}
+    </Screen>
   );
 }

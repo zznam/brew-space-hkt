@@ -1,5 +1,5 @@
 import { Banner } from '@/components/ui';
-import { useT } from '../i18n/useLanguage';
+import { useT } from '../../../i18n/useLanguage';
 import { blockWhenOffline } from './networkModel';
 import { networkMessages } from './messages';
 import { useOnlineStatus } from './useOnlineStatus';

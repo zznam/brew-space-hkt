@@ -1,5 +1,5 @@
 import { getAllVenues } from '../../../core/fixtures';
-import type { Lang } from '../i18n/i18n';
+import type { Lang } from '../../../i18n/i18n';
 import { venueT } from './messages';
 
 /** Shareable seat links (F137). The link carries only a venue id and a seat

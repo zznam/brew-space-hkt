@@ -10,13 +10,14 @@ import {
   colors,
   radius,
   styles,
-  type,
   useResponsive,
   Banner,
   Screen,
   ScreenHeader,
+  space,
+  Icon,
 } from '@/components/ui';
-import { useT } from '../i18n/useLanguage';
+import { useT } from '../../../i18n/useLanguage';
 import { kindWord, seatLabelText } from '../venue/messages';
 import { BadgesPanel } from '../rewards/BadgesPanel';
 import {
@@ -120,7 +121,7 @@ function Stats({ venue, state }: { venue: Venue; state: LoyaltyState }) {
       {stats.visits === 0 ? (
         <Text style={styles.text}>{t('statsNone')}</Text>
       ) : (
-        <View style={{ gap: 6 }}>
+        <View style={{ gap: space.sm }}>
           <Text style={styles.textStrong}>
             {t('statVisits', { n: stats.visits })}
           </Text>
@@ -185,7 +186,7 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
           {t('joinTitle', { venue: venue.name })}
         </Text>
 
-        <View style={{ gap: 6 }}>
+        <View style={{ gap: space.sm }}>
           <Text style={styles.sectionLabel}>{t('mobileNumber')}</Text>
           <TextInput
             placeholderTextColor={colors.subtle}
@@ -211,7 +212,7 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
           </Banner>
         ) : null}
 
-        <View style={{ gap: 6 }}>
+        <View style={{ gap: space.sm }}>
           <Text style={styles.sectionLabel}>{t('verificationCode')}</Text>
           <TextInput
             placeholderTextColor={colors.subtle}
@@ -224,7 +225,7 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
           />
         </View>
 
-        <View style={{ gap: 6 }}>
+        <View style={{ gap: space.sm }}>
           <Text style={styles.sectionLabel}>{t('friendCodeLabel')}</Text>
           <TextInput
             placeholderTextColor={colors.subtle}
@@ -249,24 +250,29 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
           onPress={() => setConsent(!consent)}
           style={{
             flexDirection: 'row',
-            gap: 12,
+            gap: space.md,
             alignItems: 'flex-start',
-            padding: 12,
+            padding: space.md,
             borderRadius: radius.md,
             backgroundColor: colors.surface,
             borderWidth: 1,
             borderColor: consent ? colors.green : colors.border,
           }}
         >
-          <Text
+          <View
             style={{
-              fontSize: type.headline.fontSize,
-              fontWeight: '800',
-              color: consent ? colors.green : colors.ink,
+              width: 24,
+              height: 24,
+              borderRadius: radius.sm,
+              borderWidth: 2,
+              borderColor: consent ? colors.green : colors.borderStrong,
+              backgroundColor: consent ? colors.green : colors.surface,
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            {consent ? '[x]' : '[ ]'}
-          </Text>
+            {consent ? <Icon name="check" color={colors.onPrimary} /> : null}
+          </View>
           <Text style={[styles.text, { flex: 1, color: colors.ink }]}>
             {t('consentText', { venue: venue.name })}
           </Text>
@@ -284,7 +290,7 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
         {message ? (
           <Text
             accessibilityRole="alert"
-            style={{ color: colors.danger, fontWeight: '700' }}
+            style={[styles.textStrong, { color: colors.danger }]}
           >
             {message}
           </Text>
@@ -396,7 +402,7 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
         <Text style={styles.subheading}>{t('referralTitle')}</Text>
         <View
           style={{
-            padding: 12,
+            padding: space.md,
             borderRadius: radius.md,
             backgroundColor: colors.surface,
             borderWidth: 1,
@@ -406,12 +412,7 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
         >
           <Text
             accessibilityLabel={t('referralA11y', { code: referral ?? '' })}
-            style={{
-              fontWeight: '800',
-              fontSize: type.headline.fontSize,
-              color: colors.ink,
-              letterSpacing: 0.8,
-            }}
+            style={[styles.subheading, { letterSpacing: 0.8 }]}
           >
             {referral}
           </Text>
@@ -479,9 +480,7 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
           style={[styles.input, { backgroundColor: colors.surface }]}
         />
         {notice ? (
-          <Text
-            style={[styles.text, { color: colors.amber, fontWeight: '600' }]}
-          >
+          <Text style={[styles.textStrong, { color: colors.amber }]}>
             {notice}
           </Text>
         ) : null}
@@ -500,7 +499,7 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
         {saved ? (
           <Text
             accessibilityLiveRegion="polite"
-            style={[styles.text, { color: colors.green, fontWeight: '700' }]}
+            style={[styles.textStrong, { color: colors.green }]}
           >
             {saved}
           </Text>
@@ -536,7 +535,7 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
           <>
             <Text
               accessibilityRole="alert"
-              style={[styles.text, { color: colors.danger, fontWeight: '600' }]}
+              style={[styles.textStrong, { color: colors.danger }]}
             >
               {t('leaveConfirm', { venue: venue.name })}
             </Text>

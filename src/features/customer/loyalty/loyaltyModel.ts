@@ -1,6 +1,6 @@
 import { getAllVenues } from '../../../core/fixtures';
 import type { BillingMode, Seat } from '../../../core/domain';
-import type { Lang } from '../i18n/i18n';
+import type { Lang } from '../../../i18n/i18n';
 import type { VisitSnapshot } from '../shared/visit';
 import { loyaltyT } from './messages';
 

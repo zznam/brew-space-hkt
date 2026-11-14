@@ -1,7 +1,7 @@
 import { Text, View } from 'react-native';
 import { formatMoney } from '@/core';
-import { Badge, Card, colors, Divider, Heading, styles } from '@/components/ui';
-import { useT } from '../i18n/useLanguage';
+import { Badge, Card, Divider, Heading, styles, space } from '@/components/ui';
+import { useT } from '../../../i18n/useLanguage';
 import type { VisitSnapshot } from '../shared/visit';
 import { supportMessages } from './messages';
 import { seatLabelText } from './supportModel';
@@ -20,23 +20,15 @@ function Line({
       style={{
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingVertical: 4,
+        paddingVertical: space.xs,
       }}
     >
+      <Text style={bold ? styles.textStrong : styles.text}>{label}</Text>
       <Text
         style={[
-          styles.text,
-          bold ? { color: colors.ink, fontWeight: '700' } : undefined,
+          bold ? styles.subheading : styles.textStrong,
+          { fontVariant: ['tabular-nums'] },
         ]}
-      >
-        {label}
-      </Text>
-      <Text
-        style={{
-          color: colors.ink,
-          fontWeight: bold ? '800' : '600',
-          fontSize: bold ? 18 : 15,
-        }}
       >
         {value}
       </Text>
@@ -52,7 +44,7 @@ export function ReceiptView({ receipt }: { receipt: VisitSnapshot }) {
     <Card>
       <View style={styles.rowBetween}>
         <Heading>{t('receiptHeading')}</Heading>
-        <Badge label="Completed Visit" tone="success" />
+        <Badge label={t('completedVisit')} tone="success" />
       </View>
 
       <Text style={styles.textStrong}>

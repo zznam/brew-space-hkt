@@ -17,6 +17,9 @@ import {
   styles,
   useResponsive,
 } from '@/components/ui';
+import { seatLabelText } from '@/i18n/seatLabel';
+import { useT } from '@/i18n/useLanguage';
+import { merchantMessages, posErrorText } from '../messages';
 import { MenuGrid } from './MenuGrid';
 import { CartPanel } from './CartPanel';
 import { calculateOrderTotal } from './posStore';
@@ -26,6 +29,7 @@ export function PosScreen() {
   const { seatId: routeSeatId } = useLocalSearchParams<{ seatId?: string }>();
   const selectedSeatId = routeSeatId ?? null;
   const { isWide } = useResponsive();
+  const { t, lang } = useT(merchantMessages);
   const venueId = useAppStore((state) => state.venueId);
   const orders = usePosStore((state) => state.orders);
   const soldOutItemIds = usePosStore((state) => state.soldOutItemIds);
@@ -52,22 +56,23 @@ export function PosScreen() {
     if (!current) posStore.getState().createOrder(venueId, selectedSeatId);
   }, [venueId, selectedSeatId]);
 
-  const seatLabel = selectedSeatId
+  const rawSeatLabel = selectedSeatId
     ? venue.seats.find((seat) => seat.id === selectedSeatId)?.label
     : null;
+  const seatLabel = rawSeatLabel ? seatLabelText(rawSeatLabel, lang) : null;
 
   if (justPaid) {
     return (
       <Screen>
         <Card variant="accent">
-          <Eyebrow color={colors.green}>MERCHANT / POS CHECKOUT</Eyebrow>
-          <Heading>Order sent to the kitchen.</Heading>
+          <Eyebrow color={colors.green}>{t('paidOverline')}</Eyebrow>
+          <Heading>{t('paidTitle')}</Heading>
           <Text style={styles.text}>
-            Queued on the fulfillment board for {venue.name}.
+            {t('paidBody', { venue: venue.name })}
           </Text>
           <View style={{ gap: space.sm }}>
             <Button
-              label="Start a new order"
+              label={t('newOrder')}
               variant="primary"
               fullWidth={!isWide}
               onPress={() => {
@@ -76,7 +81,7 @@ export function PosScreen() {
               }}
             />
             <Button
-              label="Open Ticket Board"
+              label={t('openTickets')}
               variant="ghost"
               onPress={() => router.push('/merchant/tickets')}
             />
@@ -96,12 +101,12 @@ export function PosScreen() {
   return (
     <Screen>
       <ScreenHeader
-        overline="MERCHANT / POINT OF SALE"
+        overline={t('posOverline')}
         accentColor={venue.accent}
-        title={seatLabel ? `Sell to ${seatLabel}` : 'Walk-in order'}
+        title={seatLabel ? t('sellTo', { seat: seatLabel }) : t('walkInOrder')}
         trailing={
           <Badge
-            label={seatLabel ? `Target: ${seatLabel}` : 'Walk-in'}
+            label={seatLabel ? t('target', { seat: seatLabel }) : t('walkIn')}
             tone={seatLabel ? 'info' : 'neutral'}
           />
         }
@@ -121,7 +126,7 @@ export function PosScreen() {
         }}
       >
         <Card style={isWide ? { flex: 1.4 } : undefined}>
-          <Text style={styles.sectionLabel}>Menu</Text>
+          <Text style={styles.sectionLabel}>{t('menu')}</Text>
 
           <MenuGrid
             venue={venue}
@@ -131,7 +136,9 @@ export function PosScreen() {
               const result = posStore
                 .getState()
                 .addLine(draftOrder.id, item.id, item.name, item.price);
-              setActionError(result.ok ? null : result.message);
+              setActionError(
+                result.ok ? null : posErrorText(result.message, lang),
+              );
             }}
             onToggleSoldOut={(itemId) =>
               posStore.getState().toggleSoldOut(itemId)
@@ -150,7 +157,9 @@ export function PosScreen() {
               const result = posStore
                 .getState()
                 .addLine(draftOrder.id, item.id, item.name, item.price);
-              setActionError(result.ok ? null : result.message);
+              setActionError(
+                result.ok ? null : posErrorText(result.message, lang),
+              );
             }}
             onDecrement={(itemId) => {
               if (!draftOrder) return;
@@ -161,13 +170,15 @@ export function PosScreen() {
               const result = posStore
                 .getState()
                 .setLineQuantity(draftOrder.id, itemId, line.quantity - 1);
-              setActionError(result.ok ? null : result.message);
+              setActionError(
+                result.ok ? null : posErrorText(result.message, lang),
+              );
             }}
             onPay={(method) => {
               if (!draftOrder) return;
               const result = posStore.getState().pay(draftOrder.id, method);
               if (result.ok) setJustPaid(true);
-              else setActionError(result.message);
+              else setActionError(posErrorText(result.message, lang));
             }}
             onCancel={() => {
               if (!draftOrder) return;
@@ -176,7 +187,7 @@ export function PosScreen() {
                 setActionError(null);
                 posStore.getState().createOrder(venueId, selectedSeatId);
               } else {
-                setActionError(result.message);
+                setActionError(posErrorText(result.message, lang));
               }
             }}
           />
@@ -186,15 +197,19 @@ export function PosScreen() {
       {otherOpenOrders.length > 0 ? (
         <Card>
           <View style={styles.rowBetween}>
-            <Heading level={2}>Other open orders</Heading>
+            <Heading level={2}>{t('otherOrders')}</Heading>
             <Badge label={`${otherOpenOrders.length}`} tone="neutral" />
           </View>
           {otherOpenOrders.map((order) => (
             <View key={order.id} style={styles.inset}>
               <Text style={styles.textStrong}>
                 {order.seatId
-                  ? venue.seats.find((seat) => seat.id === order.seatId)?.label
-                  : 'Walk-in'}{' '}
+                  ? seatLabelText(
+                      venue.seats.find((seat) => seat.id === order.seatId)
+                        ?.label ?? '',
+                      lang,
+                    )
+                  : t('walkIn')}{' '}
                 · {formatMoney(calculateOrderTotal(order))}
               </Text>
             </View>

@@ -9,9 +9,9 @@ import {
   Heading,
   radius,
   styles,
-  type,
+  space,
 } from '@/components/ui';
-import { useT } from '../i18n/useLanguage';
+import { useT } from '../../../i18n/useLanguage';
 import { supportMessages } from './messages';
 import {
   MAX_NOTE_LENGTH,
@@ -89,7 +89,7 @@ export function SupportPanel({ context }: { context: SupportContext }) {
         />
       </View>
 
-      <View style={{ gap: 8 }}>
+      <View style={{ gap: space.sm }}>
         <Text style={styles.sectionLabel}>{t('reportSeatIssue')}</Text>
         <View style={styles.row}>
           {SEAT_ISSUE_PRESETS.map((preset) => (
@@ -105,7 +105,7 @@ export function SupportPanel({ context }: { context: SupportContext }) {
 
       <Divider />
 
-      <View style={{ gap: 8 }}>
+      <View style={{ gap: space.sm }}>
         <Text style={styles.sectionLabel}>{t('leaveNote')}</Text>
         <TextInput
           placeholderTextColor={colors.subtle}
@@ -122,11 +122,10 @@ export function SupportPanel({ context }: { context: SupportContext }) {
         />
         <View style={styles.rowBetween}>
           <Text
-            style={{
-              fontSize: type.caption.fontSize,
-              color:
-                note.length > MAX_NOTE_LENGTH ? colors.danger : colors.muted,
-            }}
+            style={[
+              styles.caption,
+              note.length > MAX_NOTE_LENGTH && { color: colors.danger },
+            ]}
           >
             {t('characters', { n: note.length, max: MAX_NOTE_LENGTH })}
           </Text>
@@ -141,7 +140,7 @@ export function SupportPanel({ context }: { context: SupportContext }) {
 
       <Divider />
 
-      <View style={{ gap: 8 }}>
+      <View style={{ gap: space.sm }}>
         <Text style={styles.sectionLabel}>{t('askMove')}</Text>
         <Text style={styles.caption}>{t('seatChangeNote')}</Text>
         <View style={styles.row}>
@@ -184,7 +183,7 @@ export function SupportPanel({ context }: { context: SupportContext }) {
       {feedback ? (
         <View
           style={{
-            padding: 12,
+            padding: space.md,
             borderRadius: radius.md,
             backgroundColor: feedback.ok
               ? colors.greenSurface
@@ -195,10 +194,10 @@ export function SupportPanel({ context }: { context: SupportContext }) {
         >
           <Text
             accessibilityRole="alert"
-            style={{
-              color: feedback.ok ? colors.green : colors.danger,
-              fontWeight: '700',
-            }}
+            style={[
+              styles.textStrong,
+              { color: feedback.ok ? colors.green : colors.danger },
+            ]}
           >
             {feedback.text}
           </Text>
@@ -236,12 +235,7 @@ export function SupportPanel({ context }: { context: SupportContext }) {
               {request.classification &&
               mustEscalate(request.classification) &&
               status !== 'resolved' ? (
-                <Text
-                  style={[
-                    styles.text,
-                    { color: colors.amber, fontWeight: '600' },
-                  ]}
-                >
+                <Text style={[styles.textStrong, { color: colors.amber }]}>
                   {t('staffWillCome')}
                 </Text>
               ) : null}

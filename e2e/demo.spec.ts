@@ -142,7 +142,9 @@ test('customer screens switch to Vietnamese and remember it', async ({
   await expect(
     page.getByRole('button', { name: 'Khám phá', exact: true }),
   ).toBeVisible();
-  await page.getByRole('button', { name: /^Seat 4, desk, Available/ }).click();
+  await page
+    .getByRole('button', { name: /^Chỗ 4, bàn đơn, Đang trống/ })
+    .click();
   await expect(
     page.getByRole('heading', { name: 'Chi tiết Chỗ 4' }),
   ).toBeVisible();
@@ -150,6 +152,12 @@ test('customer screens switch to Vietnamese and remember it', async ({
   await expect(
     page.getByRole('button', { name: 'Bắt đầu tính theo giờ', exact: true }),
   ).toBeVisible();
+  await page.getByRole('button', { name: 'Chủ quán', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Mặt bằng trực tiếp', exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText('Hóa đơn đang mở')).toBeVisible();
+  await page.getByRole('button', { name: 'Khách', exact: true }).click();
   await page.getByRole('button', { name: 'English', exact: true }).click();
   await expect(
     page.getByRole('button', { name: 'Start metered', exact: true }),

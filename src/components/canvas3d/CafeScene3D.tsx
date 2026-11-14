@@ -2,15 +2,10 @@ import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import * as THREE from 'three';
 import { formatMoney, type Session, type Venue } from '@/core';
-import {
-  colors,
-  radius,
-  styles,
-  type,
-  useResponsive,
-  Chip,
-  space,
-} from '../ui';
+import { seatLabelText } from '@/i18n/seatLabel';
+import { useT } from '@/i18n/useLanguage';
+import { seatMapMessages } from '../messages';
+import { colors, radius, styles, useResponsive, Chip, space } from '../ui';
 import {
   buildVenueThreeScene,
   CAMERA_PRESETS,
@@ -29,11 +24,14 @@ export interface CafeScene3DProps {
   height?: number;
 }
 
-const PRESET_LABELS: { id: CameraPreset; label: string }[] = [
-  { id: 'isometric', label: '3D Isometric' },
-  { id: 'top', label: 'Top-Down' },
-  { id: 'front', label: 'Walk-In View' },
-  { id: 'bar', label: 'Bar Angle' },
+const PRESET_LABELS: {
+  id: CameraPreset;
+  label: 'presetIsometric' | 'presetTop' | 'presetFront' | 'presetBar';
+}[] = [
+  { id: 'isometric', label: 'presetIsometric' },
+  { id: 'top', label: 'presetTop' },
+  { id: 'front', label: 'presetFront' },
+  { id: 'bar', label: 'presetBar' },
 ];
 
 function detectWebGLSupport(): boolean {
@@ -66,11 +64,21 @@ export function CafeScene3D({
   const containerRef = useRef<ComponentRef<typeof View> | null>(null);
   const orbitRef = useRef<OrbitState>(orbit);
   const onSelectRef = useRef(onSelect);
+  const { t, lang } = useT(seatMapMessages);
+  const canvasLabel = t('canvasA11y', { venue: venue.name });
+  const canvasLabelRef = useRef(canvasLabel);
   const renderFrameRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     onSelectRef.current = onSelect;
   }, [onSelect]);
+
+  useEffect(() => {
+    canvasLabelRef.current = canvasLabel;
+    const host = containerRef.current as unknown as HTMLElement | null;
+    if (host && typeof host.querySelector === 'function')
+      host.querySelector('canvas')?.setAttribute('aria-label', canvasLabel);
+  }, [canvasLabel]);
 
   useEffect(() => {
     orbitRef.current = orbit;
@@ -91,9 +99,11 @@ export function CafeScene3D({
     canvas.style.width = '100%';
     canvas.style.height = `${height}px`;
     canvas.style.display = 'block';
-    canvas.style.borderRadius = '12px';
+    canvas.style.borderRadius = `${radius.md}px`;
     canvas.style.cursor = 'grab';
-    canvas.setAttribute('aria-label', `${venue.name} 3D floor canvas`);
+    // Vertical swipes keep scrolling the page; horizontal drags orbit the room.
+    canvas.style.touchAction = 'pan-y';
+    canvas.setAttribute('aria-label', canvasLabelRef.current);
 
     let renderer: THREE.WebGLRenderer | null = null;
     try {
@@ -159,22 +169,49 @@ export function CafeScene3D({
       return null;
     };
 
+    let activePointerId: number | null = null;
+    let downX = 0;
+    let downY = 0;
+
+    const endDrag = () => {
+      if (activePointerId === null) return;
+      activePointerId = null;
+      dragging = false;
+      canvas.style.cursor = 'grab';
+      // React state only needs the orbit once the gesture settles.
+      if (dragMoved) setOrbit(orbitRef.current);
+    };
+
     const onPointerDown = (e: PointerEvent) => {
+      if (activePointerId !== null || !e.isPrimary) return;
+      activePointerId = e.pointerId;
       dragging = true;
       dragMoved = false;
-      startX = e.clientX;
-      startY = e.clientY;
+      startX = downX = e.clientX;
+      startY = downY = e.clientY;
       canvas.style.cursor = 'grabbing';
+      try {
+        canvas.setPointerCapture(e.pointerId);
+      } catch {
+        // Capture is an enhancement; the drag still works over the canvas.
+      }
     };
 
     const onPointerMove = (e: PointerEvent) => {
       if (dragging) {
+        if (e.pointerId !== activePointerId) return;
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
-        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragMoved = true;
+        const slop = e.pointerType === 'mouse' ? 3 : 8;
+        if (
+          Math.abs(e.clientX - downX) > slop ||
+          Math.abs(e.clientY - downY) > slop
+        )
+          dragMoved = true;
+        if (!dragMoved) return;
         startX = e.clientX;
         startY = e.clientY;
-        const next: OrbitState = {
+        orbitRef.current = {
           ...orbitRef.current,
           theta: orbitRef.current.theta - dx * 0.007,
           phi: THREE.MathUtils.clamp(
@@ -183,10 +220,8 @@ export function CafeScene3D({
             Math.PI * 0.44,
           ),
         };
-        orbitRef.current = next;
-        setOrbit(next);
         renderFrame();
-      } else {
+      } else if (e.pointerType === 'mouse') {
         const hitSeat = pickSeatAt(e.clientX, e.clientY);
         setHoveredSeatId(hitSeat);
         canvas.style.cursor = hitSeat ? 'pointer' : 'grab';
@@ -194,24 +229,40 @@ export function CafeScene3D({
     };
 
     const onPointerUp = (e: PointerEvent) => {
-      if (dragging && !dragMoved) {
+      if (e.pointerId !== activePointerId) return;
+      if (!dragMoved) {
         const hitSeat = pickSeatAt(e.clientX, e.clientY);
         if (hitSeat) onSelectRef.current(hitSeat);
       }
-      dragging = false;
-      canvas.style.cursor = 'grab';
+      endDrag();
+    };
+
+    // The browser cancels the pointer when it takes the gesture for page scroll.
+    const onPointerCancel = (e: PointerEvent) => {
+      if (e.pointerId === activePointerId) endDrag();
+    };
+
+    const onPointerLeave = () => {
+      if (!dragging) setHoveredSeatId(null);
     };
 
     canvas.addEventListener('pointerdown', onPointerDown);
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
+    canvas.addEventListener('pointermove', onPointerMove);
+    canvas.addEventListener('pointerup', onPointerUp);
+    canvas.addEventListener('pointercancel', onPointerCancel);
+    canvas.addEventListener('lostpointercapture', onPointerCancel);
+    canvas.addEventListener('pointerleave', onPointerLeave);
 
     return () => {
       renderFrameRef.current = null;
       canvas.removeEventListener('pointerdown', onPointerDown);
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
+      canvas.removeEventListener('pointermove', onPointerMove);
+      canvas.removeEventListener('pointerup', onPointerUp);
+      canvas.removeEventListener('pointercancel', onPointerCancel);
+      canvas.removeEventListener('lostpointercapture', onPointerCancel);
+      canvas.removeEventListener('pointerleave', onPointerLeave);
       renderer?.dispose();
+      renderer?.forceContextLoss();
     };
   }, [webglActive, venue, sessions, selectedSeatId, height]);
 
@@ -221,8 +272,6 @@ export function CafeScene3D({
     ? sessions.some((s) => s.venueId === venue.id && s.seatId === activeSeat.id)
     : false;
 
-  const isDarkTheme = sceneCfg.theme === 'cyber';
-
   return (
     <View
       style={{
@@ -231,25 +280,23 @@ export function CafeScene3D({
         gap: space.sm,
         padding: space.md,
         borderRadius: radius.lg,
-        backgroundColor: isDarkTheme ? '#0f172a' : colors.surfaceSubtle,
+        backgroundColor: colors.surfaceSubtle,
       }}
     >
       <View style={{ gap: space.sm }}>
-        <Text
-          style={{
-            ...type.caption,
-            fontWeight: '600',
-            color: isDarkTheme ? '#f8fafc' : colors.ink,
-          }}
-        >
-          3D Spatial Engine · {venue.name} ({sceneCfg.roomWidth}m ×{' '}
-          {sceneCfg.roomDepth}m · {sceneCfg.theme})
+        <Text style={styles.captionStrong}>
+          {t('engine', {
+            venue: venue.name,
+            width: sceneCfg.roomWidth,
+            depth: sceneCfg.roomDepth,
+            theme: sceneCfg.theme,
+          })}
         </Text>
         <View style={styles.row}>
           {PRESET_LABELS.map((item) => (
             <Chip
               key={item.id}
-              label={item.label}
+              label={t(item.label)}
               selected={preset === item.id}
               onPress={() => {
                 setPreset(item.id);
@@ -258,7 +305,7 @@ export function CafeScene3D({
             />
           ))}
           <Chip
-            label="Zoom +"
+            label={t('zoomIn')}
             onPress={() =>
               setOrbit((prev) => ({
                 ...prev,
@@ -267,7 +314,7 @@ export function CafeScene3D({
             }
           />
           <Chip
-            label="Zoom −"
+            label={t('zoomOut')}
             onPress={() =>
               setOrbit((prev) => ({
                 ...prev,
@@ -291,6 +338,14 @@ export function CafeScene3D({
 
       {/* Interactive Spatial Floor Map (fallback when WebGL is disabled) */}
       {!webglActive && (
+        <Text style={styles.caption}>
+          {t('blueprint', {
+            lighting: sceneCfg.lighting,
+            count: sceneCfg.fixtures.length,
+          })}
+        </Text>
+      )}
+      {!webglActive && (
         <View
           style={{
             width: '100%',
@@ -301,19 +356,8 @@ export function CafeScene3D({
             backgroundColor: sceneCfg.floorColor,
             position: 'relative',
             overflow: 'hidden',
-            padding: 10,
           }}
         >
-          <Text
-            style={{
-              fontSize: type.caption.fontSize,
-              fontWeight: '700',
-              color: isDarkTheme ? '#e2e8f0' : '#1e293b',
-            }}
-          >
-            3D Architectural Blueprint · Lighting: {sceneCfg.lighting} ·{' '}
-            {sceneCfg.fixtures.length} fixtures
-          </Text>
           {venue.seats.map((seat) => {
             const { worldX, worldZ } = gridToWorld(
               seat.x,
@@ -343,26 +387,23 @@ export function CafeScene3D({
               <Pressable
                 key={`blueprint-${seat.id}`}
                 onPress={() => onSelect(seat.id)}
+                hitSlop={8}
                 style={{
                   position: 'absolute',
                   left: `${leftPct}%`,
                   top: `${topPct}%`,
-                  paddingVertical: 5,
-                  paddingHorizontal: 8,
+                  paddingVertical: space.xs,
+                  paddingHorizontal: space.sm,
                   borderRadius: radius.sm,
                   borderWidth: 2,
                   borderColor: selected ? venue.accent : colors.onPrimary,
-                  backgroundColor: occupied ? '#0284c7' : '#15803d',
+                  backgroundColor: occupied ? colors.blue : colors.green,
                 }}
               >
                 <Text
-                  style={{
-                    color: colors.onPrimary,
-                    fontWeight: '700',
-                    fontSize: type.overline.fontSize,
-                  }}
+                  style={[styles.captionStrong, { color: colors.onPrimary }]}
                 >
-                  {seat.label}
+                  {seatLabelText(seat.label, lang)}
                 </Text>
               </Pressable>
             );
@@ -371,16 +412,13 @@ export function CafeScene3D({
       )}
 
       {activeSeat ? (
-        <Text
-          style={{
-            fontSize: type.caption.fontSize,
-            fontWeight: '700',
-            color: isDarkTheme ? '#f8fafc' : colors.ink,
-          }}
-        >
-          Selected: {activeSeat.label} ({activeSeat.kind}) ·{' '}
-          {activeSeatOccupied ? 'Occupied' : 'Available'} ·{' '}
-          {formatMoney(activeSeat.hourlyRate)}/h
+        <Text style={styles.captionStrong}>
+          {t('selected', {
+            seat: seatLabelText(activeSeat.label, lang),
+            kind: t(activeSeat.kind),
+            status: activeSeatOccupied ? t('occupied') : t('available'),
+            rate: formatMoney(activeSeat.hourlyRate),
+          })}
         </Text>
       ) : null}
     </View>

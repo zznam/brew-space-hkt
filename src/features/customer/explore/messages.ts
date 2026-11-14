@@ -1,9 +1,11 @@
-import { defineMessages, translator, type Lang } from '../i18n/i18n';
+import { defineMessages, translator, type Lang } from '../../../i18n/i18n';
 
 /** Explore screen copy. Pure so exploreModel can use it. English text is
  * unchanged from the original screen; end-to-end tests select by it. */
 export const exploreMessages = defineMessages(
   {
+    freeBadge: '{free}/{total} free',
+    startTitle: 'Start Your Session',
     loading: 'Loading your seats and preferences…',
     eyebrow: 'CUSTOMER / FIND YOUR SPACE',
     intro: '{description} Select an available seat to try a demo session.',
@@ -54,6 +56,8 @@ export const exploreMessages = defineMessages(
     errActiveSession: 'Finish your current demo session first.',
   },
   {
+    freeBadge: 'Trống {free}/{total}',
+    startTitle: 'Bắt đầu phiên của bạn',
     loading: 'Đang tải chỗ ngồi và tuỳ chọn của bạn…',
     eyebrow: 'KHÁCH HÀNG / TÌM KHÔNG GIAN CỦA BẠN',
     intro: '{description} Hãy chọn một chỗ trống để thử phiên demo.',

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Platform, Text, View } from 'react-native';
 import { formatMoney, type Seat } from '@/core';
 import { Badge, Button, Card, colors, styles } from '@/components/ui';
-import { useT } from '../i18n/useLanguage';
+import { useT } from '../../../i18n/useLanguage';
 import { buildSeatLink } from './deepLink';
 import { kindWord, seatLabelText, venueMessages } from './messages';
 import { describeAmenities, seatAmenities } from './seatAmenities';

@@ -1,4 +1,4 @@
-import { defineMessages } from '../i18n/i18n';
+import { defineMessages } from '../../../i18n/i18n';
 
 /** Message table for the support slice (help panel, status banner, venue
  * card, receipt, rating, refund). English text is the source and must stay
@@ -6,6 +6,10 @@ import { defineMessages } from '../i18n/i18n';
  * import it. Notes typed by the customer are data and are never translated. */
 export const supportMessages = defineMessages(
   {
+    receiptOverline: 'CUSTOMER / VISIT SUMMARY',
+    completedVisit: 'Completed Visit',
+    wifiReady: 'Wi-Fi Ready',
+    ratedBadge: 'Rated',
     // Help panel
     needHelp: 'Need help?',
     callStaff: 'Call staff',
@@ -153,6 +157,10 @@ export const supportMessages = defineMessages(
     'err.RATING_COMMENT_TOO_LONG': 'Comments can be at most {max} characters.',
   },
   {
+    receiptOverline: 'KHÁCH / TÓM TẮT LƯỢT GHÉ',
+    completedVisit: 'Lượt ghé đã xong',
+    wifiReady: 'Có Wi-Fi',
+    ratedBadge: 'Đã đánh giá',
     needHelp: 'Cần hỗ trợ?',
     callStaff: 'Gọi nhân viên',
     reportSeatIssue: 'Báo sự cố chỗ ngồi',

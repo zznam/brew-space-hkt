@@ -1,5 +1,5 @@
 import type { Seat, Venue } from '../../../core/domain';
-import type { Lang } from '../i18n/i18n';
+import type { Lang } from '../../../i18n/i18n';
 import { venueT } from './messages';
 
 /**

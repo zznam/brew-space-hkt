@@ -1,10 +1,12 @@
-import { defineMessages, translator, type Lang } from '../i18n/i18n';
+import { defineMessages, translator, type Lang } from '../../../i18n/i18n';
 
 /** Loyalty copy: model errors, the member profile and the privacy page. Pure
  * so loyaltyModel can use it. English text is unchanged from the original
  * screens; end-to-end tests select by it. */
 export const loyaltyMessages = defineMessages(
   {
+    privacyOverline: 'CUSTOMER / DATA PRIVACY',
+    localOnly: 'Local Device Only',
     // Model errors and notices
     errPhone: 'Enter a 10 digit mobile number starting with 0.',
     errUnknownVenue: 'Unknown venue.',
@@ -125,6 +127,8 @@ export const loyaltyMessages = defineMessages(
     privGoMember: 'Go to Member page',
   },
   {
+    privacyOverline: 'KHÁCH / QUYỀN RIÊNG TƯ',
+    localOnly: 'Chỉ lưu trên máy này',
     errPhone: 'Hãy nhập số điện thoại di động 10 chữ số, bắt đầu bằng số 0.',
     errUnknownVenue: 'Không tìm thấy quán.',
     errAlreadyJoined: 'Bạn đã tham gia chương trình này rồi.',

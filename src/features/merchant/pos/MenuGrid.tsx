@@ -12,6 +12,8 @@ import {
   styles,
   useResponsive,
 } from '@/components/ui';
+import { useT } from '@/i18n/useLanguage';
+import { merchantMessages } from '../messages';
 
 export interface MenuGridProps {
   venue: Venue;
@@ -28,8 +30,9 @@ export function MenuGrid({
   onToggleSoldOut,
 }: MenuGridProps) {
   const { isWide } = useResponsive();
+  const { t } = useT(merchantMessages);
   if (venue.menu.length === 0) {
-    return <EmptyState message="No menu items yet." />;
+    return <EmptyState message={t('noMenu')} />;
   }
   return (
     <View
@@ -57,7 +60,10 @@ export function MenuGrid({
           >
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`${item.name}, ${formatMoney(item.price)}${soldOut ? ', Sold out' : ''}`}
+              accessibilityLabel={t(soldOut ? 'itemA11ySoldOut' : 'itemA11y', {
+                name: item.name,
+                price: formatMoney(item.price),
+              })}
               accessibilityState={{ disabled: soldOut }}
               disabled={soldOut}
               onPress={() => onAdd(item)}
@@ -83,11 +89,11 @@ export function MenuGrid({
               </View>
             </Pressable>
             <View style={{ alignItems: 'flex-end', gap: space.xs }}>
-              {soldOut ? <Badge label="Sold out" tone="danger" /> : null}
+              {soldOut ? <Badge label={t('soldOut')} tone="danger" /> : null}
               <Button
                 size="sm"
                 variant="ghost"
-                label={soldOut ? 'Lift sold out' : 'Mark sold out'}
+                label={soldOut ? t('liftSoldOut') : t('markSoldOut')}
                 onPress={() => onToggleSoldOut(item.id)}
               />
             </View>
