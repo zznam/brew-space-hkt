@@ -4,7 +4,7 @@ This file provides guidance to coding agents when working with code in this repo
 
 ## What this is
 
-Vibing HKT is the shared Expo SDK 58 / React Native foundation for a cafe and coworking platform. One app holds both the merchant and the customer experience, backed by a local demo core. There is no backend, auth, or payment yet: every transaction is simulated on one device. A three.js 3D venue viewer and an OpenAI-backed merchant onboarding flow do exist, but both are client-only demos (see Architecture) — not production AI/3D infrastructure.
+BrewSpace is the shared Expo SDK 58 / React Native foundation for a cafe and coworking platform. One app holds both the merchant and the customer experience, backed by a local demo core. There is no backend, auth, or payment yet: every transaction is simulated on one device. A three.js 3D venue viewer and an OpenAI-backed merchant onboarding flow do exist, but both are client-only demos (see Architecture) — not production AI/3D infrastructure.
 
 The repo holds two independent things:
 

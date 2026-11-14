@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Vibing HKT",
-    "slug": "vibing-hkt",
-    "scheme": "vibinghkt",
+    "name": "BrewSpace",
+    "slug": "brewspace",
+    "scheme": "brewspace",
     "version": "0.1.0",
     "orientation": "default",
     "userInterfaceStyle": "light",

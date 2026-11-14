@@ -33,7 +33,7 @@ export default function RootLayout() {
             <Text
               style={{ fontSize: 20, fontWeight: '800', color: colors.ink }}
             >
-              vibing / HKT
+              BrewSpace
             </Text>
             {!ready ? (
               <Text>Loading your demo…</Text>
