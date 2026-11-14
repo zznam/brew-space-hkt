@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-14",
+  "existing_framework": null,
+  "existing_fonts": [],
+  "existing_palette": null,
+  "existing_motion": null,
+  "existing_spacing": null,
+  "source": "User supplied floor-plan screenshot and MVP PRD",
+  "scope": "Two buildless HTML frontends; no existing production UI",
+  "decisions": {
+    "audience": ["Cafe staff", "Cafe and coworking guests"],
+    "use_case": ["Manage seats and orders", "Select a seat and self checkout"],
+    "tone": "Utilitarian, dark, mint accent — confirmed by user",
+    "fonts": ["Space Grotesk", "Be Vietnam Pro"],
+    "motion": "Only purposeful transform feedback; reduced-motion supported"
+  }
+}

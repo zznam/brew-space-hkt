@@ -1,0 +1,21 @@
+[
+  {
+    "date": "2026-11-14",
+    "macrostructure": "Split Studio",
+    "theme": "Midnight — mint reference adaptation",
+    "enrichment": "none; functional SVG floor plan and drink illustrations",
+    "brief": "Nếp customer frontend: choose seat, duration, drinks and simulated checkout",
+    "nav": "N9 edge aligned",
+    "footer": "Ft2 inline",
+    "shared_system": "Same product as operations frontend; user confirmed consistent dark and mint direction"
+  },
+  {
+    "date": "2026-11-14",
+    "macrostructure": "Map / Diagram",
+    "theme": "Midnight — mint reference adaptation",
+    "enrichment": "none; functional SVG floor plan",
+    "brief": "Nếp operations frontend: activity ledger, floor plan, seat detail and POS dialogs",
+    "nav": "N3 side rail",
+    "footer": "Ft4 operational colophon"
+  }
+]
