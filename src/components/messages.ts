@@ -59,6 +59,8 @@ export const seatMapMessages = defineMessages(
     presetBar: 'Bar Angle',
     zoomIn: 'Zoom +',
     zoomOut: 'Zoom −',
+    unavailable3D: '3D is unavailable. Use the 2D seat map below.',
+    blueprintSeatA11y: '{seat}, {status}, 2D map',
     blueprint: '2D blueprint · Lighting: {lighting} · {count} fixtures',
     selected: 'Selected: {seat} ({kind}) · {status} · {rate}/h',
   },
@@ -85,6 +87,9 @@ export const seatMapMessages = defineMessages(
     presetBar: 'Góc quầy bar',
     zoomIn: 'Phóng to',
     zoomOut: 'Thu nhỏ',
+    unavailable3D:
+      'Không thể hiển thị 3D. Hãy dùng sơ đồ chỗ ngồi 2D bên dưới.',
+    blueprintSeatA11y: '{seat}, {status}, sơ đồ 2D',
     blueprint: 'Bản vẽ 2D · Ánh sáng: {lighting} · {count} vật dụng',
     selected: 'Đang chọn: {seat} ({kind}) · {status} · {rate}/giờ',
   },
