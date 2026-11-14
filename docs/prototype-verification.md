@@ -1,50 +1,73 @@
-# Kiểm tra prototype HTML
+# Kiểm tra prototype HTML trên điện thoại
 
-Ngày kiểm tra: 14/11/2026. Môi trường: Chromium headless qua agent-browser, phục vụ file tĩnh bằng Python HTTP server. Kiểm tra này xác minh prototype cục bộ, không phải nghiệm thu sản phẩm pilot.
+Ngày kiểm tra: 14/11/2026. Môi trường: Chromium headless qua agent-browser; HTML chạy bằng Python HTTP server. Các kiểm tra xác minh prototype cục bộ, chưa là nghiệm thu sản phẩm pilot.
 
-## Kết quả
+## Kết quả đợt cập nhật
 
-- 57 kiểm tra trình duyệt đã đạt, gồm các kịch bản nghiệp vụ bên dưới và kiểm tra hiển thị trên ba trang.
-- Kiểm tra bổ sung đồng bộ hai tab cùng origin đã đạt: đổi trạng thái chỗ ở màn vận hành tự cập nhật lựa chọn ở màn khách qua sự kiện storage.
-- Ba file JavaScript qua `node --check`; các trang không phát sinh JavaScript runtime exception trong lượt kiểm tra.
-- Không có tràn ngang ở 320, 375, 414, 768, 1280 và 1440 px trên trang vào, màn vận hành và màn khách. Các control chữ dùng chế độ một dòng; đã xem ảnh tại bốn kích thước mobile/tablet.
-- Đã kiểm tra chế độ reduced motion và đóng dialog bằng Escape.
+- 13 kiểm thử biên của quy tắc dịch vụ đã đạt: mượn, giữ số lượng, giao, nhận trả, hủy, mua hàng, chống xử lý lặp và thêm dữ liệu dịch vụ vào browser state cũ.
+- 175 kiểm tra trình duyệt cho tính năng mới và bố cục đã đạt; thêm 8 kiểm tra hồi quy cho đặt chỗ, đồ uống, check-in, hỗ trợ, editor, duyệt giá và preview liên màn.
+- Thêm 4 kiểm tra vùng chạm ở 320, 375, 414 và 480 px: nút giao đồ và hủy yêu cầu nằm riêng, không chồng lên nhau.
+- Đã kiểm tra khung nội dung tối đa 480 px và không tràn ngang tại 320, 375, 390, 414, 480, 768 và 1440 px trên các tab khách/nhân viên. Cả bốn danh mục dịch vụ đều vừa khung ở các kích thước này.
+- Điều hướng dưới nằm trong viewport, có vùng chạm và nhãn chữ. Biểu mẫu/chi tiết dùng native dialog, đóng bằng nút và Escape.
+- Đồng bộ phiếu mượn giữa hai iframe thật trong trang preview đã đạt.
+- `npm run check` đạt typecheck, lint và 19 test lõi hiện có; `npm run format:check` và `npm run build:web` đạt trên Node 22. Không thay đổi demo core của ứng dụng Expo.
 
 ## Các luồng đã thử
 
-1. Chọn khu tập trung, đổi gói 4 giờ, thêm hai cà phê sữa; tổng tiền 210.000 ₫.
-2. Mô phỏng thanh toán lỗi: chưa phát sinh đơn/reservation; sau đó xác nhận thành công đúng một lần.
-3. Xác nhận hiển thị số tiền đã mua, đơn/reservation/ghi chú xuất hiện ở màn nhân viên.
-4. Nhân viên check-in, đánh dấu đã phục vụ, nhận việc và hoàn tất hỗ trợ.
-5. Quản lý duyệt ưu đãi mẫu; gói tập trung 2 giờ mới có tổng tiền chỗ 54.000 ₫.
-6. Di chuyển vị trí chỗ bằng editor và hủy để khôi phục tọa độ gốc.
-7. Tạo/hủy đặt chỗ ngày mai; không thay đổi phiên sử dụng hiện tại của cùng chỗ.
-8. Nội dung hỗ trợ có chuỗi HTML được hiển thị như văn bản, không tạo thẻ ảnh hoặc chạy nội dung chèn.
-9. Chuyển đổi responsive, danh sách/sơ đồ, điều khiển giảm chuyển động và đồng bộ dữ liệu giữa tab.
+1. Khách mượn cuốn sách cuối cùng: giữ tồn ngay, nút mượn hết lượt bị khóa, không tạo khoản thu.
+2. Khách yêu cầu ổ cắm nối dài; nhân viên thấy cả phiếu sách và đồ dùng trong Chờ giao.
+3. Nhân viên giao đồ, rồi nhận trả; tồn khả dụng khôi phục đúng một lần. Hủy phiếu chưa giao giải phóng tồn.
+4. Phiên đang dùng chỗ chưa thể kết thúc khi còn phiếu mượn cần xử lý.
+5. Hai bút và một sổ vào giỏ có tổng mẫu 69.000 ₫. Tắt gói giờ để chỉ mua hàng, chọn chỗ đang sử dụng làm nơi nhận.
+6. Thanh toán lỗi không làm giảm tồn; thành công chỉ tạo một đơn, giảm đúng số lượng và không thay đổi booking/phiên hiện tại khi không mua giờ.
+7. Tồn thay đổi trước khi xác nhận được kiểm tra lại; không tạo đơn vượt số lượng.
+8. Dữ liệu đơn cũ được giữ khi bổ sung các trường dịch vụ; không buộc người dùng xóa localStorage.
+9. Luồng cũ gói tập trung 4 giờ và hai cà phê sữa vẫn có tổng mẫu 210.000 ₫; nhân viên check-in và nhận được ghi chú hỗ trợ.
+10. Hủy chỉnh bố trí khôi phục tọa độ; duyệt giá trong tab Thêm vẫn hoạt động.
 
-## Rà soát giao diện theo Hallmark
+## Rà soát giao diện
 
-Hai màn có cấu trúc khác nhau nhưng dùng chung hệ màu và typography. Ảnh tham chiếu được dùng để định hướng sơ đồ và phân bố thông tin; không dùng ảnh chụp làm lớp nền giả giao diện. Không có browser/phone frame giả, gradient trang trí, emoji thay icon hoặc số liệu hiệu quả kinh doanh tự tạo.
+Hai màn giữ hệ màu tối/mint, font và icon thống nhất; đổi bố cục sang nội dung dọc và điều hướng dưới. Dịch vụ có nhãn mượn/mua và cần trả lại; màu chỉ là tín hiệu bổ sung. Trang xem song song nhúng hai màn thật bằng iframe, không vẽ thanh hệ điều hành hoặc vỏ điện thoại giả.
 
-Kiểm tra tương phản bằng màu đã render trên 186 node chữ HTML của ba trang mặc định không phát hiện trường hợp dưới ngưỡng: chữ nhỏ 4,5:1, chữ lớn 3:1. Chữ tối trên nút mint đạt khoảng 11,41:1. Vòng focus riêng cho nút mint đạt khoảng 3,36:1 so với nút và 3,54:1 so với nền chính. Kiểm tra này không bao gồm toàn bộ SVG, opacity của trạng thái disabled, mọi modal hoặc mọi trạng thái hover; chưa là audit WCAG đầy đủ.
+Kiểm tra màu đã render trên 174 node chữ HTML của ba trang mặc định không phát hiện chữ dưới ngưỡng: chữ nhỏ 4,5:1, chữ lớn 3:1. Nút mint giữ tỷ lệ chữ khoảng 11,41:1; focus riêng cho nút mint giữ khoảng 3,36:1 so với nút. Kiểm tra này chưa bao gồm toàn bộ SVG, mọi modal, opacity disabled hoặc mọi trạng thái hover; chưa là audit WCAG đầy đủ. Sơ đồ có lựa chọn thay thế bằng danh sách.
 
 ## Ảnh preview
 
-### FE1 vận hành
+### Hai màn điện thoại cùng lúc
 
-![Màn vận hành với sơ đồ bàn, hoạt động tại quán và chi tiết chỗ ngồi](previews/operations.png)
+![Hai màn điện thoại hiển thị phiếu mượn bên nhân viên và sách bên khách](previews/mobile-pair.png)
 
-### FE2 khách
+### Màn nhân viên và màn khách
 
-![Màn khách với sơ đồ chọn chỗ, gói giờ, giỏ thanh toán và đồ uống](previews/customer.png)
+![Màn nhân viên trên điện thoại](previews/operations.png)
 
-## Lệnh kiểm tra tĩnh
+![Màn khách trên điện thoại](previews/customer.png)
+
+### Nhận diện dịch vụ
+
+![Mượn sách tại quán](previews/customer-books.png)
+
+![Đồ dùng chung như ổ cắm nối dài và rổ](previews/customer-shared.png)
+
+![Đồ giải trí mua mang về](previews/customer-games.png)
+
+![Văn phòng phẩm mua mang về](previews/customer-stationery.png)
+
+![Hàng chờ nhân viên giao đồ](previews/operations-services.png)
+
+## Lệnh kiểm tra
 
 ```bash
+rtk proxy node --test prototype/services.check.cjs
 rtk proxy node --check prototype/shared.js
+rtk proxy node --check prototype/services.js
+rtk proxy node --check prototype/service-ui.js
 rtk proxy node --check prototype/operations.js
 rtk proxy node --check prototype/customer.js
+rtk proxy npm run check
+rtk proxy npm run format:check
+rtk proxy npm run build:web
 rtk git diff --check
 ```
 
-Các kiểm tra browser đã chạy qua phiên agent-browser của môi trường làm việc. Kịch bản thử bằng tay có trong [hướng dẫn prototype](prototype.md). Chưa kiểm tra Safari/iOS thật, độ tải hệ thống, giao dịch đồng thời, đăng nhập/phân quyền, cổng thanh toán hoặc mô hình AI.
+Các lệnh npm cần Node 22 theo `.nvmrc`. Kịch bản thử bằng tay có trong [hướng dẫn prototype](prototype.md). Chưa kiểm tra Safari/iOS thật, hiệu năng thiết bị thật, giao dịch đồng thời trên nhiều máy, xác minh danh tính, cổng thanh toán, tiền cọc/phạt hoặc AI thật. Chế độ giảm chuyển động và các giới hạn của bản prototype đầu vẫn được giữ.
