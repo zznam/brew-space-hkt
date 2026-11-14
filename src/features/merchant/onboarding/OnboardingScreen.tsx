@@ -14,16 +14,18 @@ import {
 import { useAppStore } from '@/core/useAppStore';
 import { CafeScene3D } from '@/components/canvas3d/CafeScene3D';
 import {
-  Badge,
   Button,
   Card,
   colors,
-  Eyebrow,
   Heading,
+  radius,
   styles,
+  type,
   useResponsive,
+  Banner,
+  Screen,
+  ScreenHeader,
 } from '@/components/ui';
-import { MerchantNav } from '../MerchantNav';
 import {
   processUploadedFile,
   SAMPLE_ONBOARDING_BUNDLES,
@@ -343,26 +345,15 @@ export function OnboardingScreen() {
   }
 
   return (
-    <>
-      <MerchantNav current="onboarding" />
-
+    <Screen>
+      <ScreenHeader
+        overline="MERCHANT / 3D STUDIO"
+        title="Onboard Your Cafe with OpenAI & 3D Engine"
+        subtitle="Upload photos, videos, and menu or floorplan documents. AI generates your interactive 3D cafe, then you refine it in chat."
+      />
       <Card>
-        <View style={styles.rowBetween}>
-          <Eyebrow>MERCHANT / AI 3D CAFE ONBOARDING & STUDIO</Eyebrow>
-          <Badge label="OpenAI Vision + 3D Engine" tone="info" />
-        </View>
-        <Heading>Onboard Your Cafe with OpenAI & 3D Engine</Heading>
-        <Text style={styles.text}>
-          Upload photos, walkthrough videos, and menu or floorplan documents. AI
-          analyzes all visual and document context to generate your interactive
-          3D cafe environment, then lets you chat in a multi-turn feedback loop
-          to iterate on the space.
-        </Text>
+        <Text style={styles.sectionLabel}>Start from a sample</Text>
         <View style={styles.row}>
-          <Button
-            label="Back to live floor"
-            onPress={() => router.push('/merchant/live-floor')}
-          />
           {SAMPLE_ONBOARDING_BUNDLES.map((bundle) => (
             <Button
               key={bundle.id}
@@ -374,7 +365,9 @@ export function OnboardingScreen() {
       </Card>
 
       <Card>
-        <Heading>1. Target Venue & Multimodal Context Uploads</Heading>
+        <Heading level={2}>
+          1. Target Venue & Multimodal Context Uploads
+        </Heading>
         <Text style={{ fontWeight: '700' }}>Onboarding mode</Text>
         <View style={styles.row}>
           <Button
@@ -395,6 +388,7 @@ export function OnboardingScreen() {
         <View style={{ gap: 8 }}>
           <Text style={styles.sectionLabel}>Cafe name</Text>
           <TextInput
+            placeholderTextColor={colors.subtle}
             accessibilityLabel="Cafe name"
             value={ownerVenueName}
             onChangeText={setOwnerVenueName}
@@ -406,6 +400,7 @@ export function OnboardingScreen() {
         <View style={{ gap: 8 }}>
           <Text style={styles.sectionLabel}>Owner context & spatial notes</Text>
           <TextInput
+            placeholderTextColor={colors.subtle}
             accessibilityLabel="Owner context & spatial notes"
             value={ownerNotes}
             onChangeText={setOwnerNotes}
@@ -420,6 +415,7 @@ export function OnboardingScreen() {
             OpenAI API Key (optional · runtime memory only)
           </Text>
           <TextInput
+            placeholderTextColor={colors.subtle}
             accessibilityLabel="OpenAI API Key"
             value={apiKey}
             onChangeText={setApiKey}
@@ -427,7 +423,7 @@ export function OnboardingScreen() {
             placeholder="sk-... (leave blank to use deterministic context-aware AI synthesizer)"
             style={styles.input}
           />
-          <Text style={{ fontSize: 12, color: colors.muted }}>
+          <Text style={styles.caption}>
             Uses OpenAI gpt-4o Structured JSON Outputs when a key is provided;
             never persisted to disk or EXPO_PUBLIC_*.
           </Text>
@@ -479,7 +475,7 @@ export function OnboardingScreen() {
                     flexWrap: 'wrap',
                     gap: 8,
                     padding: 10,
-                    borderRadius: 10,
+                    borderRadius: radius.md,
                     borderWidth: 1,
                     borderColor: colors.border,
                     backgroundColor: colors.paper,
@@ -489,9 +485,7 @@ export function OnboardingScreen() {
                     <Text style={{ fontWeight: '700' }}>
                       [{item.kind.toUpperCase()}] {item.name}
                     </Text>
-                    <Text style={{ fontSize: 13, color: colors.muted }}>
-                      {item.summary}
-                    </Text>
+                    <Text style={styles.caption}>{item.summary}</Text>
                   </View>
                   <Button
                     label={`Remove ${item.name}`}
@@ -522,47 +516,21 @@ export function OnboardingScreen() {
         </View>
 
         {error ? (
-          <View
-            style={{
-              padding: 12,
-              borderRadius: 12,
-              backgroundColor: colors.dangerSurface,
-              borderWidth: 1,
-              borderColor: colors.dangerBorder,
-            }}
-          >
-            <Text
-              accessibilityRole="alert"
-              style={{ color: colors.danger, fontWeight: '700' }}
-            >
-              {error}
-            </Text>
-          </View>
+          <Banner tone="danger" role="alert">
+            {error}
+          </Banner>
         ) : null}
         {statusMessage ? (
-          <View
-            style={{
-              padding: 12,
-              borderRadius: 12,
-              backgroundColor: colors.greenSurface,
-              borderWidth: 1,
-              borderColor: colors.greenBorder,
-            }}
-          >
-            <Text
-              accessibilityRole="alert"
-              style={{ color: colors.green, fontWeight: '700' }}
-            >
-              {statusMessage}
-            </Text>
-          </View>
+          <Banner tone="success" role="alert">
+            {statusMessage}
+          </Banner>
         ) : null}
       </Card>
 
       {draftVenue ? (
         <>
           <Card>
-            <Heading>
+            <Heading level={2}>
               2. Live 3D Environment Preview & Conversational AI Feedback Loop
             </Heading>
             {aiSourceLabel ? (
@@ -606,13 +574,15 @@ export function OnboardingScreen() {
               style={{
                 gap: 10,
                 padding: 14,
-                borderRadius: 14,
+                borderRadius: radius.lg,
                 borderWidth: 1,
                 borderColor: colors.border,
                 backgroundColor: colors.paper,
               }}
             >
-              <Text style={{ fontWeight: '700', fontSize: 16 }}>
+              <Text
+                style={{ fontWeight: '700', fontSize: type.headline.fontSize }}
+              >
                 Owner ↔ AI Architect Feedback Chat ({chatMessages.length}{' '}
                 messages)
               </Text>
@@ -628,12 +598,14 @@ export function OnboardingScreen() {
                       key={msg.id}
                       style={{
                         padding: 10,
-                        borderRadius: 10,
+                        borderRadius: radius.md,
                         borderWidth: 1,
                         borderColor: isOwner
                           ? draftVenue.accent
                           : colors.border,
-                        backgroundColor: isOwner ? '#fdf8f3' : '#f4f7f4',
+                        backgroundColor: isOwner
+                          ? colors.amberSurface
+                          : colors.surfaceSubtle,
                         gap: 4,
                       }}
                     >
@@ -646,7 +618,12 @@ export function OnboardingScreen() {
                           gap: 6,
                         }}
                       >
-                        <Text style={{ fontWeight: '700', fontSize: 13 }}>
+                        <Text
+                          style={{
+                            fontWeight: '700',
+                            fontSize: type.caption.fontSize,
+                          }}
+                        >
                           {isOwner
                             ? `CAFE OWNER · Iteration #${msg.iteration}`
                             : `AI ARCHITECT · Iteration #${msg.iteration}`}
@@ -665,7 +642,7 @@ export function OnboardingScreen() {
                       {msg.diffSummary && msg.diffSummary.length > 0 ? (
                         <Text
                           style={{
-                            fontSize: 12,
+                            fontSize: type.caption.fontSize,
                             fontWeight: '700',
                             color: draftVenue.accent,
                           }}
@@ -679,7 +656,9 @@ export function OnboardingScreen() {
               </View>
 
               <View style={{ gap: 6 }}>
-                <Text style={{ fontWeight: '700', fontSize: 13 }}>
+                <Text
+                  style={{ fontWeight: '700', fontSize: type.caption.fontSize }}
+                >
                   Quick feedback ideas
                 </Text>
                 <View style={styles.row}>
@@ -698,6 +677,7 @@ export function OnboardingScreen() {
                   Chat with AI to iterate on the 3D environment
                 </Text>
                 <TextInput
+                  placeholderTextColor={colors.subtle}
                   accessibilityLabel="Refinement instruction for AI"
                   value={refinementPrompt}
                   onChangeText={setRefinementPrompt}
@@ -705,9 +685,9 @@ export function OnboardingScreen() {
                   style={{
                     borderWidth: 1,
                     borderColor: colors.border,
-                    borderRadius: 10,
+                    borderRadius: radius.md,
                     padding: 10,
-                    backgroundColor: '#ffffff',
+                    backgroundColor: colors.onPrimary,
                   }}
                 />
                 <View style={styles.row}>
@@ -726,7 +706,7 @@ export function OnboardingScreen() {
           </Card>
 
           <Card>
-            <Heading>
+            <Heading level={2}>
               3. Studio Editor: Room Theme, Fixtures, Seats & Menu
             </Heading>
 
@@ -861,7 +841,7 @@ export function OnboardingScreen() {
                     flexWrap: 'wrap',
                     gap: 8,
                     padding: 10,
-                    borderRadius: 10,
+                    borderRadius: radius.md,
                     borderWidth: 1,
                     borderColor: colors.border,
                     backgroundColor: colors.paper,
@@ -945,7 +925,7 @@ export function OnboardingScreen() {
                     flexWrap: 'wrap',
                     gap: 8,
                     padding: 10,
-                    borderRadius: 10,
+                    borderRadius: radius.md,
                     borderWidth: 1,
                     borderColor: colors.border,
                     backgroundColor: colors.paper,
@@ -979,6 +959,7 @@ export function OnboardingScreen() {
                 }}
               >
                 <TextInput
+                  placeholderTextColor={colors.subtle}
                   accessibilityLabel="New menu item name"
                   value={newMenuName}
                   onChangeText={setNewMenuName}
@@ -989,6 +970,7 @@ export function OnboardingScreen() {
                   ]}
                 />
                 <TextInput
+                  placeholderTextColor={colors.subtle}
                   accessibilityLabel="New menu item price"
                   value={newMenuPrice}
                   onChangeText={setNewMenuPrice}
@@ -1054,6 +1036,6 @@ export function OnboardingScreen() {
           </Card>
         </>
       ) : null}
-    </>
+    </Screen>
   );
 }

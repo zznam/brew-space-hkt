@@ -2,7 +2,15 @@ import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import * as THREE from 'three';
 import { formatMoney, type Session, type Venue } from '@/core';
-import { Button, colors, styles, useResponsive } from '../ui';
+import {
+  colors,
+  radius,
+  styles,
+  type,
+  useResponsive,
+  Chip,
+  space,
+} from '../ui';
 import {
   buildVenueThreeScene,
   CAMERA_PRESETS,
@@ -220,19 +228,17 @@ export function CafeScene3D({
       style={{
         width: '100%',
         maxWidth: '100%',
-        gap: 8,
-        padding: 12,
-        borderRadius: 14,
-        borderWidth: 1,
-        borderColor: colors.border,
-        backgroundColor: isDarkTheme ? '#0f172a' : '#f7f4ee',
+        gap: space.sm,
+        padding: space.md,
+        borderRadius: radius.lg,
+        backgroundColor: isDarkTheme ? '#0f172a' : colors.surfaceSubtle,
       }}
     >
-      <View style={{ gap: 6 }}>
+      <View style={{ gap: space.sm }}>
         <Text
           style={{
-            fontWeight: '700',
-            fontSize: 14,
+            ...type.caption,
+            fontWeight: '600',
             color: isDarkTheme ? '#f8fafc' : colors.ink,
           }}
         >
@@ -241,9 +247,8 @@ export function CafeScene3D({
         </Text>
         <View style={styles.row}>
           {PRESET_LABELS.map((item) => (
-            <Button
+            <Chip
               key={item.id}
-              size="sm"
               label={item.label}
               selected={preset === item.id}
               onPress={() => {
@@ -252,8 +257,7 @@ export function CafeScene3D({
               }}
             />
           ))}
-          <Button
-            size="sm"
+          <Chip
             label="Zoom +"
             onPress={() =>
               setOrbit((prev) => ({
@@ -262,8 +266,7 @@ export function CafeScene3D({
               }))
             }
           />
-          <Button
-            size="sm"
+          <Chip
             label="Zoom −"
             onPress={() =>
               setOrbit((prev) => ({
@@ -282,7 +285,7 @@ export function CafeScene3D({
           width: '100%',
           height: webglActive ? height : 0,
           overflow: 'hidden',
-          borderRadius: 10,
+          borderRadius: radius.md,
         }}
       />
 
@@ -292,7 +295,7 @@ export function CafeScene3D({
           style={{
             width: '100%',
             height: 200,
-            borderRadius: 10,
+            borderRadius: radius.md,
             borderWidth: 2,
             borderColor: sceneCfg.wallColor,
             backgroundColor: sceneCfg.floorColor,
@@ -303,7 +306,7 @@ export function CafeScene3D({
         >
           <Text
             style={{
-              fontSize: 12,
+              fontSize: type.caption.fontSize,
               fontWeight: '700',
               color: isDarkTheme ? '#e2e8f0' : '#1e293b',
             }}
@@ -346,14 +349,18 @@ export function CafeScene3D({
                   top: `${topPct}%`,
                   paddingVertical: 5,
                   paddingHorizontal: 8,
-                  borderRadius: 8,
+                  borderRadius: radius.sm,
                   borderWidth: 2,
-                  borderColor: selected ? venue.accent : '#ffffff',
+                  borderColor: selected ? venue.accent : colors.onPrimary,
                   backgroundColor: occupied ? '#0284c7' : '#15803d',
                 }}
               >
                 <Text
-                  style={{ color: '#ffffff', fontWeight: '700', fontSize: 11 }}
+                  style={{
+                    color: colors.onPrimary,
+                    fontWeight: '700',
+                    fontSize: type.overline.fontSize,
+                  }}
                 >
                   {seat.label}
                 </Text>
@@ -366,7 +373,7 @@ export function CafeScene3D({
       {activeSeat ? (
         <Text
           style={{
-            fontSize: 12,
+            fontSize: type.caption.fontSize,
             fontWeight: '700',
             color: isDarkTheme ? '#f8fafc' : colors.ink,
           }}

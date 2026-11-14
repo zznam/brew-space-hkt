@@ -4,15 +4,13 @@ import {
   Badge,
   Button,
   Card,
-  colors,
-  Divider,
-  Eyebrow,
-  Heading,
+  Screen,
+  ScreenHeader,
+  space,
   styles,
   useResponsive,
 } from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
-import { CustomerNav } from '../shared/CustomerNav';
 import { loyaltyMessages } from './messages';
 
 type Key = keyof typeof loyaltyMessages.en;
@@ -29,24 +27,17 @@ export function PrivacyScreen() {
   const { t } = useT(loyaltyMessages);
   const { isWide } = useResponsive();
   return (
-    <Card>
-      <CustomerNav current="member" />
+    <Screen>
+      <ScreenHeader
+        overline="CUSTOMER / DATA PRIVACY"
+        title={t('privTitle')}
+        subtitle={t('privIntro')}
+      />
+      <Badge label="Local Device Only" tone="success" />
 
-      <View style={styles.rowBetween}>
-        <View style={{ gap: 4 }}>
-          <Eyebrow>CUSTOMER / DATA PRIVACY & TRANSPARENCY</Eyebrow>
-          <Heading>{t('privTitle')}</Heading>
-        </View>
-        <Badge label="Local Device Only" tone="success" />
-      </View>
-
-      <Text style={styles.text}>{t('privIntro')}</Text>
-
-      <Divider />
-
-      <View style={{ gap: 12 }}>
+      <View style={{ gap: space.md }}>
         {SECTIONS.map((section) => (
-          <Card key={section.title} variant="subtle" style={{ gap: 6 }}>
+          <Card key={section.title} variant="subtle">
             <Text accessibilityRole="header" style={styles.subheading}>
               {t(section.title)}
             </Text>
@@ -59,14 +50,7 @@ export function PrivacyScreen() {
         ))}
       </View>
 
-      <Card
-        variant="subtle"
-        style={{
-          gap: 8,
-          backgroundColor: colors.surface,
-          borderColor: colors.borderStrong,
-        }}
-      >
+      <Card>
         <Text accessibilityRole="header" style={styles.subheading}>
           {t('privDeleteTitle')}
         </Text>
@@ -80,6 +64,6 @@ export function PrivacyScreen() {
           />
         </View>
       </Card>
-    </Card>
+    </Screen>
   );
 }

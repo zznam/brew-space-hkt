@@ -90,8 +90,9 @@ The phone is the product; wider screens are an enhancement. This applies to ever
 
 - One job per screen, one `primary` button per view. Everything else is `default`, `secondary`, or `ghost`.
 - Show what the user needs for the current step; move detail behind a tap (a detail screen or an expandable row). When adding to a screen, look for something to remove or collapse first.
-- Build from `src/components/ui.tsx`: `Button`, `Card`, `Heading`, `Eyebrow`, `Badge`, `StatTile`, `Divider`, plus `colors` and the shared `styles`. Extend a primitive there when one is missing, so screens stay free of one-off colors, radii, and font sizes.
-- Keep the type scale to what `styles` defines (heading, subheading, section label, text, eyebrow). Hierarchy comes from spacing and weight; borders, shadows, and tinted surfaces are for the few things that need to stand out.
+- Follow `docs/design-system.md`. Tokens live in `src/components/theme.ts`; build from the primitives in `src/components/ui.tsx` (`Screen`, `ScreenHeader`, `Card`, `Button`, `Chip`, `SegmentedControl`, `Banner`, `EmptyState`, `Badge`, `StatTile`, plus the shared `styles`). Extend a primitive there when one is missing, so screens stay free of one-off colors, radii, and font sizes.
+- Navigation is the bottom tab bar rendered by `app/_layout.tsx`; screens don't render their own nav.
+- Keep the type scale to what `styles` defines (display, heading, subheading, text, textStrong, caption, section label). Hierarchy comes from spacing and weight; borders, shadows, and tinted surfaces are for the few things that need to stand out.
 - Copy is short: a label says the action ("Start session"), a line of helper text at most. Every list has an empty state and every action shows its `ActionResult` message inline.
 
 ## Conventions

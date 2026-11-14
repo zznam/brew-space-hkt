@@ -7,7 +7,10 @@ import {
   colors,
   Divider,
   Heading,
+  radius,
   styles,
+  type,
+  Banner,
 } from '@/components/ui';
 import {
   getPreferences,
@@ -60,9 +63,9 @@ function ChoiceButton({
     >
       <Text
         style={{
-          color: selected ? '#ffffff' : colors.ink,
+          color: selected ? colors.onPrimary : colors.ink,
           fontWeight: '600',
-          fontSize: 13,
+          fontSize: type.caption.fontSize,
         }}
       >
         {label}
@@ -174,29 +177,16 @@ export function CartPanel({
       : '',
   );
   return (
-    <Card variant="subtle" style={{ gap: 12 }}>
+    <Card variant="subtle">
       <View style={styles.rowBetween}>
-        <Heading style={{ fontSize: 22 }}>{t('cartTitle')}</Heading>
+        <Heading>{t('cartTitle')}</Heading>
         <Badge label={`${lines.length} line(s)`} tone="info" />
       </View>
 
       {allergyNote !== '' && (
-        <View
-          style={{
-            padding: 10,
-            borderRadius: 10,
-            backgroundColor: colors.amberSurface,
-            borderWidth: 1,
-            borderColor: colors.amberBorder,
-          }}
-        >
-          <Text
-            accessibilityRole="alert"
-            style={{ color: colors.amber, fontWeight: '700' }}
-          >
-            {t('allergySent')}
-          </Text>
-        </View>
+        <Banner tone="warning" role="alert">
+          {t('allergySent')}
+        </Banner>
       )}
 
       {prefilled && lines.length > 0 && (
@@ -217,14 +207,18 @@ export function CartPanel({
             style={{
               gap: 10,
               padding: 14,
-              borderRadius: 14,
+              borderRadius: radius.lg,
               backgroundColor: colors.surface,
               borderWidth: 1,
               borderColor: colors.border,
             }}
           >
             <Text
-              style={{ color: colors.ink, fontWeight: '700', fontSize: 16 }}
+              style={{
+                color: colors.ink,
+                fontWeight: '700',
+                fontSize: type.headline.fontSize,
+              }}
             >
               {line.name} · {formatMoney(line.unitPrice * line.quantity)}
             </Text>
@@ -271,6 +265,7 @@ export function CartPanel({
               />
             </View>
             <TextInput
+              placeholderTextColor={colors.subtle}
               accessibilityLabel={t('noteLabel', { name: line.name })}
               placeholder={t('notePlaceholder')}
               maxLength={MAX_NOTE_LENGTH}
@@ -289,9 +284,7 @@ export function CartPanel({
             <Text style={styles.sectionLabel}>{t('estimatedTotal')}</Text>
             <Heading>{formatMoney(cartTotal(lines))}</Heading>
           </View>
-          <Text style={[styles.text, { fontSize: 13 }]}>
-            {t('optionsNote')}
-          </Text>
+          <Text style={styles.caption}>{t('optionsNote')}</Text>
         </>
       )}
 

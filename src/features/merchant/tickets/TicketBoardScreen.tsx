@@ -5,13 +5,14 @@ import {
   Badge,
   Button,
   Card,
-  colors,
-  Eyebrow,
+  EmptyState,
   Heading,
+  Screen,
+  ScreenHeader,
+  space,
   styles,
   useResponsive,
 } from '@/components/ui';
-import { MerchantNav } from '../MerchantNav';
 import { calculateOrderTotal, ticketLabel } from '../pos/posStore';
 import type { FulfillmentStatus, PosOrder } from '../pos/types';
 import { posStore, usePosStore } from '../pos/usePosStore';
@@ -70,17 +71,8 @@ function TicketLine({
 }) {
   const label = ticketLabel(order, venue);
   return (
-    <View
-      style={{
-        padding: 12,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: colors.border,
-        backgroundColor: colors.surfaceSubtle,
-        gap: 8,
-      }}
-    >
-      <Text style={[styles.text, { color: colors.ink, fontWeight: '700' }]}>
+    <View style={[styles.inset, { gap: space.sm }]}>
+      <Text style={styles.textStrong}>
         {label} ·{' '}
         {order.lines.map((line) => `${line.name} ×${line.quantity}`).join(', ')}{' '}
         · {formatMoney(calculateOrderTotal(order))}
@@ -116,29 +108,27 @@ export function TicketBoardScreen() {
   )?.id;
 
   return (
-    <>
-      <MerchantNav current="tickets" />
+    <Screen>
+      <ScreenHeader
+        overline="MERCHANT / KITCHEN & BAR"
+        accentColor={venue.accent}
+        title="Tickets"
+        subtitle={`${venue.name} · Queued → Preparing → Ready → Served`}
+        trailing={<Badge label={`${orders.length} tickets`} tone="info" />}
+      />
 
-      <Card>
-        <View style={styles.rowBetween}>
-          <View style={{ gap: 2 }}>
-            <Eyebrow color={venue.accent}>
-              MERCHANT / KITCHEN & BAR TICKETS
-            </Eyebrow>
-            <Heading>{venue.name} · Tickets</Heading>
-          </View>
-          <Badge label={`${orders.length} tickets`} tone="info" />
-        </View>
-        <Text style={styles.text}>
-          Advance orders from Queued → Preparing → Ready → Served.
-        </Text>
-      </Card>
+      {orders.length === 0 ? (
+        <EmptyState
+          title="No tickets yet"
+          message="Paid orders from New order appear here."
+        />
+      ) : null}
 
       <View
         style={{
           flexDirection: isWide ? 'row' : 'column',
           flexWrap: isWide ? 'wrap' : 'nowrap',
-          gap: 12,
+          gap: space.md,
           alignItems: 'stretch',
         }}
       >
@@ -156,13 +146,11 @@ export function TicketBoardScreen() {
               }
             >
               <View style={styles.rowBetween}>
-                <Heading style={{ fontSize: 19 }}>{column.title}</Heading>
+                <Heading level={2}>{column.title}</Heading>
                 <Badge label={`${tickets.length}`} tone={column.tone} />
               </View>
-              {tickets.length === 0 ? (
-                <Text style={styles.text}>No tickets.</Text>
-              ) : (
-                <View style={{ gap: 10 }}>
+              {tickets.length === 0 ? null : (
+                <View style={{ gap: space.sm }}>
                   {tickets.map((order) => (
                     <TicketLine
                       key={order.id}
@@ -180,6 +168,6 @@ export function TicketBoardScreen() {
           );
         })}
       </View>
-    </>
+    </Screen>
   );
 }

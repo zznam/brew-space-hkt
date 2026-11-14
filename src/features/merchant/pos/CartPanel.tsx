@@ -3,10 +3,10 @@ import { formatMoney } from '@/core';
 import {
   Badge,
   Button,
-  Card,
-  colors,
   Divider,
+  EmptyState,
   Heading,
+  space,
   styles,
   useResponsive,
 } from '@/components/ui';
@@ -33,7 +33,7 @@ export function CartPanel({
   const { isWide } = useResponsive();
   const empty = !order || order.lines.length === 0;
   return (
-    <View style={{ gap: 12 }}>
+    <View style={{ gap: space.md }}>
       <View style={styles.rowBetween}>
         <Text style={styles.subheading}>Order Cart</Text>
         {order ? (
@@ -42,32 +42,16 @@ export function CartPanel({
       </View>
 
       {empty || !order ? (
-        <Card variant="subtle">
-          <Text style={styles.text}>Cart is empty. Add an item to start.</Text>
-        </Card>
+        <EmptyState message="Cart is empty. Add an item to start." />
       ) : (
         <>
-          <View style={{ gap: 8 }}>
+          <View style={{ gap: space.sm }}>
             {order.lines.map((line) => (
               <View
                 key={line.menuItemId}
-                style={[
-                  styles.rowBetween,
-                  {
-                    padding: 12,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    backgroundColor: colors.surfaceSubtle,
-                  },
-                ]}
+                style={[styles.inset, styles.insetRow]}
               >
-                <Text
-                  style={[
-                    styles.text,
-                    { color: colors.ink, fontWeight: '600', flex: 1 },
-                  ]}
-                >
+                <Text style={[styles.textStrong, { flex: 1 }]}>
                   {line.name} × {line.quantity} ·{' '}
                   {formatMoney(line.unitPrice * line.quantity)}
                 </Text>
@@ -95,7 +79,7 @@ export function CartPanel({
         </>
       )}
 
-      <View style={{ gap: 8 }}>
+      <View style={{ gap: space.sm }}>
         <Button
           label="Pay cash"
           variant="primary"

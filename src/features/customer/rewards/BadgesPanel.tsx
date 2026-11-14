@@ -1,5 +1,12 @@
 import { Text, View } from 'react-native';
-import { Badge, Card, colors, styles, useResponsive } from '@/components/ui';
+import {
+  Badge,
+  Card,
+  colors,
+  radius,
+  styles,
+  useResponsive,
+} from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
 import type { VisitSnapshot } from '../shared/visit';
 import {
@@ -18,7 +25,7 @@ export function BadgesPanel({ visits }: { visits: VisitSnapshot[] }) {
   const streak = computeStreak(visits);
   const earned = badges.filter((badge) => badge.earned).length;
   return (
-    <Card variant="subtle" style={{ gap: 10 }}>
+    <Card>
       <View style={styles.rowBetween}>
         <Text style={styles.subheading}>{t('title')}</Text>
         <Badge
@@ -53,7 +60,7 @@ export function BadgesPanel({ visits }: { visits: VisitSnapshot[] }) {
               maxWidth: '100%',
               flexGrow: isWide ? 1 : 0,
               padding: 12,
-              borderRadius: 12,
+              borderRadius: radius.md,
               borderWidth: 1,
               borderColor: badge.earned ? colors.greenBorder : colors.border,
               backgroundColor: badge.earned
@@ -71,7 +78,7 @@ export function BadgesPanel({ visits }: { visits: VisitSnapshot[] }) {
               {badge.earned ? t('earnedLabel') : t('lockedLabel')} ·{' '}
               {badge.name}
             </Text>
-            <Text style={[styles.text, { fontSize: 13 }]}>
+            <Text style={styles.caption}>
               {badge.description} ({badge.progressText})
             </Text>
           </View>

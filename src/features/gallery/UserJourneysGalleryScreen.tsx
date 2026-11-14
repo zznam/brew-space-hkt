@@ -7,12 +7,15 @@ import {
   Badge,
   Button,
   Card,
+  colors,
   Divider,
   Eyebrow,
+  radius,
   StatTile,
-  colors,
   styles,
+  type,
   useResponsive,
+  space,
 } from '@/components/ui';
 
 type JourneyCategory = 'all' | 'customer' | 'loyalty' | 'merchant' | 'ai3d';
@@ -363,32 +366,36 @@ export function UserJourneysGalleryScreen() {
   ];
 
   return (
-    <View style={{ gap: 18 }}>
+    <View style={{ gap: space.lg }}>
       {/* Hero Banner */}
       <Card
         style={{
           backgroundColor: colors.ink,
-          borderColor: colors.ink,
-          padding: 22,
-          gap: 14,
+          gap: space.lg,
         }}
       >
-        <View style={styles.rowBetween}>
-          <View style={{ gap: 4, flex: 1 }}>
+        <View
+          style={
+            isWide
+              ? styles.rowBetween
+              : { gap: space.md, alignItems: 'stretch' }
+          }
+        >
+          <View style={{ gap: space.xs, flex: isWide ? 1 : undefined }}>
             <Text
               style={{
-                fontSize: 11,
+                fontSize: type.overline.fontSize,
                 fontWeight: '800',
                 letterSpacing: 1,
                 textTransform: 'uppercase',
-                color: '#86efac',
+                color: colors.greenBorder,
               }}
             >
               Interactive Product Tour · 4 End-to-End Flows
             </Text>
             <Text
               style={{
-                fontSize: 26,
+                fontSize: type.display.fontSize,
                 fontWeight: '800',
                 color: colors.surface,
                 letterSpacing: -0.6,
@@ -396,13 +403,24 @@ export function UserJourneysGalleryScreen() {
             >
               BrewSpace — User Journeys Gallery
             </Text>
-            <Text style={{ fontSize: 14, color: '#cbd5e1', lineHeight: 20 }}>
+            <Text
+              style={{
+                fontSize: type.body.fontSize,
+                color: colors.border,
+                lineHeight: 20,
+              }}
+            >
               Explore every redesigned screen across the Customer and Merchant
               experiences. Click any step card below to auto-configure the demo
               state and jump straight into the live screen.
             </Text>
           </View>
-          <View style={{ gap: 8, alignItems: 'flex-end' }}>
+          <View
+            style={{
+              gap: space.sm,
+              alignItems: isWide ? 'flex-end' : 'flex-start',
+            }}
+          >
             <Badge label={`Active Venue: ${venue.name}`} tone="success" />
             <Badge
               label={`${venueSessions.length} active floor sessions`}
@@ -459,7 +477,7 @@ export function UserJourneysGalleryScreen() {
                 style={{
                   paddingHorizontal: 14,
                   paddingVertical: 9,
-                  borderRadius: 999,
+                  borderRadius: radius.pill,
                   borderWidth: 1,
                   borderColor: active ? colors.green : colors.border,
                   backgroundColor: active ? colors.green : colors.surface,
@@ -470,7 +488,7 @@ export function UserJourneysGalleryScreen() {
               >
                 <Text
                   style={{
-                    fontSize: 13,
+                    fontSize: type.caption.fontSize,
                     fontWeight: '700',
                     color: active ? colors.surface : colors.ink,
                   }}
@@ -481,7 +499,7 @@ export function UserJourneysGalleryScreen() {
                   style={{
                     paddingHorizontal: 7,
                     paddingVertical: 1,
-                    borderRadius: 999,
+                    borderRadius: radius.pill,
                     backgroundColor: active
                       ? 'rgba(255,255,255,0.22)'
                       : colors.paperAlt,
@@ -489,7 +507,7 @@ export function UserJourneysGalleryScreen() {
                 >
                   <Text
                     style={{
-                      fontSize: 11,
+                      fontSize: type.overline.fontSize,
                       fontWeight: '800',
                       color: active ? colors.surface : colors.muted,
                     }}
@@ -526,7 +544,7 @@ export function UserJourneysGalleryScreen() {
                   style={{
                     paddingHorizontal: 10,
                     paddingVertical: 4,
-                    borderRadius: 8,
+                    borderRadius: radius.sm,
                     backgroundColor:
                       step.roleBadge === 'Customer'
                         ? colors.greenSurface
@@ -540,7 +558,7 @@ export function UserJourneysGalleryScreen() {
                 >
                   <Text
                     style={{
-                      fontSize: 12,
+                      fontSize: type.caption.fontSize,
                       fontWeight: '800',
                       color:
                         step.roleBadge === 'Customer'
@@ -560,7 +578,7 @@ export function UserJourneysGalleryScreen() {
                 style={{
                   paddingHorizontal: 8,
                   paddingVertical: 3,
-                  borderRadius: 6,
+                  borderRadius: radius.sm,
                   backgroundColor: colors.paperAlt,
                   borderWidth: 1,
                   borderColor: colors.border,
@@ -570,7 +588,7 @@ export function UserJourneysGalleryScreen() {
                 <Text
                   numberOfLines={1}
                   style={{
-                    fontSize: 11,
+                    fontSize: type.overline.fontSize,
                     fontWeight: '700',
                     color: colors.ink,
                     fontFamily: 'monospace',
@@ -603,14 +621,14 @@ export function UserJourneysGalleryScreen() {
                     style={{
                       color: colors.green,
                       fontWeight: '800',
-                      fontSize: 13,
+                      fontSize: type.caption.fontSize,
                     }}
                   >
                     ✓
                   </Text>
                   <Text
                     style={{
-                      fontSize: 13,
+                      fontSize: type.caption.fontSize,
                       color: colors.ink,
                       flex: 1,
                       lineHeight: 19,

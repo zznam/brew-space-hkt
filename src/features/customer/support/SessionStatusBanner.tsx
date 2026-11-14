@@ -1,15 +1,15 @@
 import { Text, View } from 'react-native';
 import type { Session } from '@/core';
-import { colors } from '@/components/ui';
+import { colors, radius, space, styles } from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
 import { supportMessages } from './messages';
 import { timeStatus } from './supportModel';
 
 const TONE = {
-  ok: { background: '#eef1e9', border: colors.border },
-  ending_soon: { background: '#fff4d6', border: '#d9b44a' },
-  grace: { background: '#ffe9cf', border: '#d98a2b' },
-  overtime: { background: '#fde2e0', border: '#c0564f' },
+  ok: { background: colors.surfaceSubtle, border: colors.border },
+  ending_soon: { background: colors.amberSurface, border: colors.amberBorder },
+  grace: { background: colors.amberSurface, border: colors.amber },
+  overtime: { background: colors.dangerSurface, border: colors.danger },
 } as const;
 
 /** Informational only: it never ends a session or charges anything itself;
@@ -30,19 +30,17 @@ export function SessionStatusBanner({
         backgroundColor: tone.background,
         borderColor: tone.border,
         borderWidth: 1,
-        borderRadius: 14,
-        padding: 14,
-        gap: 4,
+        borderRadius: radius.md,
+        padding: space.md,
+        gap: space.xs,
       }}
     >
-      <Text style={{ color: colors.ink, fontWeight: '700' }}>
+      <Text style={styles.textStrong}>
         {status.kind === 'metered'
           ? t('banner.metered')
           : t(`banner.${status.state}`)}
       </Text>
-      <Text style={{ color: colors.ink, lineHeight: 22 }}>
-        {status.message}
-      </Text>
+      <Text style={[styles.text, { color: colors.ink }]}>{status.message}</Text>
     </View>
   );
 }

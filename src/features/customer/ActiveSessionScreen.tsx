@@ -6,10 +6,11 @@ import {
   Badge,
   Button,
   Card,
-  colors,
-  Divider,
-  Eyebrow,
+  EmptyState,
   Heading,
+  Screen,
+  ScreenHeader,
+  space,
   StatTile,
   styles,
   useResponsive,
@@ -19,7 +20,6 @@ import { CartPanel } from './cart/CartPanel';
 import { MenuList } from './cart/MenuList';
 import { OrderHistory } from './cart/OrderHistory';
 import { useT } from './i18n/useLanguage';
-import { CustomerNav } from './shared/CustomerNav';
 import { FocusTimer } from './focus/FocusTimer';
 import { blockWhenOffline } from './network/networkModel';
 import { OfflineBanner } from './network/OfflineBanner';
@@ -42,20 +42,21 @@ export function ActiveSessionScreen() {
   );
   if (!session)
     return (
-      <Card>
-        <CustomerNav current="session" />
-        <Eyebrow color={venue.accent}>CUSTOMER / ACTIVE SESSION</Eyebrow>
-        <Heading>{t('nextSession')}</Heading>
-        <Text style={styles.text}>{t('noSession', { venue: venue.name })}</Text>
-        <View style={styles.row}>
+      <Screen>
+        <ScreenHeader
+          overline="CUSTOMER / ACTIVE SESSION"
+          accentColor={venue.accent}
+          title={t('nextSession')}
+        />
+        <EmptyState message={t('noSession', { venue: venue.name })}>
           <Button
             variant="primary"
             fullWidth={!isWide}
             label={t('exploreSeats')}
             onPress={() => router.replace('/customer/explore')}
           />
-        </View>
-      </Card>
+        </EmptyState>
+      </Screen>
     );
   const bill = calculateBill(session);
   const rawSeatLabel =
@@ -64,29 +65,26 @@ export function ActiveSessionScreen() {
   const seatLabel =
     lang === 'vi' ? rawSeatLabel.replace('Seat', 'Chỗ') : rawSeatLabel;
   return (
-    <Card>
-      <CustomerNav current="session" />
+    <Screen>
       <OfflineBanner online={online} />
 
-      <View style={styles.rowBetween}>
-        <View style={{ gap: 2 }}>
-          <Eyebrow color={venue.accent}>CUSTOMER / ACTIVE SESSION</Eyebrow>
-          <Heading>{t('liveTab')}</Heading>
-        </View>
-        <Badge
-          label={`${seatLabel} · ${session.elapsedMinutes}m`}
-          tone="info"
-        />
-      </View>
-
-      <Text style={[styles.text, { color: colors.ink, fontWeight: '600' }]}>
-        {t('header', {
+      <ScreenHeader
+        overline="CUSTOMER / ACTIVE SESSION"
+        accentColor={venue.accent}
+        title={t('liveTab')}
+        subtitle={t('header', {
           venue: venue.name,
           seat: seatLabel,
           minutes: session.elapsedMinutes,
           mode: t(MODE_KEYS[session.mode]),
         })}
-      </Text>
+        trailing={
+          <Badge
+            label={`${seatLabel} · ${session.elapsedMinutes}m`}
+            tone="info"
+          />
+        }
+      />
 
       <SessionStatusBanner session={session} />
 
@@ -112,7 +110,7 @@ export function ActiveSessionScreen() {
       <View
         style={{
           flexDirection: isWide ? 'row' : 'column',
-          gap: 12,
+          gap: space.lg,
           alignItems: 'stretch',
         }}
       >
@@ -129,7 +127,7 @@ export function ActiveSessionScreen() {
       <View
         style={{
           flexDirection: isWide ? 'row' : 'column',
-          gap: 12,
+          gap: space.lg,
           alignItems: 'stretch',
         }}
       >
@@ -150,10 +148,8 @@ export function ActiveSessionScreen() {
 
       <VenueInfoCard venueId={venue.id} />
 
-      <Divider />
-
-      <Card variant="accent" style={{ gap: 8 }}>
-        <Text style={[styles.text, { color: colors.ink, fontWeight: '600' }]}>
+      <Card variant="accent">
+        <Text style={styles.textStrong}>
           {t('summary', {
             count: session.orders.length,
             time: formatMoney(bill.time),
@@ -161,7 +157,7 @@ export function ActiveSessionScreen() {
           })}
         </Text>
         <Heading>{formatMoney(bill.total)}</Heading>
-        <Text style={[styles.text, { fontSize: 12 }]}>{t('disclaimer')}</Text>
+        <Text style={styles.caption}>{t('disclaimer')}</Text>
         <View style={styles.row}>
           <Button
             variant="danger"
@@ -175,6 +171,6 @@ export function ActiveSessionScreen() {
           />
         </View>
       </Card>
-    </Card>
+    </Screen>
   );
 }

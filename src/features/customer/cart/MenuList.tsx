@@ -14,9 +14,9 @@ export function MenuList({ venueId }: { venueId: string }) {
   const menu = getVenue(venueId).menu;
   const shown = searchMenu(menu, query);
   return (
-    <Card variant="subtle" style={{ gap: 10 }}>
+    <Card>
       <View style={styles.rowBetween}>
-        <Heading style={{ fontSize: 19 }}>{t('menuTitle')}</Heading>
+        <Heading level={2}>{t('menuTitle')}</Heading>
         <Badge label={`${menu.length} items`} tone="neutral" />
       </View>
 
@@ -24,6 +24,7 @@ export function MenuList({ venueId }: { venueId: string }) {
 
       {menu.length > 0 && (
         <TextInput
+          placeholderTextColor={colors.subtle}
           accessibilityLabel={t('searchLabel')}
           placeholder={t('searchPlaceholder')}
           value={query}
@@ -42,25 +43,9 @@ export function MenuList({ venueId }: { venueId: string }) {
 
       <View style={{ gap: 8 }}>
         {shown.map((item) => (
-          <View
-            key={item.id}
-            style={[
-              styles.rowBetween,
-              {
-                padding: 12,
-                borderRadius: 12,
-                backgroundColor: colors.surface,
-                borderWidth: 1,
-                borderColor: colors.border,
-              },
-            ]}
-          >
+          <View key={item.id} style={[styles.inset, styles.insetRow]}>
             <View style={{ flex: 1, gap: 2 }}>
-              <Text
-                style={{ color: colors.ink, fontWeight: '700', fontSize: 15 }}
-              >
-                {item.name}
-              </Text>
+              <Text style={styles.textStrong}>{item.name}</Text>
               <Text style={styles.text}>{formatMoney(item.price)}</Text>
             </View>
             <Button

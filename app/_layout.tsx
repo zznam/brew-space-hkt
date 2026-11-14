@@ -4,7 +4,6 @@ import { StatusBar } from 'expo-status-bar';
 import {
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   Text,
   View,
@@ -12,7 +11,27 @@ import {
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { initializeStore, useAppStore } from '@/core/useAppStore';
 import { SimulatorBar } from '@/components/SimulatorBar';
-import { Badge, Card, colors, styles, useResponsive } from '@/components/ui';
+import {
+  Banner,
+  Card,
+  colors,
+  IconButton,
+  layout,
+  radius,
+  space,
+  styles,
+  type,
+  useResponsive,
+} from '@/components/ui';
+import { LanguageToggle } from '@/features/customer/i18n/LanguageToggle';
+import {
+  CustomerNav,
+  customerTabForPath,
+} from '@/features/customer/shared/CustomerNav';
+import {
+  MerchantNav,
+  merchantTabForPath,
+} from '@/features/merchant/MerchantNav';
 export { ErrorBoundary } from 'expo-router';
 
 export default function RootLayout() {
@@ -39,137 +58,126 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.paper }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }}>
         <StatusBar style="dark" />
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={{ flex: 1 }}
+          style={{ flex: 1, backgroundColor: colors.paper }}
         >
+          {/* App bar */}
+          <View
+            style={{
+              minHeight: layout.appBarHeight,
+              paddingHorizontal: space.lg,
+              backgroundColor: colors.surface,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: space.sm,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: space.sm,
+              }}
+            >
+              <View
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: radius.sm,
+                  backgroundColor: colors.green,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ ...type.label, color: colors.onPrimary }}>
+                  B
+                </Text>
+              </View>
+              <Text style={{ ...type.headline, color: colors.ink }}>
+                BrewSpace
+              </Text>
+            </View>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: space.sm,
+              }}
+            >
+              {ready && role === 'customer' && !onGallery ? (
+                <LanguageToggle />
+              ) : null}
+              <IconButton
+                icon="journeys"
+                selected={onGallery}
+                accessibilityLabel={
+                  onGallery ? 'Close Journey Gallery' : 'User Journeys Gallery'
+                }
+                onPress={() => {
+                  if (onGallery) {
+                    router.push(
+                      (role === 'merchant'
+                        ? '/merchant/live-floor'
+                        : '/customer/explore') as never,
+                    );
+                  } else {
+                    router.push('/gallery' as never);
+                  }
+                }}
+              />
+            </View>
+          </View>
+
+          {ready ? <SimulatorBar /> : null}
+
           <ScrollView
+            style={{ flex: 1 }}
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={{
-              paddingHorizontal: isWide ? 20 : 12,
-              paddingVertical: isWide ? 18 : 12,
+              paddingHorizontal: isWide ? space.xxl : layout.screenPadding,
+              paddingTop: space.lg,
+              paddingBottom: space.xxxl,
               alignItems: 'center',
             }}
           >
-            <View style={{ width: '100%', maxWidth: 1080, gap: 12 }}>
-              <View
-                style={[
-                  styles.rowBetween,
-                  {
-                    paddingBottom: 10,
-                    borderBottomWidth: 1,
-                    borderBottomColor: colors.border,
-                  },
-                ]}
-              >
-                <View
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
-                >
-                  <View
-                    style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: 5,
-                      backgroundColor: colors.green,
-                    }}
-                  />
-                  <Text
-                    style={{
-                      fontSize: 19,
-                      fontWeight: '800',
-                      color: colors.ink,
-                      letterSpacing: -0.5,
-                    }}
-                  >
-                    BrewSpace
-                  </Text>
-                </View>
-
-                <View style={styles.row}>
-                  {isWide ? (
-                    <Badge label="Cafe & Co-Work OS" tone="success" />
-                  ) : null}
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={
-                      onGallery
-                        ? 'Close Journey Gallery'
-                        : 'User Journeys Gallery'
-                    }
-                    onPress={() => {
-                      if (onGallery) {
-                        router.push(
-                          (role === 'merchant'
-                            ? '/merchant/live-floor'
-                            : '/customer/explore') as never,
-                        );
-                      } else {
-                        router.push('/gallery' as never);
-                      }
-                    }}
-                    style={{
-                      minHeight: 38,
-                      paddingHorizontal: 12,
-                      paddingVertical: 7,
-                      borderRadius: 999,
-                      borderWidth: 1,
-                      borderColor: onGallery ? colors.ink : colors.green,
-                      backgroundColor: onGallery
-                        ? colors.ink
-                        : colors.greenSurface,
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 12,
-                        fontWeight: '800',
-                        color: onGallery ? colors.surface : colors.green,
-                      }}
-                    >
-                      {onGallery ? '← Back to App' : 'User Journeys Gallery'}
-                    </Text>
-                  </Pressable>
-                </View>
-              </View>
-
+            <View
+              style={{
+                width: '100%',
+                maxWidth: layout.contentMaxWidth,
+                gap: space.lg,
+              }}
+            >
               {!ready ? (
                 <Card>
-                  <Text style={{ fontWeight: '700', color: colors.ink }}>
-                    Loading your demo…
-                  </Text>
+                  <Text style={styles.subheading}>Loading your demo…</Text>
                   <Text style={styles.text}>
                     Restoring local workspace state and 3D venue layouts.
                   </Text>
                 </Card>
               ) : (
                 <>
-                  {warning && (
-                    <View
-                      style={{
-                        backgroundColor: colors.amberSurface,
-                        borderColor: colors.amberBorder,
-                        borderWidth: 1,
-                        borderRadius: 12,
-                        padding: 12,
-                      }}
-                    >
-                      <Text
-                        accessibilityRole="alert"
-                        style={{ color: colors.amber, fontWeight: '600' }}
-                      >
-                        {warning}
-                      </Text>
-                    </View>
-                  )}
-                  <SimulatorBar />
+                  {warning ? (
+                    <Banner tone="warning" role="alert">
+                      {warning}
+                    </Banner>
+                  ) : null}
                   <Slot />
                 </>
               )}
             </View>
           </ScrollView>
+
+          {ready && !onGallery ? (
+            role === 'merchant' ? (
+              <MerchantNav current={merchantTabForPath(pathname)} />
+            ) : (
+              <CustomerNav current={customerTabForPath(pathname)} />
+            )
+          ) : null}
         </KeyboardAvoidingView>
       </SafeAreaView>
     </SafeAreaProvider>

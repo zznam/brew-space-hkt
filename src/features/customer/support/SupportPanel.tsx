@@ -7,7 +7,9 @@ import {
   colors,
   Divider,
   Heading,
+  radius,
   styles,
+  type,
 } from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
 import { supportMessages } from './messages';
@@ -76,9 +78,9 @@ export function SupportPanel({ context }: { context: SupportContext }) {
   }
 
   return (
-    <Card variant="subtle" style={{ gap: 12 }}>
+    <Card variant="subtle">
       <View style={styles.rowBetween}>
-        <Heading style={{ fontSize: 19 }}>{t('needHelp')}</Heading>
+        <Heading level={2}>{t('needHelp')}</Heading>
         <Button
           variant="secondary"
           size="sm"
@@ -106,6 +108,7 @@ export function SupportPanel({ context }: { context: SupportContext }) {
       <View style={{ gap: 8 }}>
         <Text style={styles.sectionLabel}>{t('leaveNote')}</Text>
         <TextInput
+          placeholderTextColor={colors.subtle}
           accessibilityLabel={t('noteLabel')}
           multiline
           maxLength={MAX_NOTE_LENGTH + 50}
@@ -120,7 +123,7 @@ export function SupportPanel({ context }: { context: SupportContext }) {
         <View style={styles.rowBetween}>
           <Text
             style={{
-              fontSize: 13,
+              fontSize: type.caption.fontSize,
               color:
                 note.length > MAX_NOTE_LENGTH ? colors.danger : colors.muted,
             }}
@@ -140,9 +143,7 @@ export function SupportPanel({ context }: { context: SupportContext }) {
 
       <View style={{ gap: 8 }}>
         <Text style={styles.sectionLabel}>{t('askMove')}</Text>
-        <Text style={[styles.text, { fontSize: 13 }]}>
-          {t('seatChangeNote')}
-        </Text>
+        <Text style={styles.caption}>{t('seatChangeNote')}</Text>
         <View style={styles.row}>
           {SEAT_PREFERENCES.map((option) => (
             <Button
@@ -155,6 +156,7 @@ export function SupportPanel({ context }: { context: SupportContext }) {
           ))}
         </View>
         <TextInput
+          placeholderTextColor={colors.subtle}
           accessibilityLabel={t('moveReasonLabel')}
           maxLength={MAX_NOTE_LENGTH + 50}
           value={moveReason}
@@ -183,7 +185,7 @@ export function SupportPanel({ context }: { context: SupportContext }) {
         <View
           style={{
             padding: 12,
-            borderRadius: 12,
+            borderRadius: radius.md,
             backgroundColor: feedback.ok
               ? colors.greenSurface
               : colors.dangerSurface,
@@ -216,18 +218,8 @@ export function SupportPanel({ context }: { context: SupportContext }) {
         mine.map((request) => {
           const status = requestStatus(request, context.minute);
           return (
-            <View
-              key={request.id}
-              style={{
-                padding: 12,
-                borderRadius: 12,
-                backgroundColor: colors.surface,
-                borderWidth: 1,
-                borderColor: colors.border,
-                gap: 6,
-              }}
-            >
-              <Text style={{ color: colors.ink, fontWeight: '700' }}>
+            <View key={request.id} style={styles.inset}>
+              <Text style={styles.textStrong}>
                 {requestDisplayText(request, lang)}
               </Text>
               <Text style={styles.text}>

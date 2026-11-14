@@ -8,13 +8,15 @@ import {
   Button,
   Card,
   colors,
-  Eyebrow,
-  Heading,
+  radius,
   styles,
+  type,
   useResponsive,
+  Banner,
+  Screen,
+  ScreenHeader,
 } from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
-import { CustomerNav } from '../shared/CustomerNav';
 import { kindWord, seatLabelText } from '../venue/messages';
 import { BadgesPanel } from '../rewards/BadgesPanel';
 import {
@@ -69,7 +71,6 @@ export function ProfileScreen() {
   if (!ready)
     return (
       <Card>
-        <CustomerNav current="member" />
         <Text accessibilityRole="alert" style={styles.text}>
           {t('loading')}
         </Text>
@@ -77,36 +78,23 @@ export function ProfileScreen() {
     );
   const member = isMember(loyalty, venue.id);
   return (
-    <Card>
-      <CustomerNav current="member" />
-      <View style={styles.rowBetween}>
-        <View style={{ gap: 4 }}>
-          <Eyebrow color={venue.accent}>{t('eyebrow')}</Eyebrow>
-          <Heading>{venue.name}</Heading>
-        </View>
-        <Badge
-          label={member ? 'Active Member' : 'Guest'}
-          tone={member ? 'success' : 'neutral'}
-        />
-      </View>
+    <Screen>
+      <ScreenHeader
+        overline={t('eyebrow')}
+        accentColor={venue.accent}
+        title={venue.name}
+        trailing={
+          <Badge
+            label={member ? 'Active Member' : 'Guest'}
+            tone={member ? 'success' : 'neutral'}
+          />
+        }
+      />
 
       {warning ? (
-        <View
-          style={{
-            padding: 12,
-            borderRadius: 12,
-            backgroundColor: colors.amberSurface,
-            borderWidth: 1,
-            borderColor: colors.amberBorder,
-          }}
-        >
-          <Text
-            accessibilityRole="alert"
-            style={[styles.text, { color: colors.amber, fontWeight: '600' }]}
-          >
-            {loyaltyWarningText(warning, lang)}
-          </Text>
-        </View>
+        <Banner tone="warning" role="alert">
+          {loyaltyWarningText(warning, lang)}
+        </Banner>
       ) : null}
 
       {member ? (
@@ -114,7 +102,7 @@ export function ProfileScreen() {
       ) : (
         <GuestView key={venue.id} venue={venue} state={loyalty} />
       )}
-    </Card>
+    </Screen>
   );
 }
 
@@ -127,17 +115,17 @@ function Stats({ venue, state }: { venue: Venue; state: LoyaltyState }) {
     ? t('hoursMinutes', { h: hours, m: minutes })
     : t('minutesOnly', { m: minutes });
   return (
-    <Card variant="subtle" style={{ gap: 8 }}>
+    <Card>
       <Text style={styles.subheading}>{t('statsTitle')}</Text>
       {stats.visits === 0 ? (
         <Text style={styles.text}>{t('statsNone')}</Text>
       ) : (
         <View style={{ gap: 6 }}>
-          <Text style={[styles.text, { color: colors.ink, fontWeight: '600' }]}>
+          <Text style={styles.textStrong}>
             {t('statVisits', { n: stats.visits })}
           </Text>
           <Text style={styles.text}>{t('statTime', { time })}</Text>
-          <Text style={[styles.text, { color: colors.ink, fontWeight: '600' }]}>
+          <Text style={styles.textStrong}>
             {t('statSpend', { money: formatMoney(stats.totalSpend) })}
           </Text>
           <Text style={styles.text}>
@@ -192,7 +180,7 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
       <Text style={styles.text}>{t('guestIntro')}</Text>
       <PrivacyLink />
 
-      <Card variant="subtle" style={{ gap: 12 }}>
+      <Card>
         <Text style={styles.subheading}>
           {t('joinTitle', { venue: venue.name })}
         </Text>
@@ -200,6 +188,7 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
         <View style={{ gap: 6 }}>
           <Text style={styles.sectionLabel}>{t('mobileNumber')}</Text>
           <TextInput
+            placeholderTextColor={colors.subtle}
             accessibilityLabel={t('mobileNumber')}
             keyboardType="phone-pad"
             placeholder="0901234567"
@@ -217,27 +206,15 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
         </View>
 
         {sentTo ? (
-          <View
-            style={{
-              padding: 10,
-              borderRadius: 10,
-              backgroundColor: colors.greenSurface,
-              borderWidth: 1,
-              borderColor: colors.greenBorder,
-            }}
-          >
-            <Text
-              accessibilityLiveRegion="polite"
-              style={[styles.text, { color: colors.green, fontWeight: '700' }]}
-            >
-              {t('demoOtp', { phone: maskPhone(sentTo), code: DEMO_OTP })}
-            </Text>
-          </View>
+          <Banner tone="success">
+            {t('demoOtp', { phone: maskPhone(sentTo), code: DEMO_OTP })}
+          </Banner>
         ) : null}
 
         <View style={{ gap: 6 }}>
           <Text style={styles.sectionLabel}>{t('verificationCode')}</Text>
           <TextInput
+            placeholderTextColor={colors.subtle}
             accessibilityLabel={t('verificationCode')}
             keyboardType="number-pad"
             maxLength={6}
@@ -250,6 +227,7 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
         <View style={{ gap: 6 }}>
           <Text style={styles.sectionLabel}>{t('friendCodeLabel')}</Text>
           <TextInput
+            placeholderTextColor={colors.subtle}
             accessibilityLabel={t('friendCodeA11y')}
             autoCapitalize="characters"
             placeholder={`${venue.id.toUpperCase()}-XXXXXX`}
@@ -257,7 +235,7 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
             onChangeText={setFriendCode}
             style={[styles.input, { backgroundColor: colors.surface }]}
           />
-          <Text style={[styles.text, { fontSize: 13 }]}>
+          <Text style={styles.caption}>
             {t('referralNote', {
               venue: venue.name,
               points: REFERRAL_BONUS_POINTS,
@@ -274,7 +252,7 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
             gap: 12,
             alignItems: 'flex-start',
             padding: 12,
-            borderRadius: 12,
+            borderRadius: radius.md,
             backgroundColor: colors.surface,
             borderWidth: 1,
             borderColor: consent ? colors.green : colors.border,
@@ -282,7 +260,7 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
         >
           <Text
             style={{
-              fontSize: 18,
+              fontSize: type.headline.fontSize,
               fontWeight: '800',
               color: consent ? colors.green : colors.ink,
             }}
@@ -312,14 +290,14 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
           </Text>
         ) : null}
 
-        <Text style={[styles.text, { fontSize: 13 }]}>{t('pointsLater')}</Text>
+        <Text style={styles.caption}>{t('pointsLater')}</Text>
       </Card>
 
       <Stats venue={venue} state={state} />
       <BadgesPanel visits={venueVisits(state, venue.id)} />
 
       {hasLocalData ? (
-        <Card variant="subtle" style={{ gap: 10 }}>
+        <Card>
           <Text style={styles.text}>{t('guestLocal')}</Text>
           {confirmClear ? (
             <View style={styles.row}>
@@ -369,8 +347,8 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
 
   return (
     <>
-      <Card variant="accent" style={{ gap: 8 }}>
-        <Text style={[styles.text, { color: colors.ink, fontWeight: '700' }]}>
+      <Card variant="accent">
+        <Text style={styles.textStrong}>
           {t('memberLine', {
             phone: membership ? maskPhone(membership.phone) : '',
           })}
@@ -383,7 +361,7 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
         </Text>
       </Card>
 
-      <Card variant="subtle" style={{ gap: 8 }}>
+      <Card>
         <Text style={styles.subheading}>{t('historyTitle')}</Text>
         {ledger.length === 0 ? (
           <Text style={styles.text}>{t('historyNone')}</Text>
@@ -393,22 +371,8 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
               (item) => item.sessionId === entry.sessionId,
             );
             return (
-              <View
-                key={entry.id}
-                style={{
-                  padding: 10,
-                  borderRadius: 10,
-                  backgroundColor: colors.surface,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                }}
-              >
-                <Text
-                  style={[
-                    styles.text,
-                    { color: colors.ink, fontWeight: '600' },
-                  ]}
-                >
+              <View key={entry.id} style={styles.inset}>
+                <Text style={styles.textStrong}>
                   {t('historyLine', {
                     n: entry.points,
                     detail:
@@ -428,12 +392,12 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
       <Stats venue={venue} state={state} />
       <BadgesPanel visits={venueVisits(state, venue.id)} />
 
-      <Card variant="subtle" style={{ gap: 8 }}>
+      <Card>
         <Text style={styles.subheading}>{t('referralTitle')}</Text>
         <View
           style={{
             padding: 12,
-            borderRadius: 10,
+            borderRadius: radius.md,
             backgroundColor: colors.surface,
             borderWidth: 1,
             borderColor: colors.border,
@@ -444,7 +408,7 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
             accessibilityLabel={t('referralA11y', { code: referral ?? '' })}
             style={{
               fontWeight: '800',
-              fontSize: 18,
+              fontSize: type.headline.fontSize,
               color: colors.ink,
               letterSpacing: 0.8,
             }}
@@ -462,7 +426,7 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
 
       <PrivacyLink />
 
-      <Card variant="subtle" style={{ gap: 10 }}>
+      <Card>
         <Text style={styles.subheading}>{t('prefsTitle')}</Text>
 
         <Text style={styles.sectionLabel}>{t('milk')}</Text>
@@ -506,6 +470,7 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
           })}
         </Text>
         <TextInput
+          placeholderTextColor={colors.subtle}
           accessibilityLabel={t('allergyA11y')}
           maxLength={MAX_ALLERGY_NOTE}
           multiline
@@ -542,7 +507,7 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
         ) : null}
       </Card>
 
-      <Card variant="subtle" style={{ gap: 8 }}>
+      <Card>
         <Text style={styles.subheading}>{t('pinnedTitle')}</Text>
         {favourites.length === 0 ? (
           <Text style={styles.text}>{t('pinnedNone')}</Text>
@@ -565,7 +530,7 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
         )}
       </Card>
 
-      <Card variant="subtle" style={{ gap: 10 }}>
+      <Card>
         <Text style={styles.subheading}>{t('leaveTitle')}</Text>
         {confirmLeave ? (
           <>

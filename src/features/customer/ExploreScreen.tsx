@@ -6,12 +6,15 @@ import { appStore, useAppStore } from '@/core/useAppStore';
 import { SeatMap } from '@/components/SeatMap';
 import {
   Badge,
+  Banner,
   Button,
   Card,
+  Chip,
+  CollapsibleSection,
   colors,
-  Divider,
-  Eyebrow,
-  Heading,
+  EmptyState,
+  Screen,
+  ScreenHeader,
   styles,
   useResponsive,
 } from '@/components/ui';
@@ -29,7 +32,6 @@ import { useT } from './i18n/useLanguage';
 import { favouriteSeatIds } from './loyalty/loyaltyModel';
 import { loyaltyWarningText } from './loyalty/messages';
 import { useLoyalty, useLoyaltyReady } from './loyalty/useLoyalty';
-import { CustomerNav } from './shared/CustomerNav';
 import {
   descriptionText,
   exploreMessages,
@@ -101,7 +103,6 @@ export function ExploreScreen() {
   if (!ready)
     return (
       <Card>
-        <CustomerNav current="explore" />
         <Text accessibilityRole="alert" style={styles.text}>
           {t('loading')}
         </Text>
@@ -137,81 +138,40 @@ export function ExploreScreen() {
     );
 
   return (
-    <Card>
-      <CustomerNav current="explore" />
-
-      <View style={styles.rowBetween}>
-        <View style={{ gap: 2 }}>
-          <Eyebrow color={venue.accent}>{t('eyebrow')}</Eyebrow>
-          <Heading>{venue.name}</Heading>
-        </View>
-        <Badge
-          label={`${summary.free}/${summary.total} free`}
-          tone={summary.free > 0 ? 'success' : 'warning'}
-        />
-      </View>
-
-      <Text style={styles.text}>
-        {t('intro', { description: descriptionText(venue.description, lang) })}
-      </Text>
+    <Screen>
+      <ScreenHeader
+        overline={t('eyebrow')}
+        accentColor={venue.accent}
+        title={venue.name}
+        subtitle={t('intro', {
+          description: descriptionText(venue.description, lang),
+        })}
+        trailing={
+          <Badge
+            label={`${summary.free}/${summary.total} free`}
+            tone={summary.free > 0 ? 'success' : 'warning'}
+          />
+        }
+      />
 
       {warning ? (
-        <View
-          style={{
-            padding: 12,
-            borderRadius: 12,
-            backgroundColor: colors.amberSurface,
-            borderWidth: 1,
-            borderColor: colors.amberBorder,
-          }}
-        >
-          <Text
-            accessibilityRole="alert"
-            style={[styles.text, { color: colors.amber, fontWeight: '600' }]}
-          >
-            {loyaltyWarningText(warning, lang)}
-          </Text>
-        </View>
+        <Banner tone="warning" role="alert">
+          {loyaltyWarningText(warning, lang)}
+        </Banner>
       ) : null}
 
       {linkNotice ? (
-        <View
-          style={{
-            padding: 12,
-            borderRadius: 12,
-            backgroundColor: colors.blueSurface,
-            borderWidth: 1,
-            borderColor: colors.blueBorder,
-          }}
-        >
-          <Text
-            accessibilityRole="alert"
-            style={[styles.text, { color: colors.blue, fontWeight: '600' }]}
-          >
-            {linkNotice}
-          </Text>
-        </View>
+        <Banner tone="info" role="alert">
+          {linkNotice}
+        </Banner>
       ) : null}
 
-      <View
-        style={{
-          padding: 10,
-          borderRadius: 12,
-          backgroundColor: colors.greenSurface,
-          borderWidth: 1,
-          borderColor: colors.greenBorder,
-        }}
-      >
-        <Text
-          accessibilityLiveRegion="polite"
-          style={[styles.text, { color: colors.green, fontWeight: '700' }]}
-        >
-          {describeOccupancy(summary, lang)}
-        </Text>
-      </View>
+      <Text accessibilityLiveRegion="polite" style={styles.caption}>
+        {describeOccupancy(summary, lang)}
+      </Text>
 
       {usual ? (
-        <Card variant="accent" style={{ gap: 8 }}>
+        <Card variant="accent">
           <Text style={[styles.subheading, { color: colors.green }]}>
             {t('usualTitle')}
           </Text>
@@ -227,9 +187,7 @@ export function ExploreScreen() {
           </Text>
           {usual.seat ? (
             <>
-              <Text
-                style={[styles.text, { color: colors.ink, fontWeight: '600' }]}
-              >
+              <Text style={styles.textStrong}>
                 {t('usualFree', {
                   seat: seatText(usual.seat.label),
                   pinned: usual.viaFavourite ? t('usualPinned') : '',
@@ -249,30 +207,24 @@ export function ExploreScreen() {
         </Card>
       ) : null}
 
-      <Card variant="subtle" style={{ gap: 8 }}>
-        <View style={styles.rowBetween}>
-          <Text style={styles.subheading}>{t('filterTitle')}</Text>
-          {hasActiveFilters(filters) ? (
-            <Text
-              accessibilityLiveRegion="polite"
-              style={[styles.text, { color: colors.green, fontWeight: '700' }]}
-            >
-              {t('showing', {
+      <CollapsibleSection
+        title={t('filterTitle')}
+        summary={
+          hasActiveFilters(filters)
+            ? t('showing', {
                 shown: visibleSeats.length,
                 total: venue.seats.length,
-              })}
-            </Text>
-          ) : null}
-        </View>
-
+              })
+            : undefined
+        }
+      >
         <View style={styles.row}>
           {KINDS.map((kind) => {
             const label = kindName(kind, lang);
             const on = filters.kinds.includes(kind);
             return (
-              <Button
+              <Chip
                 key={kind}
-                size="sm"
                 label={on ? `✓ ${label}` : label}
                 selected={on}
                 onPress={() =>
@@ -296,17 +248,15 @@ export function ExploreScreen() {
                 ? t('anyPrice')
                 : t('priceCap', { price: formatMoney(cap) });
             return (
-              <Button
+              <Chip
                 key={cap ?? 'any'}
-                size="sm"
                 label={on ? `✓ ${label}` : label}
                 selected={on}
                 onPress={() => setFilters({ ...filters, maxRate: cap })}
               />
             );
           })}
-          <Button
-            size="sm"
+          <Chip
             label={
               filters.availableOnly
                 ? `✓ ${t('availableOnly')}`
@@ -324,9 +274,8 @@ export function ExploreScreen() {
             const label = amenityLabel(key, lang);
             const on = (filters.amenities ?? []).includes(key);
             return (
-              <Button
+              <Chip
                 key={key}
-                size="sm"
                 label={on ? `✓ ${label}` : label}
                 selected={on}
                 onPress={() => toggleAmenity(key)}
@@ -334,46 +283,29 @@ export function ExploreScreen() {
             );
           })}
         </View>
-      </Card>
+      </CollapsibleSection>
 
       {visibleSeats.length === 0 ? (
-        <Card variant="subtle" style={{ gap: 10 }}>
-          <Text
-            accessibilityRole="alert"
-            style={[styles.text, { color: colors.ink, fontWeight: '600' }]}
-          >
-            {t('noMatch')}
-          </Text>
-          <View style={styles.row}>
-            <Button
-              label={t('clearFilters')}
-              onPress={() => setFilters(noFilters())}
-            />
-          </View>
-        </Card>
+        <EmptyState message={t('noMatch')}>
+          <Button
+            label={t('clearFilters')}
+            onPress={() => setFilters(noFilters())}
+          />
+        </EmptyState>
       ) : (
-        <SeatMap
-          venue={filteredVenue}
-          sessions={store.sessions}
-          selectedSeatId={store.selectedSeatId}
-          onSelect={choose}
-        />
+        <Card>
+          <SeatMap
+            venue={filteredVenue}
+            sessions={store.sessions}
+            selectedSeatId={store.selectedSeatId}
+            onSelect={choose}
+          />
+        </Card>
       )}
 
       {selectedSeat ? (
-        <View
-          style={[
-            styles.rowBetween,
-            {
-              padding: 12,
-              borderRadius: 12,
-              backgroundColor: colors.surfaceSubtle,
-              borderWidth: 1,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <Text style={[styles.text, { color: colors.ink, fontWeight: '700' }]}>
+        <View style={styles.rowBetween}>
+          <Text style={[styles.textStrong, { flex: 1 }]}>
             {t('selected', { seat: seatText(selectedSeat.label) })}
             {visibleSeats.some((seat) => seat.id === selectedSeat.id)
               ? ''
@@ -404,7 +336,7 @@ export function ExploreScreen() {
       ) : null}
 
       {/* Primary Thumb-Reachable Action Block */}
-      <Card variant="accent" style={{ gap: 10 }}>
+      <Card>
         <Text style={styles.sectionLabel}>Start Your Session</Text>
         <Button
           variant="primary"
@@ -427,27 +359,12 @@ export function ExploreScreen() {
       </Card>
 
       {error ? (
-        <View
-          style={{
-            padding: 12,
-            borderRadius: 12,
-            backgroundColor: colors.dangerSurface,
-            borderWidth: 1,
-            borderColor: colors.dangerBorder,
-          }}
-        >
-          <Text
-            accessibilityRole="alert"
-            style={{ color: colors.danger, fontWeight: '700' }}
-          >
-            {error}
-          </Text>
-        </View>
+        <Banner tone="danger" role="alert">
+          {error}
+        </Banner>
       ) : null}
 
-      <Divider />
-
-      <Card variant="subtle" style={{ gap: 8 }}>
+      <Card>
         <Text style={styles.subheading}>{t('pinnedTitle')}</Text>
         {favouriteIds.length === 0 ? (
           <Text style={styles.text}>{t('pinnedNone')}</Text>
@@ -477,7 +394,7 @@ export function ExploreScreen() {
 
       <VenuePage venue={venue} />
 
-      <Text style={[styles.text, { fontSize: 12 }]}>{t('footnote')}</Text>
-    </Card>
+      <Text style={styles.caption}>{t('footnote')}</Text>
+    </Screen>
   );
 }

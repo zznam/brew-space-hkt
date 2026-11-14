@@ -2,7 +2,16 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { formatMoney, type Seat, type Session, type Venue } from '@/core';
 import { CafeScene3D } from './canvas3d/CafeScene3D';
-import { Badge, Button, colors, styles, useResponsive } from './ui';
+import {
+  Badge,
+  Button,
+  colors,
+  radius,
+  styles,
+  useResponsive,
+  space,
+  motion,
+} from './ui';
 
 /** Shared accessible baseline + interactive 3D cafe renderer behind the same props. */
 export interface SeatMapProps {
@@ -26,9 +35,9 @@ export function SeatMap({
   const freeCount = venue.seats.length - occupiedCount;
 
   return (
-    <View style={{ gap: 12 }}>
+    <View style={{ gap: space.md }}>
       <View style={styles.rowBetween}>
-        <View style={{ gap: 4, flex: 1 }}>
+        <View style={{ gap: space.xs, flex: 1 }}>
           <Text style={styles.subheading}>
             {show3D ? '3D Floor & Seat List' : 'Seat List (3D hidden)'}
           </Text>
@@ -58,7 +67,7 @@ export function SeatMap({
         style={{
           flexDirection: isWide ? 'row' : 'column',
           flexWrap: isWide ? 'wrap' : 'nowrap',
-          gap: 8,
+          gap: space.sm,
         }}
       >
         {venue.seats.map((seat: Seat) => {
@@ -78,23 +87,19 @@ export function SeatMap({
                 width: isWide ? 185 : '100%',
                 maxWidth: '100%',
                 flexGrow: isWide ? 1 : 0,
-                minHeight: 54,
-                paddingHorizontal: 14,
-                paddingVertical: 12,
-                gap: 6,
-                borderWidth: selected ? 2 : 1,
-                borderColor: selected
-                  ? venue.accent
-                  : occupied
-                    ? colors.blueBorder
-                    : colors.greenBorder,
+                minHeight: 56,
+                paddingHorizontal: space.md,
+                paddingVertical: space.md,
+                gap: space.xs,
+                borderWidth: 2,
+                borderColor: selected ? venue.accent : 'transparent',
                 backgroundColor: selected
                   ? colors.surface
                   : occupied
                     ? colors.blueSurface
                     : colors.greenSurface,
-                borderRadius: 14,
-                opacity: pressed ? 0.78 : 1,
+                borderRadius: radius.lg,
+                opacity: pressed ? motion.pressedOpacity : 1,
               })}
             >
               <View style={styles.rowBetween}>
@@ -105,36 +110,22 @@ export function SeatMap({
                     style={{
                       width: 9,
                       height: 9,
-                      borderRadius: 5,
+                      borderRadius: radius.pill,
                       backgroundColor: occupied ? colors.blue : colors.green,
                     }}
                   />
-                  <Text
-                    style={{
-                      fontWeight: '800',
-                      fontSize: 16,
-                      color: colors.ink,
-                    }}
-                  >
-                    {seat.label}
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 13,
-                      color: colors.muted,
-                      fontWeight: '600',
-                    }}
-                  >
-                    · {seat.kind}
-                  </Text>
+                  <Text style={styles.textStrong}>{seat.label}</Text>
+                  <Text style={styles.caption}>· {seat.kind}</Text>
                 </View>
 
                 <Text
-                  style={{
-                    fontSize: 13,
-                    fontWeight: '700',
-                    color: occupied ? colors.blue : colors.green,
-                  }}
+                  style={[
+                    styles.caption,
+                    {
+                      fontWeight: '700',
+                      color: occupied ? colors.blue : colors.green,
+                    },
+                  ]}
                 >
                   {occupied ? 'Occupied' : 'Available'} ·{' '}
                   {formatMoney(seat.hourlyRate)}/h
@@ -142,14 +133,7 @@ export function SeatMap({
               </View>
 
               {seat.zone ? (
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color: colors.subtle,
-                    fontWeight: '600',
-                  }}
-                  numberOfLines={1}
-                >
+                <Text style={styles.caption} numberOfLines={1}>
                   {seat.zone} · Grid ({seat.x},{seat.z})
                 </Text>
               ) : null}
