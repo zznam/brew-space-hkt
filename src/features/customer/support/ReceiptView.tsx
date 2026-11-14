@@ -55,7 +55,7 @@ export function ReceiptView({ receipt }: { receipt: VisitSnapshot }) {
         <Badge label="Completed Visit" tone="success" />
       </View>
 
-      <Text style={[styles.text, { color: colors.ink, fontWeight: '700' }]}>
+      <Text style={styles.textStrong}>
         {receipt.venueName} · {seatLabelText(receipt.seatLabel, lang)} (
         {seatKind})
       </Text>
@@ -84,7 +84,7 @@ export function ReceiptView({ receipt }: { receipt: VisitSnapshot }) {
       <Divider />
 
       <Line label={t('receiptTotal')} value={formatMoney(receipt.total)} bold />
-      <Text style={[styles.text, { fontSize: 13 }]}>{t('receiptDemo')}</Text>
+      <Text style={styles.caption}>{t('receiptDemo')}</Text>
     </Card>
   );
 }

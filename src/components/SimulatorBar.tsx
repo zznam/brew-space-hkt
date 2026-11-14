@@ -1,62 +1,51 @@
 import { router } from 'expo-router';
-import { Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { getAllVenues } from '@/core';
 import { useAppStore } from '@/core/useAppStore';
-import { Badge, Button, Card, colors, styles } from './ui';
+import { Chip, colors, radius, SegmentedControl, space, styles } from './ui';
 
+/**
+ * Demo controls, kept to one horizontally scrolling strip so the product
+ * screens own the viewport: role, venue, scenario, time and reset.
+ */
 export function SimulatorBar() {
   const store = useAppStore((state) => state);
   const allVenues = getAllVenues(store.customVenues);
-  const activeVenue = allVenues.find((v) => v.id === store.venueId);
-  const venueSessions = store.sessions.filter(
-    (s) => s.venueId === store.venueId,
-  );
 
   return (
-    <Card variant="subtle" style={{ padding: 10, gap: 6 }}>
-      <View style={styles.rowBetween}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <View
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: 4,
-              backgroundColor: activeVenue?.accent ?? colors.green,
-            }}
-          />
-          <Text
-            style={{
-              fontWeight: '800',
-              fontSize: 11,
-              letterSpacing: 0.6,
-              color: colors.ink,
-            }}
-          >
-            SIMULATOR
-          </Text>
-        </View>
-        <View style={styles.row}>
-          <Badge
-            label={store.role === 'merchant' ? 'Merchant' : 'Customer'}
-            tone={store.role === 'merchant' ? 'info' : 'success'}
-          />
-          {activeVenue ? (
-            <Badge
-              label={`${venueSessions.length}/${activeVenue.seats.length} busy`}
-              tone="neutral"
-            />
-          ) : null}
-        </View>
-      </View>
-
-      <View style={[styles.row, { gap: 6 }]}>
-        {(['merchant', 'customer'] as const).map((role) => (
-          <Button
-            key={role}
+    <View
+      style={{
+        backgroundColor: colors.paperAlt,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+      }}
+    >
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{
+          alignItems: 'center',
+          gap: space.sm,
+          paddingHorizontal: space.lg,
+          paddingVertical: space.sm,
+        }}
+      >
+        <Text style={styles.sectionLabel}>Demo</Text>
+        <View
+          style={{
+            backgroundColor: colors.surface,
+            borderRadius: radius.md,
+          }}
+        >
+          <SegmentedControl
             size="sm"
-            label={role === 'merchant' ? 'Merchant' : 'Customer'}
-            selected={store.role === role}
-            onPress={() => {
+            value={store.role}
+            options={[
+              { value: 'merchant', label: 'Merchant' },
+              { value: 'customer', label: 'Customer' },
+            ]}
+            onChange={(role) => {
               store.setRole(role);
               router.replace(
                 role === 'merchant'
@@ -65,46 +54,34 @@ export function SimulatorBar() {
               );
             }}
           />
-        ))}
+        </View>
         {allVenues.map((venue) => (
-          <Button
+          <Chip
             key={venue.id}
-            size="sm"
             label={venue.name}
             selected={store.venueId === venue.id}
             onPress={() => store.setVenue(venue.id)}
           />
         ))}
-      </View>
-
-      <View style={[styles.row, { gap: 6 }]}>
-        <Button
-          size="sm"
+        <Chip
           label="Morning · 7/8 seats"
           selected={store.scenario === 'morning'}
           onPress={() => store.setScenario('morning')}
         />
-        <Button
-          size="sm"
+        <Chip
           label="Afternoon · 2/8 seats"
           selected={store.scenario === 'afternoon'}
           onPress={() => store.setScenario('afternoon')}
         />
-        <Button
-          size="sm"
-          label="+30m · all venues"
-          onPress={store.advanceTime}
-        />
-        <Button
-          size="sm"
-          variant="danger"
+        <Chip label="+30m · all venues" onPress={store.advanceTime} />
+        <Chip
           label="Reset all demo data"
           onPress={() => {
             store.reset();
             router.replace('/merchant/live-floor');
           }}
         />
-      </View>
-    </Card>
+      </ScrollView>
+    </View>
   );
 }

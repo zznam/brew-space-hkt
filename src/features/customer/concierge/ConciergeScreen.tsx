@@ -9,10 +9,13 @@ import {
   Card,
   colors,
   Divider,
-  Eyebrow,
-  Heading,
+  radius,
   styles,
+  type,
   useResponsive,
+  Screen,
+  ScreenHeader,
+  Chip,
 } from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
 import { useLoyalty, useLoyaltyReady } from '../loyalty/useLoyalty';
@@ -24,7 +27,6 @@ import {
   readOnlyNote,
 } from './conciergeModel';
 import { conciergeMessages } from './messages';
-import { CustomerNav } from '../shared/CustomerNav';
 
 interface Message {
   id: number;
@@ -49,7 +51,6 @@ export function ConciergeScreen() {
   if (!ready)
     return (
       <Card>
-        <CustomerNav current="assistant" />
         <Text accessibilityRole="alert" style={styles.text}>
           {t('loading')}
         </Text>
@@ -73,30 +74,22 @@ export function ConciergeScreen() {
   }
 
   return (
-    <Card>
-      <CustomerNav current="assistant" />
+    <Screen>
+      <ScreenHeader
+        overline="CUSTOMER / VENUE CONCIERGE"
+        accentColor={venue.accent}
+        title={t('heading')}
+        subtitle={t('intro', { venue: venue.name, note: readOnlyNote(lang) })}
+      />
 
-      <View style={styles.rowBetween}>
-        <View style={{ gap: 4 }}>
-          <Eyebrow color={venue.accent}>CUSTOMER / VENUE CONCIERGE</Eyebrow>
-          <Heading>{t('heading')}</Heading>
-        </View>
-        <Badge label={venue.name} tone="info" />
-      </View>
-
-      <Text style={styles.text}>
-        {t('intro', { venue: venue.name, note: readOnlyNote(lang) })}
-      </Text>
-
-      <Card variant="subtle" style={{ gap: 10 }}>
+      <Card>
         <Text style={styles.sectionLabel}>{t('suggested')}</Text>
         {/* English keeps both rows as before; Vietnamese shows its own row. */}
         {lang === 'vi' ? null : (
           <View style={styles.row}>
             {SUGGESTED_QUESTIONS_EN.map((question) => (
-              <Button
+              <Chip
                 key={question}
-                size="sm"
                 label={question}
                 onPress={() => ask(question)}
               />
@@ -105,9 +98,8 @@ export function ConciergeScreen() {
         )}
         <View style={styles.row}>
           {SUGGESTED_QUESTIONS_VI.map((question) => (
-            <Button
+            <Chip
               key={question}
-              size="sm"
               label={question}
               onPress={() => ask(question)}
             />
@@ -117,6 +109,7 @@ export function ConciergeScreen() {
 
       <View style={{ gap: 10 }}>
         <TextInput
+          placeholderTextColor={colors.subtle}
           accessibilityLabel={t('inputLabel')}
           maxLength={MAX_QUESTION_LENGTH}
           value={draft}
@@ -157,7 +150,7 @@ export function ConciergeScreen() {
                 key={message.id}
                 style={{
                   padding: 14,
-                  borderRadius: 14,
+                  borderRadius: radius.lg,
                   borderWidth: 1,
                   borderColor: isYou ? colors.greenBorder : colors.border,
                   backgroundColor: isYou
@@ -170,7 +163,7 @@ export function ConciergeScreen() {
                   style={{
                     color: isYou ? colors.green : colors.ink,
                     fontWeight: '800',
-                    fontSize: 13,
+                    fontSize: type.caption.fontSize,
                   }}
                 >
                   {isYou ? t('you') : t('assistant')}
@@ -190,6 +183,6 @@ export function ConciergeScreen() {
           onPress={() => router.replace('/customer/explore')}
         />
       </View>
-    </Card>
+    </Screen>
   );
 }

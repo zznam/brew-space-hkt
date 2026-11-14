@@ -1,15 +1,15 @@
 import { router } from 'expo-router';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import {
   Button,
-  Card,
-  Eyebrow,
-  Heading,
+  EmptyState,
+  Screen,
+  ScreenHeader,
+  space,
   styles,
   useResponsive,
 } from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
-import { CustomerNav } from '../shared/CustomerNav';
 import { supportMessages } from './messages';
 import { RatingForm } from './RatingForm';
 import { RefundRequestCard } from './RefundRequestCard';
@@ -22,31 +22,28 @@ export function ReceiptScreen() {
   const receipt = useSupport((state) => state.lastReceipt);
   if (!receipt)
     return (
-      <Card>
-        <CustomerNav current="session" />
-        <Eyebrow>CUSTOMER / VISIT SUMMARY</Eyebrow>
-        <Heading>{t('noVisitHeading')}</Heading>
-        <Text style={styles.text}>{t('noVisitBody')}</Text>
-        <View style={styles.row}>
+      <Screen>
+        <ScreenHeader
+          overline="CUSTOMER / VISIT SUMMARY"
+          title={t('noVisitHeading')}
+        />
+        <EmptyState message={t('noVisitBody')}>
           <Button
             variant="primary"
             fullWidth={!isWide}
             label={t('exploreSeats')}
             onPress={() => router.replace('/customer/explore')}
           />
-        </View>
-      </Card>
+        </EmptyState>
+      </Screen>
     );
   return (
-    <View style={{ gap: 12 }}>
-      <Card>
-        <CustomerNav current="session" />
-      </Card>
+    <Screen>
       <ReceiptView receipt={receipt} />
       <View
         style={{
           flexDirection: isWide ? 'row' : 'column',
-          gap: 12,
+          gap: space.lg,
           alignItems: 'stretch',
         }}
       >
@@ -65,6 +62,6 @@ export function ReceiptScreen() {
           onPress={() => router.replace('/customer/explore')}
         />
       </View>
-    </View>
+    </Screen>
   );
 }

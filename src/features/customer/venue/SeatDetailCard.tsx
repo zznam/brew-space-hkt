@@ -44,12 +44,9 @@ export function SeatDetailCard({ seat, occupied }: Props) {
   }
 
   return (
-    <Card variant={occupied ? 'subtle' : 'accent'}>
+    <Card>
       <View style={styles.rowBetween}>
-        <Text
-          accessibilityRole="header"
-          style={{ fontWeight: '800', fontSize: 19, color: colors.ink }}
-        >
+        <Text accessibilityRole="header" style={styles.subheading}>
           {t('seatDetails', { seat: seatLabelText(seat.label, lang) })}
         </Text>
         <Badge
@@ -58,7 +55,7 @@ export function SeatDetailCard({ seat, occupied }: Props) {
         />
       </View>
 
-      <Text style={[styles.text, { color: colors.ink, fontWeight: '600' }]}>
+      <Text style={styles.textStrong}>
         {t('seatTypeStatus', {
           kind: kindWord(seat.kind, lang),
           status: seatStatusText(occupied, lang),
@@ -69,17 +66,8 @@ export function SeatDetailCard({ seat, occupied }: Props) {
         {t('seatAmenities', { amenities: describeAmenities(amenities, lang) })}
       </Text>
 
-      <View
-        style={{
-          padding: 12,
-          borderRadius: 12,
-          backgroundColor: colors.surface,
-          borderWidth: 1,
-          borderColor: colors.border,
-          gap: 4,
-        }}
-      >
-        <Text style={[styles.text, { color: colors.ink, fontWeight: '600' }]}>
+      <View style={styles.inset}>
+        <Text style={styles.textStrong}>
           {t('seatRate', {
             rate: formatMoney(seat.hourlyRate),
             metered: formatMoney(estimates.metered1h),
@@ -89,30 +77,21 @@ export function SeatDetailCard({ seat, occupied }: Props) {
         </Text>
       </View>
 
-      <Text style={[styles.text, { fontSize: 13 }]}>{t('seatDemoNote')}</Text>
+      <Text style={styles.caption}>{t('seatDemoNote')}</Text>
 
       <View style={styles.row}>
         <Button size="sm" label={t('shareSeat')} onPress={() => void share()} />
       </View>
 
       {shared ? (
-        <View
-          style={{
-            gap: 4,
-            padding: 10,
-            borderRadius: 10,
-            backgroundColor: colors.surface,
-            borderWidth: 1,
-            borderColor: colors.border,
-          }}
-        >
+        <View style={styles.inset}>
           <Text
             accessibilityLiveRegion="polite"
-            style={[styles.text, { color: colors.green, fontWeight: '700' }]}
+            style={[styles.textStrong, { color: colors.green }]}
           >
             {shared.copied ? t('linkCopied') : t('linkCopyManually')}
           </Text>
-          <Text selectable style={[styles.text, { fontSize: 13 }]}>
+          <Text selectable style={styles.caption}>
             {shared.link}
           </Text>
         </View>

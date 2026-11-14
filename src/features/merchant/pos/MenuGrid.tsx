@@ -1,6 +1,17 @@
 import { Pressable, Text, View } from 'react-native';
 import { formatMoney, type MenuItem, type Venue } from '@/core';
-import { Badge, Button, colors, styles, useResponsive } from '@/components/ui';
+import {
+  Badge,
+  Button,
+  colors,
+  EmptyState,
+  Icon,
+  layout,
+  motion,
+  space,
+  styles,
+  useResponsive,
+} from '@/components/ui';
 
 export interface MenuGridProps {
   venue: Venue;
@@ -9,6 +20,7 @@ export interface MenuGridProps {
   onToggleSoldOut: (menuItemId: string) => void;
 }
 
+/** One row per item: tap the item to add it; the stock toggle sits beside it. */
 export function MenuGrid({
   venue,
   soldOutItemIds,
@@ -17,14 +29,14 @@ export function MenuGrid({
 }: MenuGridProps) {
   const { isWide } = useResponsive();
   if (venue.menu.length === 0) {
-    return <Text style={styles.text}>No menu items yet.</Text>;
+    return <EmptyState message="No menu items yet." />;
   }
   return (
     <View
       style={{
         flexDirection: isWide ? 'row' : 'column',
         flexWrap: isWide ? 'wrap' : 'nowrap',
-        gap: 10,
+        gap: space.sm,
       }}
     >
       {venue.menu.map((item) => {
@@ -32,70 +44,53 @@ export function MenuGrid({
         return (
           <View
             key={item.id}
-            style={{
-              width: isWide ? 220 : '100%',
-              maxWidth: '100%',
-              flexGrow: isWide ? 1 : 0,
-              padding: 12,
-              borderRadius: 14,
-              borderWidth: 1,
-              borderColor: soldOut ? colors.dangerBorder : colors.border,
-              backgroundColor: soldOut
-                ? colors.dangerSurface
-                : colors.surfaceSubtle,
-              gap: 8,
-            }}
+            style={[
+              styles.inset,
+              styles.insetRow,
+              {
+                width: isWide ? 300 : '100%',
+                flexGrow: isWide ? 1 : 0,
+                flexWrap: 'nowrap',
+                gap: space.sm,
+              },
+            ]}
           >
-            <View style={styles.rowBetween}>
-              <Badge
-                label={soldOut ? 'Sold out' : 'Available'}
-                tone={soldOut ? 'danger' : 'success'}
-              />
-              <Text
-                style={{
-                  fontWeight: '700',
-                  color: colors.ink,
-                  fontSize: 14,
-                }}
-              >
-                {formatMoney(item.price)}
-              </Text>
-            </View>
-
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`${item.name}, ${formatMoney(item.price)}${soldOut ? ', Sold out' : ''}`}
               accessibilityState={{ disabled: soldOut }}
               disabled={soldOut}
               onPress={() => onAdd(item)}
-              style={({ pressed }) => [
-                styles.button,
-                {
-                  width: '100%',
-                  backgroundColor: soldOut
-                    ? colors.paperAlt
-                    : colors.greenSurface,
-                  borderColor: soldOut ? colors.border : colors.greenBorder,
-                  opacity: soldOut ? 0.45 : pressed ? 0.72 : 1,
-                },
-              ]}
+              style={({ pressed }) => ({
+                flex: 1,
+                minHeight: layout.touchTarget,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: space.md,
+                opacity: soldOut
+                  ? motion.disabledOpacity
+                  : pressed
+                    ? motion.pressedOpacity
+                    : 1,
+              })}
             >
-              <Text
-                style={{
-                  fontWeight: '700',
-                  color: soldOut ? colors.ink : colors.green,
-                }}
-              >
-                {item.name} · {formatMoney(item.price)}
-              </Text>
+              <Icon name="order" color={colors.green} />
+              <View style={{ flex: 1, gap: space.xxs }}>
+                <Text style={styles.textStrong} numberOfLines={2}>
+                  {item.name}
+                </Text>
+                <Text style={styles.caption}>{formatMoney(item.price)}</Text>
+              </View>
             </Pressable>
-
-            <Button
-              size="sm"
-              variant={soldOut ? 'default' : 'ghost'}
-              label={soldOut ? 'Lift sold out' : 'Mark sold out'}
-              onPress={() => onToggleSoldOut(item.id)}
-            />
+            <View style={{ alignItems: 'flex-end', gap: space.xs }}>
+              {soldOut ? <Badge label="Sold out" tone="danger" /> : null}
+              <Button
+                size="sm"
+                variant="ghost"
+                label={soldOut ? 'Lift sold out' : 'Mark sold out'}
+                onPress={() => onToggleSoldOut(item.id)}
+              />
+            </View>
           </View>
         );
       })}

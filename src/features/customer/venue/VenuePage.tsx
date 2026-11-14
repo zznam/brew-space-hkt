@@ -6,6 +6,7 @@ import {
   Card,
   colors,
   Heading,
+  space,
   styles,
   useResponsive,
 } from '@/components/ui';
@@ -22,9 +23,9 @@ export function VenuePage({ venue }: { venue: Venue }) {
   const { t, lang } = useT(venueMessages);
   const info = venuePageInfo(venue, now, lang);
   return (
-    <Card variant="subtle" style={{ gap: 10 }}>
+    <Card>
       <View style={styles.rowBetween}>
-        <Heading style={{ fontSize: 18 }}>{t('venueHeading')}</Heading>
+        <Heading level={2}>{t('venueHeading')}</Heading>
         {info.openNow === null ? null : (
           <Badge
             label={info.openNow ? t('openNow') : t('closedNow')}
@@ -33,32 +34,21 @@ export function VenuePage({ venue }: { venue: Venue }) {
         )}
       </View>
 
-      <Text style={[styles.text, { color: colors.ink, fontWeight: '600' }]}>
+      <Text style={styles.textStrong}>
         {t('address', { address: info.address })}
       </Text>
 
       {info.openNow === null ? null : (
-        <Text
-          style={{
-            color: info.openNow ? colors.green : colors.muted,
-            fontWeight: '700',
-            fontSize: 13,
-          }}
-        >
-          {info.openNow ? t('openNow') : t('closedNow')}{' '}
-          <Text style={{ fontWeight: '400', color: colors.muted }}>
-            {t('clockNote')}
-          </Text>
-        </Text>
+        <Text style={styles.caption}>{t('clockNote')}</Text>
       )}
 
       <View
         style={{
           flexDirection: isWide ? 'row' : 'column',
-          gap: 12,
+          gap: space.md,
         }}
       >
-        <View style={{ flex: isWide ? 1 : undefined, gap: 4 }}>
+        <View style={{ flex: isWide ? 1 : undefined, gap: space.xs }}>
           <Text style={styles.sectionLabel}>{t('openingHours')}</Text>
           {info.hours.map((line) => (
             <Text key={line.days} style={styles.text}>
@@ -67,20 +57,11 @@ export function VenuePage({ venue }: { venue: Venue }) {
           ))}
         </View>
 
-        <View style={{ flex: isWide ? 1.2 : undefined, gap: 6 }}>
+        <View style={{ flex: isWide ? 1.2 : undefined, gap: space.sm }}>
           <Text style={styles.sectionLabel}>{t('pricesTitle')}</Text>
           {info.prices.map((row) => (
-            <View
-              key={row.kind}
-              style={{
-                padding: 8,
-                borderRadius: 10,
-                backgroundColor: colors.surface,
-                borderWidth: 1,
-                borderColor: colors.border,
-              }}
-            >
-              <Text style={[styles.text, { fontSize: 13, color: colors.ink }]}>
+            <View key={row.kind} style={styles.inset}>
+              <Text style={[styles.caption, { color: colors.ink }]}>
                 {t('priceRow', {
                   kind: kindName(row.kind, lang),
                   count: row.seatCount,
@@ -95,7 +76,7 @@ export function VenuePage({ venue }: { venue: Venue }) {
         </View>
       </View>
 
-      <Text style={[styles.text, { fontSize: 12 }]}>{t('venueDemoNote')}</Text>
+      <Text style={styles.caption}>{t('venueDemoNote')}</Text>
     </Card>
   );
 }

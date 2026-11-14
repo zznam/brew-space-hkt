@@ -1,6 +1,14 @@
 import { useEffect, useReducer } from 'react';
 import { Text, View } from 'react-native';
-import { Badge, Button, Card, colors, styles } from '@/components/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  colors,
+  radius,
+  styles,
+  type,
+} from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
 import { useLoyalty, useLoyaltyReady } from '../loyalty/useLoyalty';
 import {
@@ -37,7 +45,7 @@ export function FocusTimer({ venueId }: { venueId: string }) {
   const preset = getPreset(state.presetId);
   const message = announcement(state, lang);
   return (
-    <Card variant="subtle" style={{ gap: 10 }}>
+    <Card variant="subtle">
       <View style={styles.rowBetween}>
         <Text style={styles.subheading}>{t('title')}</Text>
         <Badge
@@ -70,7 +78,7 @@ export function FocusTimer({ venueId }: { venueId: string }) {
       <View
         style={{
           padding: 14,
-          borderRadius: 14,
+          borderRadius: radius.lg,
           backgroundColor: colors.surface,
           borderWidth: 1,
           borderColor: colors.border,
@@ -84,7 +92,7 @@ export function FocusTimer({ venueId }: { venueId: string }) {
             clock: formatClock(state.remainingMs),
           })}
           style={{
-            fontSize: 34,
+            fontSize: type.display.fontSize,
             fontWeight: '800',
             color: colors.ink,
             letterSpacing: 1,

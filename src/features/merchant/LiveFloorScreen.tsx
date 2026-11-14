@@ -8,14 +8,15 @@ import {
   Button,
   Card,
   colors,
-  Divider,
-  Eyebrow,
+  EmptyState,
   Heading,
+  Screen,
+  ScreenHeader,
+  space,
   StatTile,
   styles,
   useResponsive,
 } from '@/components/ui';
-import { MerchantNav } from './MerchantNav';
 
 export function LiveFloorScreen() {
   const store = useAppStore((state) => state);
@@ -34,41 +35,35 @@ export function LiveFloorScreen() {
   const freeSeats = venue.seats.length - sessions.length;
 
   return (
-    <>
-      <MerchantNav current="live-floor" />
+    <Screen>
+      <ScreenHeader
+        overline="MERCHANT / LIVE FLOOR"
+        accentColor={venue.accent}
+        title={venue.name}
+        subtitle={`${sessions.length} of ${venue.seats.length} seats occupied · ${venue.description}`}
+      />
+
+      <View style={styles.grid}>
+        <StatTile
+          label="Active"
+          value={`${sessions.length}`}
+          sublabel={`of ${venue.seats.length} seats`}
+          accentColor={venue.accent}
+        />
+        <StatTile
+          label="Available"
+          value={`${freeSeats}`}
+          sublabel="Ready now"
+          accentColor={colors.green}
+        />
+        <StatTile
+          label="Open Tabs"
+          value={formatMoney(liveRevenue)}
+          sublabel="Seat + menu"
+        />
+      </View>
 
       <Card>
-        <View style={{ gap: 4 }}>
-          <Eyebrow color={venue.accent}>MERCHANT / LIVE FLOOR</Eyebrow>
-          <Heading>{venue.name}</Heading>
-          <Text style={styles.text}>
-            {sessions.length} of {venue.seats.length} seats occupied ·{' '}
-            {venue.description}
-          </Text>
-        </View>
-
-        <View style={styles.grid}>
-          <StatTile
-            label="Active"
-            value={`${sessions.length}`}
-            sublabel={`of ${venue.seats.length} seats`}
-            accentColor={venue.accent}
-          />
-          <StatTile
-            label="Available"
-            value={`${freeSeats}`}
-            sublabel="Ready now"
-            accentColor={colors.green}
-          />
-          <StatTile
-            label="Open Tabs"
-            value={formatMoney(liveRevenue)}
-            sublabel="Seat + menu"
-          />
-        </View>
-
-        <Divider />
-
         <SeatMap
           venue={venue}
           sessions={sessions}
@@ -95,16 +90,12 @@ export function LiveFloorScreen() {
 
       <Card>
         <View style={styles.rowBetween}>
-          <Heading>Live tabs</Heading>
+          <Heading level={2}>Live tabs</Heading>
           <Badge label={`${sessions.length} active`} tone="neutral" />
         </View>
 
         {sessions.length === 0 && (
-          <Card variant="subtle">
-            <Text style={styles.text}>
-              No active sessions. Switch to Customer to start one.
-            </Text>
-          </Card>
+          <EmptyState message="No active sessions. Switch to Customer to start one." />
         )}
 
         {sessions.map((session) => {
@@ -115,30 +106,18 @@ export function LiveFloorScreen() {
             <View
               key={session.id}
               style={[
-                styles.rowBetween,
-                {
-                  padding: 12,
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: isSelected ? venue.accent : colors.border,
-                  backgroundColor: isSelected
-                    ? colors.greenSurface
-                    : colors.surfaceSubtle,
-                },
+                styles.inset,
+                styles.insetRow,
+                isSelected && { backgroundColor: colors.greenSurface },
               ]}
             >
-              <View style={{ gap: 2, flex: 1 }}>
-                <Text
-                  style={[
-                    styles.text,
-                    { color: colors.ink, fontWeight: '700' },
-                  ]}
-                >
+              <View style={{ gap: space.xxs, flex: 1 }}>
+                <Text style={styles.textStrong}>
                   {seat?.label} · {session.elapsedMinutes} min ·{' '}
                   {formatMoney(total)}
                   {isSelected ? ' · Selected' : ''}
                 </Text>
-                <Text style={{ fontSize: 12, color: colors.muted }}>
+                <Text style={styles.caption}>
                   {session.mode} · {session.orders.length} order line(s)
                 </Text>
               </View>
@@ -154,6 +133,6 @@ export function LiveFloorScreen() {
           );
         })}
       </Card>
-    </>
+    </Screen>
   );
 }

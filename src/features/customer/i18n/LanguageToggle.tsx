@@ -1,31 +1,28 @@
-import { Text, View } from 'react-native';
-import { Button, styles } from '@/components/ui';
-import { defineMessages, LANGUAGE_NAMES, LANGUAGES } from './i18n';
-import { languageStore, useT } from './useLanguage';
-
-const messages = defineMessages(
-  { language: 'Language' },
-  { language: 'Ngôn ngữ' },
-);
+import { useEffect } from 'react';
+import { SegmentedControl } from '@/components/ui';
+import { LANGUAGE_NAMES, LANGUAGES } from './i18n';
+import {
+  initializeLanguage,
+  languageStore,
+  useLanguageStore,
+} from './useLanguage';
 
 /** Language names are always written in their own language so either reader
  * can find theirs. */
 export function LanguageToggle() {
-  const { t, lang } = useT(messages);
+  const lang = useLanguageStore((state) => state.lang);
+  useEffect(() => {
+    void initializeLanguage();
+  }, []);
   return (
-    <View style={styles.row}>
-      <Text style={[styles.text, { fontSize: 13, fontWeight: '600' }]}>
-        {t('language')}:
-      </Text>
-      {LANGUAGES.map((code) => (
-        <Button
-          key={code}
-          size="sm"
-          label={LANGUAGE_NAMES[code]}
-          selected={code === lang}
-          onPress={() => languageStore.getState().setLang(code)}
-        />
-      ))}
-    </View>
+    <SegmentedControl
+      size="sm"
+      value={lang}
+      options={LANGUAGES.map((code) => ({
+        value: code,
+        label: LANGUAGE_NAMES[code],
+      }))}
+      onChange={(code) => languageStore.getState().setLang(code)}
+    />
   );
 }

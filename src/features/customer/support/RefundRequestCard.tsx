@@ -1,7 +1,15 @@
 import { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import { formatMoney } from '@/core';
-import { Badge, Button, Card, colors, Heading, styles } from '@/components/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  colors,
+  Heading,
+  styles,
+  type,
+} from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
 import type { VisitSnapshot } from '../shared/visit';
 import { supportMessages } from './messages';
@@ -31,7 +39,7 @@ export function RefundRequestCard({ receipt }: { receipt: VisitSnapshot }) {
   return (
     <Card>
       <View style={styles.rowBetween}>
-        <Heading style={{ fontSize: 22 }}>{t('refundHeading')}</Heading>
+        <Heading>{t('refundHeading')}</Heading>
         {latest ? (
           <Badge
             label={latest.status === 'requested' ? 'In Review' : 'Closed'}
@@ -44,7 +52,7 @@ export function RefundRequestCard({ receipt }: { receipt: VisitSnapshot }) {
 
       {latest ? (
         <Card variant="subtle" style={{ gap: 6 }}>
-          <Text style={{ color: colors.ink, fontWeight: '700' }}>
+          <Text style={styles.textStrong}>
             {t('status', { status: refundStatusLabel(latest.status, lang) })}
           </Text>
           <Text style={styles.text}>
@@ -73,6 +81,7 @@ export function RefundRequestCard({ receipt }: { receipt: VisitSnapshot }) {
       ) : (
         <>
           <TextInput
+            placeholderTextColor={colors.subtle}
             accessibilityLabel={t('refundReasonLabel')}
             multiline
             maxLength={MAX_REFUND_REASON + 50}
@@ -84,7 +93,7 @@ export function RefundRequestCard({ receipt }: { receipt: VisitSnapshot }) {
           <View style={styles.rowBetween}>
             <Text
               style={{
-                fontSize: 13,
+                fontSize: type.caption.fontSize,
                 color:
                   reason.length > MAX_REFUND_REASON
                     ? colors.danger

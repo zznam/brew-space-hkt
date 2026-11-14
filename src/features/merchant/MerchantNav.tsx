@@ -1,63 +1,46 @@
 import { router } from 'expo-router';
-import { View } from 'react-native';
-import {
-  Button,
-  Card,
-  colors,
-  Eyebrow,
-  styles,
-  useResponsive,
-} from '@/components/ui';
+import { TabBar, type TabItem } from '@/components/ui';
 
 export type MerchantTab = 'live-floor' | 'pos' | 'tickets' | 'onboarding';
 
-const TABS: { key: MerchantTab; label: string; href: string }[] = [
-  { key: 'live-floor', label: 'Live Floor', href: '/merchant/live-floor' },
-  { key: 'pos', label: 'New order', href: '/merchant/pos' },
-  { key: 'tickets', label: 'Tickets', href: '/merchant/tickets' },
+const TABS: (TabItem<MerchantTab> & { href: string })[] = [
+  {
+    key: 'live-floor',
+    label: 'Floor',
+    accessibilityLabel: 'Live Floor',
+    icon: 'floor',
+    href: '/merchant/live-floor',
+  },
+  { key: 'pos', label: 'New order', icon: 'order', href: '/merchant/pos' },
+  {
+    key: 'tickets',
+    label: 'Tickets',
+    icon: 'tickets',
+    href: '/merchant/tickets',
+  },
   {
     key: 'onboarding',
-    label: 'Onboard Cafe / 3D Studio',
+    label: '3D Studio',
+    accessibilityLabel: 'Onboard Cafe / 3D Studio',
+    icon: 'studio',
     href: '/merchant/onboarding',
   },
 ];
 
-export function MerchantNav({ current }: { current: MerchantTab }) {
-  const { isWide } = useResponsive();
+export function merchantTabForPath(pathname: string): MerchantTab | null {
+  return TABS.find((tab) => pathname.startsWith(tab.href))?.key ?? null;
+}
+
+/** Bottom tab bar for the merchant role, rendered once by the root layout. */
+export function MerchantNav({ current }: { current: MerchantTab | null }) {
   return (
-    <Card
-      variant="subtle"
-      style={{
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        backgroundColor: colors.surface,
-        gap: 8,
+    <TabBar
+      items={TABS}
+      current={current}
+      onSelect={(key) => {
+        const tab = TABS.find((entry) => entry.key === key);
+        if (tab && key !== current) router.push(tab.href as never);
       }}
-    >
-      <View
-        style={{
-          flexDirection: isWide ? 'row' : 'column',
-          justifyContent: 'space-between',
-          alignItems: isWide ? 'center' : 'stretch',
-          gap: 8,
-        }}
-      >
-        <Eyebrow>MERCHANT OPERATIONS</Eyebrow>
-        <View style={styles.row}>
-          {TABS.map((tab) => (
-            <Button
-              key={tab.key}
-              size="sm"
-              label={tab.label}
-              selected={tab.key === current}
-              style={isWide ? undefined : { flexGrow: 1 }}
-              onPress={() => {
-                if (tab.key !== current) router.push(tab.href as never);
-              }}
-            />
-          ))}
-        </View>
-      </View>
-    </Card>
+    />
   );
 }

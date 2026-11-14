@@ -1,6 +1,15 @@
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
-import { Badge, Button, Card, colors, Heading, styles } from '@/components/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  colors,
+  Heading,
+  radius,
+  styles,
+  type,
+} from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
 import { supportMessages, type SupportMessageKey } from './messages';
 import { MAX_NOTE_LENGTH, failureText } from './supportModel';
@@ -40,7 +49,7 @@ function Selector({
               minHeight: 44,
               alignItems: 'center',
               justifyContent: 'center',
-              borderRadius: 12,
+              borderRadius: radius.md,
               borderWidth: 1,
               borderColor: value === n ? colors.green : colors.border,
               backgroundColor: value === n ? colors.green : colors.paperAlt,
@@ -48,9 +57,9 @@ function Selector({
           >
             <Text
               style={{
-                color: value === n ? '#ffffff' : colors.ink,
+                color: value === n ? colors.onPrimary : colors.ink,
                 fontWeight: '700',
-                fontSize: 15,
+                fontSize: type.body.fontSize,
               }}
             >
               {n}
@@ -81,10 +90,10 @@ export function RatingForm({ sessionId }: { sessionId: string }) {
     return (
       <Card variant="accent">
         <View style={styles.rowBetween}>
-          <Heading style={{ fontSize: 22 }}>{t('thankYou')}</Heading>
+          <Heading>{t('thankYou')}</Heading>
           <Badge label="Rated" tone="success" />
         </View>
-        <Text style={[styles.text, { color: colors.ink, fontWeight: '600' }]}>
+        <Text style={styles.textStrong}>
           {t('yourRating', {
             seat: existing.seat,
             drinks: existing.drinks,
@@ -112,7 +121,7 @@ export function RatingForm({ sessionId }: { sessionId: string }) {
   const complete = GROUPS.every((group) => scores[group.key] > 0);
   return (
     <Card>
-      <Heading style={{ fontSize: 22 }}>{t('ratingHeading')}</Heading>
+      <Heading>{t('ratingHeading')}</Heading>
       {GROUPS.map((group) => (
         <Selector
           key={group.key}
@@ -124,6 +133,7 @@ export function RatingForm({ sessionId }: { sessionId: string }) {
         />
       ))}
       <TextInput
+        placeholderTextColor={colors.subtle}
         accessibilityLabel={t('commentLabel')}
         multiline
         value={comment}
@@ -134,7 +144,7 @@ export function RatingForm({ sessionId }: { sessionId: string }) {
       <View style={styles.rowBetween}>
         <Text
           style={{
-            fontSize: 13,
+            fontSize: type.caption.fontSize,
             color:
               comment.length > MAX_NOTE_LENGTH ? colors.danger : colors.muted,
           }}

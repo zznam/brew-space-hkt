@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 import { formatMoney, type Session } from '@/core';
-import { Badge, Button, Card, colors, Heading, styles } from '@/components/ui';
+import { Badge, Button, Card, Heading, styles } from '@/components/ui';
 import {
   formatModifiers,
   lineKey,
@@ -33,9 +33,9 @@ export function OrderHistory({
   const orders = ordersForSession(allOrders, session);
   const latestId = orders[orders.length - 1]?.id;
   return (
-    <Card variant="subtle" style={{ gap: 12 }}>
+    <Card>
       <View style={styles.rowBetween}>
-        <Heading style={{ fontSize: 22 }}>{t('ordersTitle')}</Heading>
+        <Heading>{t('ordersTitle')}</Heading>
         <Badge label={`${orders.length}`} tone="neutral" />
       </View>
 
@@ -46,19 +46,9 @@ export function OrderHistory({
       {[...orders].reverse().map((order) => {
         const status = orderStatus(order, session.elapsedMinutes);
         return (
-          <View
-            key={order.id}
-            style={{
-              gap: 8,
-              padding: 12,
-              borderRadius: 12,
-              backgroundColor: colors.surface,
-              borderWidth: 1,
-              borderColor: colors.border,
-            }}
-          >
+          <View key={order.id} style={styles.inset}>
             <View style={styles.rowBetween}>
-              <Text style={{ color: colors.ink, fontWeight: '700' }}>
+              <Text style={styles.textStrong}>
                 {t(STATUS_KEY[status])} · {formatMoney(order.total)}
               </Text>
               <Badge
