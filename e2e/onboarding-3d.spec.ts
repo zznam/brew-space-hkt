@@ -1,5 +1,51 @@
 import { expect, test } from '@playwright/test';
 
+test('cafe owner can upload multiple files in one selection and select them again', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(
+    page.getByRole('heading', { name: 'The Grind Co-Work' }),
+  ).toBeVisible();
+  await page
+    .getByRole('button', { name: 'Onboard Cafe / 3D Studio', exact: true })
+    .click();
+  await expect(
+    page.getByRole('heading', {
+      name: 'Onboard Your Cafe with OpenAI & 3D Engine',
+    }),
+  ).toBeVisible();
+
+  const files = [
+    {
+      name: 'floorplan.md',
+      mimeType: 'text/markdown',
+      buffer: Buffer.from('Room: 10m x 8m\nSeats: 2 desks and 1 pod'),
+    },
+    {
+      name: 'menu.txt',
+      mimeType: 'text/plain',
+      buffer: Buffer.from('Espresso: 40000 VND\nTea: 35000 VND'),
+    },
+  ];
+  const picker = page.locator('input[type="file"]');
+  await picker.setInputFiles(files);
+  await expect(page.getByText('Processed 2 uploaded file(s).')).toBeVisible();
+  await expect(page.getByText('[DOCUMENT] floorplan.md')).toBeVisible();
+  await expect(page.getByText('[DOCUMENT] menu.txt')).toBeVisible();
+  await expect(picker).toHaveValue('');
+
+  await page
+    .getByRole('button', { name: 'Clear uploads', exact: true })
+    .click();
+  await picker.setInputFiles(files);
+  await expect(
+    page.getByText('Photos, Walkthrough Videos & Documents (2 attached)'),
+  ).toBeVisible();
+  await expect(page.getByText('[DOCUMENT] floorplan.md')).toBeVisible();
+  await expect(page.getByText('[DOCUMENT] menu.txt')).toBeVisible();
+});
+
 test('cafe owner onboards with photos/videos/docs, chats through multiple 3D iterations, restores or publishes to customer view', async ({
   page,
 }) => {
