@@ -4,14 +4,16 @@ import { Text, TextInput, View } from 'react-native';
 import { getVenue } from '@/core';
 import { useAppStore } from '@/core/useAppStore';
 import { Button, Card, Heading, colors, styles } from '@/components/ui';
+import { useT } from '../i18n/useLanguage';
 import { useLoyalty, useLoyaltyReady } from '../loyalty/useLoyalty';
 import {
   MAX_QUESTION_LENGTH,
-  READ_ONLY_NOTE,
   SUGGESTED_QUESTIONS_EN,
   SUGGESTED_QUESTIONS_VI,
   answerQuestion,
+  readOnlyNote,
 } from './conciergeModel';
+import { conciergeMessages } from './messages';
 import { CustomerNav } from '../shared/CustomerNav';
 
 interface Message {
@@ -23,6 +25,7 @@ const MAX_MESSAGES = 40;
 
 /** "Ask the venue": read-only Q&A at '/customer/assistant'. */
 export function ConciergeScreen() {
+  const { t, lang } = useT(conciergeMessages);
   const venueId = useAppStore((state) => state.venueId);
   const sessions = useAppStore((state) => state.sessions);
   const { ready } = useLoyaltyReady();
@@ -37,7 +40,7 @@ export function ConciergeScreen() {
       <Card>
         <CustomerNav current="assistant" />
         <Text accessibilityRole="alert" style={styles.text}>
-          Loading the assistant…
+          {t('loading')}
         </Text>
       </Card>
     );
@@ -45,7 +48,7 @@ export function ConciergeScreen() {
   function ask(question: string) {
     const text = question.trim();
     if (!text) return;
-    const reply = answerQuestion(text, { venue, sessions, loyalty });
+    const reply = answerQuestion(text, { venue, sessions, loyalty }, lang);
     const youId = nextId.current++;
     const venueMessageId = nextId.current++;
     setMessages((previous) =>
@@ -61,20 +64,23 @@ export function ConciergeScreen() {
   return (
     <Card>
       <CustomerNav current="assistant" />
-      <Heading>Ask the venue</Heading>
+      <Heading>{t('heading')}</Heading>
       <Text style={styles.text}>
-        {venue.name}. {READ_ONLY_NOTE} You can write in English or Vietnamese.
+        {t('intro', { venue: venue.name, note: readOnlyNote(lang) })}
       </Text>
-      <Text style={styles.text}>Suggested questions</Text>
-      <View style={styles.row}>
-        {SUGGESTED_QUESTIONS_EN.map((question) => (
-          <Button
-            key={question}
-            label={question}
-            onPress={() => ask(question)}
-          />
-        ))}
-      </View>
+      <Text style={styles.text}>{t('suggested')}</Text>
+      {/* English keeps both rows as before; Vietnamese shows its own row. */}
+      {lang === 'vi' ? null : (
+        <View style={styles.row}>
+          {SUGGESTED_QUESTIONS_EN.map((question) => (
+            <Button
+              key={question}
+              label={question}
+              onPress={() => ask(question)}
+            />
+          ))}
+        </View>
+      )}
       <View style={styles.row}>
         {SUGGESTED_QUESTIONS_VI.map((question) => (
           <Button
@@ -85,13 +91,13 @@ export function ConciergeScreen() {
         ))}
       </View>
       <TextInput
-        accessibilityLabel="Ask the venue a question"
+        accessibilityLabel={t('inputLabel')}
         maxLength={MAX_QUESTION_LENGTH}
         value={draft}
         onChangeText={setDraft}
         onSubmitEditing={() => ask(draft)}
         returnKeyType="send"
-        placeholder="e.g. How many seats are free?"
+        placeholder={t('placeholder')}
         style={{
           minHeight: 44,
           borderWidth: 1,
@@ -102,13 +108,15 @@ export function ConciergeScreen() {
           color: colors.ink,
         }}
       />
-      <Button label="Ask" disabled={!draft.trim()} onPress={() => ask(draft)} />
-      <Text style={styles.text}>Conversation</Text>
-      <View accessibilityLabel="Conversation" style={{ gap: 10 }}>
+      <Button
+        label={t('ask')}
+        disabled={!draft.trim()}
+        onPress={() => ask(draft)}
+      />
+      <Text style={styles.text}>{t('conversation')}</Text>
+      <View accessibilityLabel={t('conversation')} style={{ gap: 10 }}>
         {messages.length === 0 ? (
-          <Text style={styles.text}>
-            No questions yet. Tap a suggestion or type your own.
-          </Text>
+          <Text style={styles.text}>{t('empty')}</Text>
         ) : (
           messages.map((message) => (
             <View
@@ -121,7 +129,7 @@ export function ConciergeScreen() {
               }}
             >
               <Text style={{ color: colors.ink, fontWeight: '700' }}>
-                {message.from === 'you' ? 'You' : 'Venue assistant'}
+                {message.from === 'you' ? t('you') : t('assistant')}
               </Text>
               <Text style={{ color: colors.ink, lineHeight: 22 }}>
                 {message.text}
@@ -131,7 +139,7 @@ export function ConciergeScreen() {
         )}
       </View>
       <Button
-        label="Back to explore"
+        label={t('back')}
         onPress={() => router.replace('/customer/explore')}
       />
     </Card>

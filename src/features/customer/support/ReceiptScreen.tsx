@@ -1,22 +1,23 @@
 import { router } from 'expo-router';
 import { Text, View } from 'react-native';
 import { Button, Card, Heading, styles } from '@/components/ui';
+import { useT } from '../i18n/useLanguage';
+import { supportMessages } from './messages';
 import { RatingForm } from './RatingForm';
 import { RefundRequestCard } from './RefundRequestCard';
 import { ReceiptView } from './ReceiptView';
 import { useSupport } from './useSupport';
 
 export function ReceiptScreen() {
+  const { t } = useT(supportMessages);
   const receipt = useSupport((state) => state.lastReceipt);
   if (!receipt)
     return (
       <Card>
-        <Heading>No recent visit</Heading>
-        <Text style={styles.text}>
-          Your receipt appears here after you end a session.
-        </Text>
+        <Heading>{t('noVisitHeading')}</Heading>
+        <Text style={styles.text}>{t('noVisitBody')}</Text>
         <Button
-          label="Explore seats"
+          label={t('exploreSeats')}
           onPress={() => router.replace('/customer/explore')}
         />
       </Card>
@@ -27,7 +28,7 @@ export function ReceiptScreen() {
       <RefundRequestCard receipt={receipt} />
       <RatingForm sessionId={receipt.sessionId} />
       <Button
-        label="Back to explore"
+        label={t('backToExplore')}
         onPress={() => router.replace('/customer/explore')}
       />
     </View>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useStore } from 'zustand';
 import type { VisitSnapshot } from '../shared/visit';
+import { LOAD_WARNING_FAILED, LOAD_WARNING_INCOMPATIBLE } from './messages';
 import {
   createLoyaltyStore,
   isLoyaltyState,
@@ -31,10 +32,10 @@ export function initializeLoyalty(): Promise<string | null> {
             preferences,
             favourites,
           });
-        } else warning = 'Saved member data was incompatible. Starting fresh.';
+        } else warning = LOAD_WARNING_INCOMPATIBLE;
       }
     } catch {
-      warning = 'Saved member data could not be loaded. Starting fresh.';
+      warning = LOAD_WARNING_FAILED;
     }
     let writes = Promise.resolve();
     loyaltyStore.subscribe((state) => {

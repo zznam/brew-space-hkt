@@ -1,5 +1,6 @@
 import { createStore } from 'zustand/vanilla';
 import type { ActionResult } from '../../../core/domain';
+import type { Lang } from '../i18n/i18n';
 import type { VisitSnapshot } from '../shared/visit';
 import {
   LEDGER_KINDS,
@@ -21,11 +22,20 @@ import {
 } from './loyaltyModel';
 
 export interface LoyaltyStore extends LoyaltyState {
-  join: (venueId: string, input: JoinInput) => ActionResult;
+  /** `lang` only picks the language of an error message. */
+  join: (venueId: string, input: JoinInput, lang?: Lang) => ActionResult;
   leave: (venueId: string) => void;
   recordVisit: (snapshot: VisitSnapshot) => void;
-  toggleFavourite: (venueId: string, seatId: string) => ActionResult;
-  setPreferences: (venueId: string, prefs: Preferences) => ActionResult;
+  toggleFavourite: (
+    venueId: string,
+    seatId: string,
+    lang?: Lang,
+  ) => ActionResult;
+  setPreferences: (
+    venueId: string,
+    prefs: Preferences,
+    lang?: Lang,
+  ) => ActionResult;
   reset: () => void;
 }
 
@@ -39,16 +49,17 @@ export function createLoyaltyStore() {
     };
     return {
       ...initialLoyaltyState(),
-      join: (venueId, input) => apply(joinProgramme(get(), venueId, input)),
+      join: (venueId, input, lang) =>
+        apply(joinProgramme(get(), venueId, input, lang)),
       leave: (venueId) => set(leaveProgramme(get(), venueId)),
       recordVisit: (snapshot) => {
         const next = recordVisit(get(), snapshot);
         if (next !== get()) set(next);
       },
-      toggleFavourite: (venueId, seatId) =>
-        apply(toggleFavourite(get(), venueId, seatId)),
-      setPreferences: (venueId, prefs) =>
-        apply(setPreferences(get(), venueId, prefs)),
+      toggleFavourite: (venueId, seatId, lang) =>
+        apply(toggleFavourite(get(), venueId, seatId, lang)),
+      setPreferences: (venueId, prefs, lang) =>
+        apply(setPreferences(get(), venueId, prefs, lang)),
       reset: () => set(initialLoyaltyState()),
     };
   });

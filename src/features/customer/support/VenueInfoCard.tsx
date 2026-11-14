@@ -1,19 +1,24 @@
 import { Text } from 'react-native';
 import { Card, Heading, colors, styles } from '@/components/ui';
+import { useT } from '../i18n/useLanguage';
+import { supportMessages } from './messages';
 import { getVenueInfo } from './venueInfo';
 
 export function VenueInfoCard({ venueId }: { venueId: string }) {
-  const info = getVenueInfo(venueId);
+  const { t, lang } = useT(supportMessages);
+  const info = getVenueInfo(venueId, lang);
   return (
     <Card>
-      <Heading>Wi-Fi and house rules</Heading>
+      <Heading>{t('venueHeading')}</Heading>
       <Text style={styles.text}>
-        Wi-Fi network:{' '}
+        {t('wifiNetwork')}{' '}
         <Text style={{ color: colors.ink, fontWeight: '700' }}>
           {info.wifiName}
         </Text>
       </Text>
-      <Text style={styles.text}>Password: {info.wifiAccess}</Text>
+      <Text style={styles.text}>
+        {t('wifiPassword', { where: info.wifiAccess })}
+      </Text>
       {info.rules.map((rule, index) => (
         <Text key={rule} style={styles.text}>
           {index + 1}. {rule}

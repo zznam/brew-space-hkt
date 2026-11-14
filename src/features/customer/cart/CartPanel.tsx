@@ -7,6 +7,7 @@ import {
   MILK_OPTIONS,
   SWEETNESS_OPTIONS,
 } from '../loyalty/loyaltyModel';
+import { useT } from '../i18n/useLanguage';
 import { useLoyalty, useLoyaltyReady } from '../loyalty/useLoyalty';
 import {
   cartTotal,
@@ -20,6 +21,7 @@ import {
   sweetnessLabel,
   type Modifiers,
 } from './cartModel';
+import { cartMessages, cartText } from './messages';
 import { useCart } from './useCart';
 
 /** Same look as the shared Button, but with its own accessibility label so
@@ -72,6 +74,7 @@ function OptionRow<T extends string | number>({
   label: (option: T) => string;
   onChange: (option: T) => void;
 }) {
+  const { t } = useT(cartMessages);
   return (
     <View style={{ gap: 6 }}>
       <Text style={styles.text}>{title}</Text>
@@ -82,7 +85,11 @@ function OptionRow<T extends string | number>({
             label={label(option)}
             selected={option === value}
             onPress={() => onChange(option)}
-            accessibilityLabel={`${title} ${label(option)} for ${itemName}`}
+            accessibilityLabel={t('optionFor', {
+              title,
+              option: label(option),
+              item: itemName,
+            })}
           />
         ))}
       </View>
@@ -99,30 +106,31 @@ function ModifierPicker({
   modifiers: Modifiers;
   onChange: (patch: Partial<Modifiers>) => void;
 }) {
+  const { t, lang } = useT(cartMessages);
   return (
     <View style={{ gap: 8 }}>
       <OptionRow
-        title="Milk"
+        title={t('milk')}
         itemName={itemName}
         options={MILK_OPTIONS}
         value={modifiers.milk}
-        label={milkLabel}
+        label={(milk) => milkLabel(milk, lang)}
         onChange={(milk) => onChange({ milk })}
       />
       <OptionRow
-        title="Sweetness"
+        title={t('sweetness')}
         itemName={itemName}
         options={SWEETNESS_OPTIONS}
         value={modifiers.sweetness}
-        label={sweetnessLabel}
+        label={(sweetness) => sweetnessLabel(sweetness, lang)}
         onChange={(sweetness) => onChange({ sweetness })}
       />
       <OptionRow
-        title="Ice"
+        title={t('ice')}
         itemName={itemName}
         options={ICE_OPTIONS}
         value={modifiers.ice}
-        label={iceLabel}
+        label={(ice) => iceLabel(ice, lang)}
         onChange={(ice) => onChange({ ice })}
       />
     </View>
@@ -138,13 +146,14 @@ export function CartPanel({
   disabledReason?: string | null;
 }) {
   const lines = useCart((state) => state.lines);
-  const error = useCart((state) => state.error);
-  const notice = useCart((state) => state.notice);
-  const warning = useCart((state) => state.warning);
+  const error = useCart((state) => state.errorMessage);
+  const notice = useCart((state) => state.noticeMessage);
+  const warning = useCart((state) => state.warningMessage);
   const prefilled = useCart((state) => state.prefilled);
   const { setQuantity, setNote, setModifiers, removeLine, submit } = useCart(
     (s) => s,
   );
+  const { t, lang } = useT(cartMessages);
   const { ready } = useLoyaltyReady();
   // Saved allergy comes from the loyalty state (read-only). Members only.
   const allergyNote = useLoyalty((state) =>
@@ -154,19 +163,17 @@ export function CartPanel({
   );
   return (
     <View style={{ gap: 10 }}>
-      <Heading>Your cart</Heading>
+      <Heading>{t('cartTitle')}</Heading>
       {allergyNote !== '' && (
         <Text accessibilityRole="alert" style={{ color: colors.ink }}>
-          Your allergy note is sent to staff with every order.
+          {t('allergySent')}
         </Text>
       )}
       {prefilled && lines.length > 0 && (
-        <Text style={styles.text}>Prefilled from your saved preferences</Text>
+        <Text style={styles.text}>{t('prefilled')}</Text>
       )}
       {lines.length === 0 && (
-        <Text style={styles.text}>
-          Your cart is empty. Add something from the menu.
-        </Text>
+        <Text style={styles.text}>{t('cartEmptyHint')}</Text>
       )}
       {lines.map((line) => {
         const key = lineKey(line);
@@ -186,7 +193,7 @@ export function CartPanel({
             {line.modifiers && (
               <>
                 <Text style={styles.text}>
-                  {formatModifiers(line.modifiers)}
+                  {formatModifiers(line.modifiers, lang)}
                 </Text>
                 <ModifierPicker
                   itemName={line.name}
@@ -201,7 +208,7 @@ export function CartPanel({
                 onPress={() => setQuantity(key, line.quantity - 1)}
               />
               <Text
-                accessibilityLabel={`Quantity ${line.quantity}`}
+                accessibilityLabel={t('quantity', { n: line.quantity })}
                 style={{ color: colors.ink, minWidth: 24, textAlign: 'center' }}
               >
                 {line.quantity}
@@ -212,13 +219,13 @@ export function CartPanel({
                 onPress={() => setQuantity(key, line.quantity + 1)}
               />
               <Button
-                label={`Remove ${line.name}`}
+                label={t('removeItem', { name: line.name })}
                 onPress={() => removeLine(key)}
               />
             </View>
             <TextInput
-              accessibilityLabel={`Note for ${line.name}`}
-              placeholder="Note (e.g. less sugar)"
+              accessibilityLabel={t('noteLabel', { name: line.name })}
+              placeholder={t('notePlaceholder')}
               maxLength={MAX_NOTE_LENGTH}
               defaultValue={line.note}
               onChangeText={(text) => setNote(key, text)}
@@ -236,37 +243,32 @@ export function CartPanel({
       })}
       {lines.length > 0 && (
         <>
-          <Text style={styles.text}>Estimated total</Text>
+          <Text style={styles.text}>{t('estimatedTotal')}</Text>
           <Heading>{formatMoney(cartTotal(lines))}</Heading>
-          <Text style={styles.text}>
-            Options do not change the price. The bill is calculated by the demo
-            core.
-          </Text>
+          <Text style={styles.text}>{t('optionsNote')}</Text>
         </>
       )}
       {error && (
         <Text accessibilityRole="alert" style={{ color: '#a23b2a' }}>
-          {error}
+          {cartText(error, lang)}
         </Text>
       )}
       {warning && (
         <Text accessibilityRole="alert" style={{ color: '#a23b2a' }}>
-          {warning}
+          {cartText(warning, lang)}
         </Text>
       )}
       {notice && !error && (
         <Text accessibilityRole="alert" style={styles.text}>
-          {notice}
+          {cartText(notice, lang)}
         </Text>
       )}
-      {!ready && (
-        <Text style={styles.text}>Loading your saved member data…</Text>
-      )}
+      {!ready && <Text style={styles.text}>{t('loadingMember')}</Text>}
       {disabledReason ? (
         <Text style={styles.text}>{disabledReason}</Text>
       ) : null}
       <Button
-        label="Place order"
+        label={t('placeOrder')}
         disabled={lines.length === 0 || !ready || disabledReason !== null}
         onPress={() => submit(session)}
       />

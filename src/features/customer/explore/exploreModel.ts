@@ -1,7 +1,10 @@
 import type { BillingMode, Seat, Session, Venue } from '../../../core/domain';
+import type { Lang } from '../i18n/i18n';
 import { visitHabits } from '../loyalty/loyaltyModel';
 import type { VisitSnapshot } from '../shared/visit';
+import { kindWord } from '../venue/messages';
 import { hasAmenities, type Amenity } from '../venue/seatAmenities';
+import { MODE_KEY, exploreT } from './messages';
 
 /** Pure seat discovery rules. Occupancy is reported as counts only. */
 export const USUAL_MIN_VISITS = 3;
@@ -68,12 +71,19 @@ export function occupancySummary(
 }
 const KIND_ORDER: Seat['kind'][] = ['desk', 'pod', 'booth'];
 /** "5 of 8 seats free · 3 desks, 1 pod, 1 booth" */
-export function describeOccupancy(summary: OccupancySummary) {
+export function describeOccupancy(
+  summary: OccupancySummary,
+  lang: Lang = 'en',
+) {
   const parts = KIND_ORDER.filter((kind) => summary.byKind[kind] > 0).map(
     (kind) =>
-      `${summary.byKind[kind]} ${kind}${summary.byKind[kind] === 1 ? '' : 's'}`,
+      `${summary.byKind[kind]} ${kindWord(kind, lang, summary.byKind[kind])}`,
   );
-  return `${summary.free} of ${summary.total} seats free${parts.length ? ` · ${parts.join(', ')}` : ''}`;
+  const head = exploreT(lang)('seatsFree', {
+    free: summary.free,
+    total: summary.total,
+  });
+  return `${head}${parts.length ? ` · ${parts.join(', ')}` : ''}`;
 }
 
 export const MODE_LABEL: Record<BillingMode, string> = {
@@ -81,6 +91,9 @@ export const MODE_LABEL: Record<BillingMode, string> = {
   BUNDLE_2H: 'the 2h bundle',
   BUNDLE_4H: 'the 4h bundle',
 };
+/** Billing mode as it reads inside a sentence. */
+export const modeLabel = (mode: BillingMode, lang: Lang = 'en') =>
+  exploreT(lang)(MODE_KEY[mode]);
 export interface UsualSuggestion {
   visitCount: number;
   seatKind: Seat['kind'];
@@ -97,6 +110,7 @@ export function usualSuggestion(
   venue: Venue,
   sessions: Session[],
   favouriteSeatIds: string[] = [],
+  lang: Lang = 'en',
 ): UsualSuggestion | null {
   const here = visits.filter((visit) => visit.venueId === venue.id);
   if (here.length < USUAL_MIN_VISITS) return null;
@@ -117,6 +131,8 @@ export function usualSuggestion(
     viaFavourite: favourite !== undefined,
     reason: seat
       ? null
-      : `No ${habits.seatKind} is free right now. Check back soon or pick another seat.`,
+      : exploreT(lang)('usualNoSeat', {
+          kind: kindWord(habits.seatKind, lang),
+        }),
   };
 }

@@ -1,4 +1,6 @@
 import type { Seat, Venue } from '../../../core/domain';
+import type { Lang } from '../i18n/i18n';
+import { venueT } from './messages';
 
 /**
  * Seat amenities are PRESENTATION DATA owned by the customer app for now.
@@ -56,7 +58,19 @@ export const hasAmenities = (
   return wanted.every((amenity) => have.includes(amenity));
 };
 
-export const describeAmenities = (amenities: readonly Amenity[]) =>
+const AMENITY_KEY = {
+  power: 'amenityPower',
+  window: 'amenityWindow',
+  quiet: 'amenityQuiet',
+  monitor: 'amenityMonitor',
+} as const;
+export const amenityLabel = (amenity: Amenity, lang: Lang = 'en') =>
+  venueT(lang)(AMENITY_KEY[amenity]);
+
+export const describeAmenities = (
+  amenities: readonly Amenity[],
+  lang: Lang = 'en',
+) =>
   amenities.length
-    ? amenities.map((amenity) => AMENITY_LABEL[amenity]).join(', ')
-    : 'No listed amenities';
+    ? amenities.map((amenity) => amenityLabel(amenity, lang)).join(', ')
+    : venueT(lang)('noAmenities');

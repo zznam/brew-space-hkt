@@ -1,5 +1,7 @@
 import { calculateBill } from '../../../core/billing';
 import type { BillingMode, Seat, Session, Venue } from '../../../core/domain';
+import type { Lang } from '../i18n/i18n';
+import { venueT } from './messages';
 import { getVenueInfo, type DayHours } from '../support/venueInfo';
 
 /** Pure venue page rules: price table, seat estimates, opening hours. All
@@ -74,22 +76,30 @@ export function priceTable(venue: Venue): PriceRow[] {
 }
 
 /** Status text for a seat. Never says who occupies it. */
-export const seatStatusText = (occupied: boolean) =>
-  occupied ? 'Occupied right now' : 'Available now';
+export const seatStatusText = (occupied: boolean, lang: Lang = 'en') =>
+  venueT(lang)(occupied ? 'statusOccupied' : 'statusAvailable');
 
 // Opening hours -----------------------------------------------------------
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_KEYS = [
+  'daySun',
+  'dayMon',
+  'dayTue',
+  'dayWed',
+  'dayThu',
+  'dayFri',
+  'daySat',
+] as const;
 /** Display order: Monday first. */
 const DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const toMinutes = (time: string) => {
   const [h, m] = time.split(':').map(Number);
   return (h ?? 0) * 60 + (m ?? 0);
 };
-const dayText = (day: DayHours | null) =>
+const dayText = (day: DayHours | null, lang: Lang) =>
   !day
-    ? 'Closed'
+    ? venueT(lang)('hoursClosed')
     : day.open === '00:00' && day.close === '24:00'
-      ? 'Open 24 hours'
+      ? venueT(lang)('hours24')
       : `${day.open} - ${day.close}`;
 const unpublished = (hours: (DayHours | null)[]) =>
   hours.length !== 7 || hours.every((day) => day === null);
@@ -98,20 +108,24 @@ export interface HoursLine {
   text: string;
 }
 /** Groups consecutive weekdays with the same hours: "Mon - Fri: 07:30 - 21:00". */
-export function describeHours(hours: (DayHours | null)[]): HoursLine[] {
+export function describeHours(
+  hours: (DayHours | null)[],
+  lang: Lang = 'en',
+): HoursLine[] {
+  const t = venueT(lang);
   if (unpublished(hours))
-    return [{ days: 'Hours', text: 'Not published for this demo venue' }];
+    return [{ days: t('hoursTitle'), text: t('hoursUnpublished') }];
   const lines: { from: number; to: number; text: string }[] = [];
   DISPLAY_ORDER.forEach((dayIndex, position) => {
-    const text = dayText(hours[dayIndex] ?? null);
+    const text = dayText(hours[dayIndex] ?? null, lang);
     const last = lines[lines.length - 1];
     if (last && last.text === text) last.to = position;
     else lines.push({ from: position, to: position, text });
   });
   const name = (position: number) =>
-    DAY_NAMES[DISPLAY_ORDER[position] ?? 0] ?? '';
+    t(DAY_KEYS[DISPLAY_ORDER[position] ?? 0] ?? 'dayMon');
   if (lines.length === 1 && lines[0])
-    return [{ days: 'Every day', text: lines[0].text }];
+    return [{ days: t('everyDay'), text: lines[0].text }];
   return lines.map((line) => ({
     days:
       line.from === line.to
@@ -143,11 +157,15 @@ export function isOpenAt(
   if (!today) return false;
   return minutes >= toMinutes(today.open) && minutes < toMinutes(today.close);
 }
-export function venuePageInfo(venue: Venue, now: Date | null) {
-  const info = getVenueInfo(venue.id);
+export function venuePageInfo(
+  venue: Venue,
+  now: Date | null,
+  lang: Lang = 'en',
+) {
+  const info = getVenueInfo(venue.id, lang);
   return {
     address: info.address,
-    hours: describeHours(info.hours),
+    hours: describeHours(info.hours, lang),
     openNow: now ? isOpenAt(info.hours, info.utcOffsetMinutes, now) : null,
     prices: priceTable(venue),
   };

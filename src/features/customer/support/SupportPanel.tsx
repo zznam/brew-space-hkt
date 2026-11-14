@@ -1,15 +1,21 @@
 import { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import { Button, Card, Heading, colors, styles } from '@/components/ui';
+import { useT } from '../i18n/useLanguage';
+import { supportMessages } from './messages';
 import {
   MAX_NOTE_LENGTH,
-  REQUEST_STATUS_LABEL,
-  SEAT_CHANGE_NOTE,
   SEAT_ISSUE_PRESETS,
   SEAT_PREFERENCES,
   type SeatPreference,
+  failureText,
   mustEscalate,
+  priorityLabel,
+  requestDisplayText,
   requestStatus,
+  requestStatusLabel,
+  seatIssueLabel,
+  seatPreferenceLabel,
 } from './supportModel';
 import type { SubmitResult, SupportContext } from './supportStore';
 import { useSupport } from './useSupport';
@@ -17,6 +23,7 @@ import { useSupport } from './useSupport';
 /** Customer help panel. `context.minute` is the session's elapsed minutes, which
  * drives the demo status progression. */
 export function SupportPanel({ context }: { context: SupportContext }) {
+  const { t, lang } = useT(supportMessages);
   const requests = useSupport((state) => state.requests);
   const callStaff = useSupport((state) => state.callStaff);
   const submitNote = useSupport((state) => state.submitNote);
@@ -40,13 +47,14 @@ export function SupportPanel({ context }: { context: SupportContext }) {
     .reverse();
 
   function report(result: SubmitResult, clearNote = false) {
-    if (!result.ok) return setFeedback({ ok: false, text: result.message });
+    if (!result.ok)
+      return setFeedback({ ok: false, text: failureText(result, lang) });
     if (clearNote) setNote('');
     if (result.request.kind === 'seat_change') {
       setMoveReason('');
       return setFeedback({
         ok: true,
-        text: 'Request sent. A team member will talk to you before anything moves.',
+        text: t('seatChangeSent'),
       });
     }
     const { classification } = result.request;
@@ -54,33 +62,36 @@ export function SupportPanel({ context }: { context: SupportContext }) {
       ok: true,
       text:
         !classification || mustEscalate(classification)
-          ? 'A team member will come to your seat.'
-          : 'Noted for your team. This does not change your order or price.',
+          ? t('staffWillCome')
+          : t('notedForTeam'),
     });
   }
 
   return (
     <Card>
-      <Heading>Need help?</Heading>
-      <Button label="Call staff" onPress={() => report(callStaff(context))} />
-      <Text style={styles.text}>Report a seat issue</Text>
+      <Heading>{t('needHelp')}</Heading>
+      <Button
+        label={t('callStaff')}
+        onPress={() => report(callStaff(context))}
+      />
+      <Text style={styles.text}>{t('reportSeatIssue')}</Text>
       <View style={styles.row}>
         {SEAT_ISSUE_PRESETS.map((preset) => (
           <Button
             key={preset.id}
-            label={preset.label}
+            label={seatIssueLabel(preset, lang)}
             onPress={() => report(reportSeatIssue(context, preset.id))}
           />
         ))}
       </View>
-      <Text style={styles.text}>Leave a note</Text>
+      <Text style={styles.text}>{t('leaveNote')}</Text>
       <TextInput
-        accessibilityLabel="Note for staff"
+        accessibilityLabel={t('noteLabel')}
         multiline
         maxLength={MAX_NOTE_LENGTH + 50}
         value={note}
         onChangeText={setNote}
-        placeholder="e.g. peanut allergy, wifi not working"
+        placeholder={t('notePlaceholder')}
         style={{
           minHeight: 72,
           borderWidth: 1,
@@ -95,31 +106,31 @@ export function SupportPanel({ context }: { context: SupportContext }) {
           color: note.length > MAX_NOTE_LENGTH ? '#a33' : colors.muted,
         }}
       >
-        {note.length}/{MAX_NOTE_LENGTH} characters
+        {t('characters', { n: note.length, max: MAX_NOTE_LENGTH })}
       </Text>
       <Button
-        label="Send note"
+        label={t('sendNote')}
         disabled={!note.trim() || note.length > MAX_NOTE_LENGTH}
         onPress={() => report(submitNote(context, note), true)}
       />
-      <Text style={styles.text}>Ask to move seats</Text>
-      <Text style={styles.text}>{SEAT_CHANGE_NOTE}</Text>
+      <Text style={styles.text}>{t('askMove')}</Text>
+      <Text style={styles.text}>{t('seatChangeNote')}</Text>
       <View style={styles.row}>
         {SEAT_PREFERENCES.map((option) => (
           <Button
             key={option.id}
-            label={option.label}
+            label={seatPreferenceLabel(option.id, lang)}
             selected={preferred === option.id}
             onPress={() => setPreferred(option.id)}
           />
         ))}
       </View>
       <TextInput
-        accessibilityLabel="Reason for moving seats (optional)"
+        accessibilityLabel={t('moveReasonLabel')}
         maxLength={MAX_NOTE_LENGTH + 50}
         value={moveReason}
         onChangeText={setMoveReason}
-        placeholder="Reason (optional), e.g. too noisy here"
+        placeholder={t('moveReasonPlaceholder')}
         style={{
           minHeight: 44,
           borderWidth: 1,
@@ -131,7 +142,7 @@ export function SupportPanel({ context }: { context: SupportContext }) {
         }}
       />
       <Button
-        label="Ask to move seats"
+        label={t('askMove')}
         disabled={moveReason.length > MAX_NOTE_LENGTH}
         onPress={() =>
           report(
@@ -150,9 +161,9 @@ export function SupportPanel({ context }: { context: SupportContext }) {
           {feedback.text}
         </Text>
       ) : null}
-      <Text style={styles.text}>Your requests here</Text>
+      <Text style={styles.text}>{t('yourRequests')}</Text>
       {mine.length === 0 ? (
-        <Text style={styles.text}>No requests yet.</Text>
+        <Text style={styles.text}>{t('noRequests')}</Text>
       ) : (
         mine.map((request) => {
           const status = requestStatus(request, context.minute);
@@ -167,24 +178,27 @@ export function SupportPanel({ context }: { context: SupportContext }) {
               }}
             >
               <Text style={{ color: colors.ink, fontWeight: '600' }}>
-                {request.text}
+                {requestDisplayText(request, lang)}
               </Text>
               <Text style={styles.text}>
-                Status: {REQUEST_STATUS_LABEL[status]}
+                {t('status', { status: requestStatusLabel(status, lang) })}
                 {request.classification
-                  ? ` · Priority: ${request.classification.priority}`
+                  ? t('priority', {
+                      priority: priorityLabel(
+                        request.classification.priority,
+                        lang,
+                      ),
+                    })
                   : ''}
               </Text>
               {request.classification &&
               mustEscalate(request.classification) &&
               status !== 'resolved' ? (
-                <Text style={styles.text}>
-                  A team member will come to your seat.
-                </Text>
+                <Text style={styles.text}>{t('staffWillCome')}</Text>
               ) : null}
               {status !== 'resolved' ? (
                 <Button
-                  label="Mark resolved"
+                  label={t('markResolved')}
                   onPress={() => markResolved(request.id)}
                 />
               ) : null}

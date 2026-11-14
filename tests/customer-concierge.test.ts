@@ -69,7 +69,7 @@ describe('availability', () => {
     expect(result.intent).toBe('availability');
     expect(result.text).toMatch(/6/);
     expect(result.text).toMatch(/8/);
-    expect(result.text).toMatch(/3 (desks|bàn làm việc)/);
+    expect(result.text).toMatch(/3 (desks|bàn đơn)/);
   });
 
   it('answers per kind', () => {
@@ -174,7 +174,6 @@ describe('menu', () => {
 
 describe('venue info', () => {
   it('shares where the wifi password is, never a password', () => {
-    const info = getVenueInfo('grind');
     for (const q of [
       'wifi?',
       'What is the wifi password?',
@@ -182,6 +181,8 @@ describe('venue info', () => {
       'mat khau wifi',
     ]) {
       const result = ask(q);
+      // Vietnamese answers carry the Vietnamese variant of the hint.
+      const info = getVenueInfo('grind', result.language);
       expect(result.intent).toBe('wifi');
       expect(result.text).toContain(info.wifiName);
       expect(result.text).toContain(info.wifiAccess);
@@ -189,9 +190,9 @@ describe('venue info', () => {
   });
 
   it('lists the house rules', () => {
-    const info = getVenueInfo('grind');
     for (const q of ['What are the house rules?', 'nội quy là gì', 'noi quy']) {
       const result = ask(q);
+      const info = getVenueInfo('grind', result.language);
       expect(result.intent).toBe('rules');
       for (const rule of info.rules) expect(result.text).toContain(rule);
     }
@@ -313,7 +314,7 @@ describe('fallbacks', () => {
     for (const q of ['What is the meaning of life?', 'Có chỗ gửi xe không?']) {
       const result = ask(q);
       expect(result.intent).toBe('unknown');
-      expect(result.text).toMatch(/Call staff/);
+      expect(result.text).toMatch(/Call staff|Gọi nhân viên/);
     }
   });
   it('handles empty, odd and long input without throwing', () => {

@@ -1,6 +1,7 @@
 import { useEffect, useReducer } from 'react';
 import { Text, View } from 'react-native';
 import { Button, styles } from '@/components/ui';
+import { useT } from '../i18n/useLanguage';
 import { useLoyalty, useLoyaltyReady } from '../loyalty/useLoyalty';
 import {
   FOCUS_PRESETS,
@@ -12,6 +13,7 @@ import {
   initialFocusState,
   phaseLabel,
 } from './focusModel';
+import { focusMessages } from './messages';
 
 const sectionTitle = { fontWeight: '700', fontSize: 17 } as const;
 
@@ -21,6 +23,7 @@ export function FocusTimer({ venueId }: { venueId: string }) {
   const [state, dispatch] = useReducer(focusReducer, undefined, () =>
     initialFocusState(),
   );
+  const { t, lang } = useT(focusMessages);
   useLoyaltyReady();
   const membership = useLoyalty((store) => store.memberships[venueId]);
   const prefs = useLoyalty((store) => store.preferences[venueId]);
@@ -34,20 +37,16 @@ export function FocusTimer({ venueId }: { venueId: string }) {
   }, [state.running]);
 
   const preset = getPreset(state.presetId);
-  const message = announcement(state);
+  const message = announcement(state, lang);
   return (
     <View style={{ gap: 8 }}>
-      <Text style={sectionTitle}>Focus timer</Text>
-      <Text style={styles.text}>
-        A personal Pomodoro aid on this device. It uses your device clock and
-        never affects your session time or bill. It resets if you leave this
-        screen.
-      </Text>
+      <Text style={sectionTitle}>{t('title')}</Text>
+      <Text style={styles.text}>{t('intro')}</Text>
       <View style={styles.row}>
         {FOCUS_PRESETS.map((item) => (
           <Button
             key={item.id}
-            label={`${item.label} min`}
+            label={t('presetLabel', { label: item.label })}
             selected={item.id === state.presetId}
             disabled={state.phase !== 'idle'}
             onPress={() => dispatch({ type: 'preset', presetId: item.id })}
@@ -55,25 +54,31 @@ export function FocusTimer({ venueId }: { venueId: string }) {
         ))}
       </View>
       <Text
-        accessibilityLabel={`${phaseLabel(state.phase)}, ${formatClock(state.remainingMs)} left`}
+        accessibilityLabel={t('clockLabel', {
+          phase: phaseLabel(state.phase, lang),
+          clock: formatClock(state.remainingMs),
+        })}
         style={{ fontSize: 32, fontWeight: '700' }}
       >
         {formatClock(state.remainingMs)}
       </Text>
       <Text style={styles.text}>
-        {phaseLabel(state.phase)}
-        {state.phase !== 'idle' && !state.running ? ' (paused)' : ''} · Focus
-        blocks done: {state.cycles} · {preset.workMinutes} min focus,{' '}
-        {preset.breakMinutes} min break
+        {t('summary', {
+          phase: phaseLabel(state.phase, lang),
+          paused: state.phase !== 'idle' && !state.running ? t('paused') : '',
+          cycles: state.cycles,
+          work: preset.workMinutes,
+          rest: preset.breakMinutes,
+        })}
       </Text>
       <View style={styles.row}>
         <Button
           label={
             state.phase === 'idle'
-              ? 'Start'
+              ? t('start')
               : state.running
-                ? 'Pause'
-                : 'Resume'
+                ? t('pause')
+                : t('resume')
           }
           onPress={() =>
             dispatch({
@@ -83,7 +88,7 @@ export function FocusTimer({ venueId }: { venueId: string }) {
           }
         />
         <Button
-          label="Reset"
+          label={t('reset')}
           disabled={state.phase === 'idle'}
           onPress={() => dispatch({ type: 'reset' })}
         />
@@ -93,7 +98,7 @@ export function FocusTimer({ venueId }: { venueId: string }) {
       </Text>
       {state.phase === 'break' ? (
         <Text accessibilityLiveRegion="polite" style={styles.text}>
-          {breakSuggestion(membership && prefs ? prefs : null)}
+          {breakSuggestion(membership && prefs ? prefs : null, lang)}
         </Text>
       ) : null}
     </View>

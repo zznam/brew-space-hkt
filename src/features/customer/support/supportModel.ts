@@ -1,4 +1,36 @@
 import type { Seat, Session } from '../../../core/domain';
+import { translate, type Lang, type Params } from '../i18n/i18n';
+import {
+  supportMessages,
+  type SupportErrorCode,
+  type SupportMessageKey,
+} from './messages';
+
+export type { SupportErrorCode } from './messages';
+
+/** Translate one support message key. English is the default. */
+export function supportText(
+  key: SupportMessageKey,
+  lang: Lang = 'en',
+  params?: Params,
+): string {
+  return translate(supportMessages, lang, key, params);
+}
+
+/** Text for a failure code (validators and stores return a code plus English
+ * text; the UI shows the translated text for the code). */
+export function errorText(code: SupportErrorCode, lang: Lang = 'en'): string {
+  return supportText(`err.${code}`, lang, { max: MAX_NOTE_LENGTH });
+}
+
+/** Message to show for a failed result: translated when it has a code, the
+ * original English message otherwise. */
+export function failureText(
+  result: { message: string; code?: SupportErrorCode },
+  lang: Lang = 'en',
+): string {
+  return result.code ? errorText(result.code, lang) : result.message;
+}
 
 /* Pure support-request domain. The note classifier is a deterministic,
  * rule-based stand-in for the future AI classifier: it only labels a note and
@@ -149,17 +181,23 @@ const RULES: Rule[] = [
 ];
 
 export type NoteValidation =
-  { ok: true; text: string } | { ok: false; message: string };
+  | { ok: true; text: string }
+  | { ok: false; message: string; code: SupportErrorCode };
 
 /** Trim and bound free text. Free text is data only; it is never executed. */
 export function validateNote(text: unknown): NoteValidation {
   if (typeof text !== 'string' || !text.trim())
-    return { ok: false, message: 'Write a short note first.' };
+    return {
+      ok: false,
+      message: 'Write a short note first.',
+      code: 'NOTE_EMPTY',
+    };
   const trimmed = text.trim();
   if (trimmed.length > MAX_NOTE_LENGTH)
     return {
       ok: false,
       message: `Notes can be at most ${MAX_NOTE_LENGTH} characters.`,
+      code: 'NOTE_TOO_LONG',
     };
   return { ok: true, text: trimmed };
 }
@@ -272,15 +310,22 @@ export function classifySeatChange(): NoteClassification {
 /** An optional free-text reason: empty is fine, too long is not. */
 export function validateOptionalReason(
   text: unknown,
-): { ok: true; text: string } | { ok: false; message: string } {
+):
+  | { ok: true; text: string }
+  | { ok: false; message: string; code: SupportErrorCode } {
   if (text === undefined || text === null) return { ok: true, text: '' };
   if (typeof text !== 'string')
-    return { ok: false, message: 'The reason must be text.' };
+    return {
+      ok: false,
+      message: 'The reason must be text.',
+      code: 'REASON_NOT_TEXT',
+    };
   const trimmed = text.trim();
   if (trimmed.length > MAX_NOTE_LENGTH)
     return {
       ok: false,
       message: `Reasons can be at most ${MAX_NOTE_LENGTH} characters.`,
+      code: 'REASON_TOO_LONG',
     };
   return { ok: true, text: trimmed };
 }
@@ -357,6 +402,73 @@ export const REQUEST_STATUS_LABEL: Record<RequestStatus, string> = {
   resolved: 'Resolved',
 };
 
+/** Core seat labels stay "Seat 3"; Vietnamese screens show "Chỗ 3". */
+export const seatLabelText = (label: string, lang: Lang = 'en'): string =>
+  lang === 'vi' ? label.replace(/^Seat\b/, 'Chỗ') : label;
+
+export const requestStatusLabel = (
+  status: RequestStatus,
+  lang: Lang = 'en',
+): string => supportText(`status.${status}`, lang);
+
+export const priorityLabel = (
+  priority: NotePriority,
+  lang: Lang = 'en',
+): string => supportText(`priority.${priority}`, lang);
+
+export const seatPreferenceLabel = (
+  preference: SeatPreference,
+  lang: Lang = 'en',
+): string => supportText(`pref.${preference}`, lang);
+
+export const seatIssueLabel = (
+  preset: Pick<SeatIssuePreset, 'id'>,
+  lang: Lang = 'en',
+): string => supportText(`preset.${preset.id}`, lang);
+
+/** The text to show for a stored request. Stored text is always English (it
+ * is data); in Vietnamese the app-generated kinds are rebuilt from their parts
+ * and the customer's own words are shown as typed. */
+export function requestDisplayText(
+  request: Pick<SupportRequest, 'kind' | 'text' | 'preferredKind'>,
+  lang: Lang = 'en',
+): string {
+  if (lang === 'en') return request.text;
+  switch (request.kind) {
+    case 'call_staff':
+      return supportText('text.callStaff', lang);
+    case 'seat_issue': {
+      const preset = SEAT_ISSUE_PRESETS.find(
+        (entry) => entry.label === request.text,
+      );
+      return preset ? seatIssueLabel(preset, lang) : request.text;
+    }
+    case 'seat_change': {
+      const preferred = supportText(
+        `prefShort.${request.preferredKind ?? 'any'}`,
+        lang,
+      );
+      const split = request.text.indexOf('): ');
+      return split === -1
+        ? supportText('text.seatChange', lang, { preferred })
+        : supportText('text.seatChangeReason', lang, {
+            preferred,
+            reason: request.text.slice(split + 3),
+          });
+    }
+    case 'refund': {
+      const prefix = 'Refund request: ';
+      return request.text.startsWith(prefix)
+        ? supportText('text.refund', lang, {
+            reason: request.text.slice(prefix.length),
+          })
+        : request.text;
+    }
+    default:
+      return request.text;
+  }
+}
+
 /* ---------- session time status (mirrors src/core/billing.ts) ---------- */
 
 export const GRACE_MINUTES = 10;
@@ -389,10 +501,12 @@ export function includedMinutes(mode: Session['mode']): number {
   return mode === 'BUNDLE_2H' ? 120 : mode === 'BUNDLE_4H' ? 240 : 0;
 }
 
-const plural = (n: number) => `${n} minute${n === 1 ? '' : 's'}`;
+const plural = (n: number, lang: Lang) =>
+  `${n} ${supportText(n === 1 ? 'time.minute.one' : 'time.minute.other', lang)}`;
 
 export function timeStatus(
   session: Pick<Session, 'mode' | 'elapsedMinutes'>,
+  lang: Lang = 'en',
 ): TimeStatus {
   const elapsed = session.elapsedMinutes;
   if (!Number.isSafeInteger(elapsed) || elapsed < 0)
@@ -407,27 +521,42 @@ export function timeStatus(
       elapsedMinutes: elapsed,
       minutesToNextBlock: toNext,
       state: 'ok',
-      message: `${plural(elapsed)} so far. Seat time is billed in 15-minute blocks; the current block ends in ${plural(toNext)}.`,
+      message: supportText('time.metered', lang, {
+        elapsed: plural(elapsed, lang),
+        toNext: plural(toNext, lang),
+      }),
     };
   }
   const remaining = Math.max(0, included - elapsed);
   const over = Math.max(0, elapsed - included);
   const graceLeft = Math.max(0, GRACE_MINUTES - over);
-  const label = `${included / 60}-hour bundle`;
+  const hours = included / 60;
   let state: TimeState;
   let message: string;
   if (over > GRACE_MINUTES) {
     state = 'overtime';
-    message = `You are ${plural(over)} past your ${label}. Extra time is now billed in 15-minute blocks.`;
+    message = supportText('time.overtime', lang, {
+      over: plural(over, lang),
+      hours,
+    });
   } else if (remaining === 0) {
     state = 'grace';
-    message = `Your ${label} is used up. ${plural(graceLeft)} of grace left before extra time is billed.`;
+    message = supportText('time.grace', lang, {
+      grace: plural(graceLeft, lang),
+      hours,
+    });
   } else if (remaining <= ENDING_SOON_MINUTES) {
     state = 'ending_soon';
-    message = `${plural(remaining)} left in your ${label}. Your session will not end automatically.`;
+    message = supportText('time.ending_soon', lang, {
+      remaining: plural(remaining, lang),
+      hours,
+    });
   } else {
     state = 'ok';
-    message = `${plural(remaining)} left in your ${label}.`;
+    message = supportText('time.ok', lang, {
+      remaining: plural(remaining, lang),
+      hours,
+    });
   }
   return {
     kind: 'bundle',

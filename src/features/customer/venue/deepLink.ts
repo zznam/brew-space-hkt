@@ -1,4 +1,6 @@
 import { venues } from '../../../core/fixtures';
+import type { Lang } from '../i18n/i18n';
+import { venueT } from './messages';
 
 /** Shareable seat links (F137). The link carries only a venue id and a seat
  * id: no customer, session, price or booking data. Time preselection is out of
@@ -32,6 +34,7 @@ export interface ParsedSeatLink {
 export function parseSeatLink(
   params: SeatLinkParams,
   activeVenueId: string,
+  lang: Lang = 'en',
 ): ParsedSeatLink {
   const venueParam = clean(params.venue);
   const seatParam = clean(params.seat);
@@ -46,8 +49,7 @@ export function parseSeatLink(
         requested: true,
         venueId: null,
         seatId: null,
-        notice:
-          'That link points to a venue we could not find, so it was ignored.',
+        notice: venueT(lang)('linkUnknownVenue'),
       };
     target = found;
     venueId = found.id === activeVenueId ? null : found.id;
@@ -61,7 +63,7 @@ export function parseSeatLink(
     seatId: seat ? seat.id : null,
     notice: seat
       ? null
-      : `That link points to a seat that is not in ${target.name}, so no seat was preselected.`,
+      : venueT(lang)('linkUnknownSeat', { venue: target.name }),
   };
 }
 
