@@ -1,5 +1,5 @@
 import { createStore } from 'zustand/vanilla';
-import { venues } from '../../../core/fixtures';
+import { getAllVenues } from '../../../core/fixtures';
 import type { VisitSnapshot } from '../shared/visit';
 import {
   MAX_NOTE_LENGTH,
@@ -93,7 +93,7 @@ const fail = (message: string, code: SupportErrorCode) => ({
 });
 
 function validateContext(ctx: SupportContext) {
-  const venue = venues.find((entry) => entry.id === ctx?.venueId);
+  const venue = getAllVenues().find((entry) => entry.id === ctx?.venueId);
   if (!venue) return fail('Unknown venue.', 'UNKNOWN_VENUE');
   if (!venue.seats.some((seat) => seat.id === ctx.seatId))
     return fail('Unknown seat for this venue.', 'UNKNOWN_SEAT');

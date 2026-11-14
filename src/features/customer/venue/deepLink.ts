@@ -1,4 +1,4 @@
-import { venues } from '../../../core/fixtures';
+import { getAllVenues } from '../../../core/fixtures';
 import type { Lang } from '../i18n/i18n';
 import { venueT } from './messages';
 
@@ -40,10 +40,10 @@ export function parseSeatLink(
   const seatParam = clean(params.seat);
   if (!venueParam && !seatParam)
     return { requested: false, venueId: null, seatId: null, notice: null };
-  let target = venues.find((venue) => venue.id === activeVenueId);
+  let target = getAllVenues().find((venue) => venue.id === activeVenueId);
   let venueId: string | null = null;
   if (venueParam) {
-    const found = venues.find((venue) => venue.id === venueParam);
+    const found = getAllVenues().find((venue) => venue.id === venueParam);
     if (!found)
       return {
         requested: true,

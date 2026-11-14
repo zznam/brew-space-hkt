@@ -1,4 +1,4 @@
-import { venues } from '../../../core/fixtures';
+import { getAllVenues } from '../../../core/fixtures';
 import type { BillingMode, Seat } from '../../../core/domain';
 import type { Lang } from '../i18n/i18n';
 import type { VisitSnapshot } from '../shared/visit';
@@ -84,9 +84,9 @@ export const initialLoyaltyState = (): LoyaltyState => ({
 });
 
 export const isKnownVenue = (venueId: string) =>
-  venues.some((venue) => venue.id === venueId);
+  getAllVenues().some((venue) => venue.id === venueId);
 export const isKnownSeat = (venueId: string, seatId: string) =>
-  venues.some(
+  getAllVenues().some(
     (venue) =>
       venue.id === venueId && venue.seats.some((seat) => seat.id === seatId),
   );
