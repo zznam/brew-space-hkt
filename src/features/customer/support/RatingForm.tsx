@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { Button, Card, Heading, colors, styles } from '@/components/ui';
-import { MAX_NOTE_LENGTH } from './supportModel';
+import { useT } from '../i18n/useLanguage';
+import { supportMessages, type SupportMessageKey } from './messages';
+import { MAX_NOTE_LENGTH, failureText } from './supportModel';
 import { useSupport } from './useSupport';
 
 const GROUPS = [
-  { key: 'seat', label: 'Seat' },
-  { key: 'drinks', label: 'Drinks' },
-  { key: 'service', label: 'Service' },
-] as const;
+  { key: 'seat', label: 'group.seat' },
+  { key: 'drinks', label: 'group.drinks' },
+  { key: 'service', label: 'group.service' },
+] as const satisfies readonly { key: string; label: SupportMessageKey }[];
 type GroupKey = (typeof GROUPS)[number]['key'];
 
 function Selector({
@@ -20,6 +22,7 @@ function Selector({
   value: number;
   onChange: (value: number) => void;
 }) {
+  const { t } = useT(supportMessages);
   return (
     <View style={{ gap: 6 }}>
       <Text style={styles.text}>{label}</Text>
@@ -28,7 +31,7 @@ function Selector({
           <Pressable
             key={n}
             accessibilityRole="button"
-            accessibilityLabel={`${label}: ${n} out of 5`}
+            accessibilityLabel={t('ratingScore', { label, n })}
             accessibilityState={{ selected: value === n }}
             onPress={() => onChange(n)}
             style={{
@@ -58,6 +61,7 @@ function Selector({
 }
 
 export function RatingForm({ sessionId }: { sessionId: string }) {
+  const { t, lang } = useT(supportMessages);
   const existing = useSupport((state) =>
     state.ratings.find((entry) => entry.sessionId === sessionId),
   );
@@ -74,13 +78,16 @@ export function RatingForm({ sessionId }: { sessionId: string }) {
   if (existing && !editing)
     return (
       <Card>
-        <Heading>Thank you!</Heading>
+        <Heading>{t('thankYou')}</Heading>
         <Text style={styles.text}>
-          Your rating: seat {existing.seat}, drinks {existing.drinks}, service{' '}
-          {existing.service}.
+          {t('yourRating', {
+            seat: existing.seat,
+            drinks: existing.drinks,
+            service: existing.service,
+          })}
         </Text>
         <Button
-          label="Change my rating"
+          label={t('changeRating')}
           onPress={() => {
             setScores({
               seat: existing.seat,
@@ -97,11 +104,11 @@ export function RatingForm({ sessionId }: { sessionId: string }) {
   const complete = GROUPS.every((group) => scores[group.key] > 0);
   return (
     <Card>
-      <Heading>How was your visit?</Heading>
+      <Heading>{t('ratingHeading')}</Heading>
       {GROUPS.map((group) => (
         <Selector
           key={group.key}
-          label={group.label}
+          label={t(group.label)}
           value={scores[group.key]}
           onChange={(value) =>
             setScores((current) => ({ ...current, [group.key]: value }))
@@ -109,11 +116,11 @@ export function RatingForm({ sessionId }: { sessionId: string }) {
         />
       ))}
       <TextInput
-        accessibilityLabel="Comment (optional)"
+        accessibilityLabel={t('commentLabel')}
         multiline
         value={comment}
         onChangeText={setComment}
-        placeholder="Anything we should know? (optional)"
+        placeholder={t('commentPlaceholder')}
         style={{
           minHeight: 72,
           borderWidth: 1,
@@ -128,7 +135,7 @@ export function RatingForm({ sessionId }: { sessionId: string }) {
           color: comment.length > MAX_NOTE_LENGTH ? '#a33' : colors.muted,
         }}
       >
-        {comment.length}/{MAX_NOTE_LENGTH} characters
+        {t('characters', { n: comment.length, max: MAX_NOTE_LENGTH })}
       </Text>
       {error ? (
         <Text accessibilityRole="alert" style={{ color: '#a33' }}>
@@ -136,14 +143,14 @@ export function RatingForm({ sessionId }: { sessionId: string }) {
         </Text>
       ) : null}
       <Button
-        label="Submit rating"
+        label={t('submitRating')}
         disabled={!complete}
         onPress={() => {
           const result = rate({ sessionId, ...scores, comment });
           if (result.ok) {
             setError('');
             setEditing(false);
-          } else setError(result.message);
+          } else setError(failureText(result, lang));
         }}
       />
     </Card>

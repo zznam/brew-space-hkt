@@ -1,13 +1,10 @@
 import { Text, View } from 'react-native';
-import { formatMoney, type BillingMode } from '@/core';
+import { formatMoney } from '@/core';
 import { Card, Heading, colors, styles } from '@/components/ui';
+import { useT } from '../i18n/useLanguage';
 import type { VisitSnapshot } from '../shared/visit';
-
-const MODE_LABEL: Record<BillingMode, string> = {
-  METERED_OPEN: 'Pay as you go',
-  BUNDLE_2H: '2-hour bundle',
-  BUNDLE_4H: '4-hour bundle',
-};
+import { supportMessages } from './messages';
+import { seatLabelText } from './supportModel';
 
 function Line({ label, value }: { label: string; value: string }) {
   return (
@@ -19,17 +16,24 @@ function Line({ label, value }: { label: string; value: string }) {
 }
 
 export function ReceiptView({ receipt }: { receipt: VisitSnapshot }) {
+  const { t, lang } = useT(supportMessages);
+  const seatKind =
+    lang === 'vi' ? t(`kind.${receipt.seatKind}`) : receipt.seatKind;
   return (
     <Card>
-      <Heading>Your receipt</Heading>
+      <Heading>{t('receiptHeading')}</Heading>
       <Text style={styles.text}>
-        {receipt.venueName} · {receipt.seatLabel} ({receipt.seatKind})
+        {receipt.venueName} · {seatLabelText(receipt.seatLabel, lang)} (
+        {seatKind})
       </Text>
-      <Line label="Mode" value={MODE_LABEL[receipt.mode]} />
-      <Line label="Time" value={`${receipt.minutes} minutes`} />
-      <Line label="Seat time" value={formatMoney(receipt.time)} />
+      <Line label={t('receiptMode')} value={t(`mode.${receipt.mode}`)} />
+      <Line
+        label={t('receiptTime')}
+        value={t('receiptMinutes', { n: receipt.minutes })}
+      />
+      <Line label={t('receiptSeatTime')} value={formatMoney(receipt.time)} />
       {receipt.orders.length === 0 ? (
-        <Text style={styles.text}>No items ordered.</Text>
+        <Text style={styles.text}>{t('receiptNoItems')}</Text>
       ) : (
         receipt.orders.map((order, index) => (
           <Line
@@ -39,8 +43,8 @@ export function ReceiptView({ receipt }: { receipt: VisitSnapshot }) {
           />
         ))
       )}
-      <Line label="Total" value={formatMoney(receipt.total)} />
-      <Text style={styles.text}>Demo receipt — no payment collected</Text>
+      <Line label={t('receiptTotal')} value={formatMoney(receipt.total)} />
+      <Text style={styles.text}>{t('receiptDemo')}</Text>
     </Card>
   );
 }

@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { Platform, Text, View } from 'react-native';
 import { formatMoney, type Seat } from '@/core';
 import { Button, Card, styles } from '@/components/ui';
+import { useT } from '../i18n/useLanguage';
 import { buildSeatLink } from './deepLink';
+import { kindWord, seatLabelText, venueMessages } from './messages';
 import { describeAmenities, seatAmenities } from './seatAmenities';
 import { estimateSeat, seatStatusText } from './venueModel';
 
@@ -15,6 +17,7 @@ interface Props {
  * `key={seat.id}` so the share state resets when the seat changes. The status
  * never says who sits in an occupied seat. */
 export function SeatDetailCard({ seat, occupied }: Props) {
+  const { t, lang } = useT(venueMessages);
   const [shared, setShared] = useState<{
     link: string;
     copied: boolean;
@@ -43,30 +46,33 @@ export function SeatDetailCard({ seat, occupied }: Props) {
   return (
     <Card>
       <Text accessibilityRole="header" style={{ fontWeight: '700' }}>
-        {seat.label} details
+        {t('seatDetails', { seat: seatLabelText(seat.label, lang) })}
       </Text>
       <Text style={styles.text}>
-        Type: {seat.kind} · Status: {seatStatusText(occupied)}
-      </Text>
-      <Text style={styles.text}>Amenities: {describeAmenities(amenities)}</Text>
-      <Text style={styles.text}>
-        Rate: {formatMoney(seat.hourlyRate)}/h. Estimates: 1h metered{' '}
-        {formatMoney(estimates.metered1h)} · 2h bundle{' '}
-        {formatMoney(estimates.bundle2h)} · 4h bundle{' '}
-        {formatMoney(estimates.bundle4h)}
+        {t('seatTypeStatus', {
+          kind: kindWord(seat.kind, lang),
+          status: seatStatusText(occupied, lang),
+        })}
       </Text>
       <Text style={styles.text}>
-        Demo estimates for seat time only. Amenities are sample data.
+        {t('seatAmenities', { amenities: describeAmenities(amenities, lang) })}
       </Text>
+      <Text style={styles.text}>
+        {t('seatRate', {
+          rate: formatMoney(seat.hourlyRate),
+          metered: formatMoney(estimates.metered1h),
+          b2: formatMoney(estimates.bundle2h),
+          b4: formatMoney(estimates.bundle4h),
+        })}
+      </Text>
+      <Text style={styles.text}>{t('seatDemoNote')}</Text>
       <View style={styles.row}>
-        <Button label="Share this seat" onPress={() => void share()} />
+        <Button label={t('shareSeat')} onPress={() => void share()} />
       </View>
       {shared ? (
         <View style={{ gap: 4 }}>
           <Text accessibilityLiveRegion="polite" style={styles.text}>
-            {shared.copied
-              ? 'Link copied. It holds only the venue and seat.'
-              : 'Copy this link to share the seat. It holds only the venue and seat.'}
+            {shared.copied ? t('linkCopied') : t('linkCopyManually')}
           </Text>
           <Text selectable style={styles.text}>
             {shared.link}

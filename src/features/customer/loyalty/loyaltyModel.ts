@@ -1,6 +1,8 @@
 import { getAllVenues } from '../../../core/fixtures';
 import type { BillingMode, Seat } from '../../../core/domain';
+import type { Lang } from '../i18n/i18n';
 import type { VisitSnapshot } from '../shared/visit';
+import { loyaltyT } from './messages';
 
 /**
  * Pure loyalty rules for the customer demo. Membership is scoped per tenant;
@@ -101,14 +103,12 @@ export function maskPhone(phone: string) {
 }
 export function requestOtp(
   phone: string,
+  lang: Lang = 'en',
 ):
   | { ok: true; phone: string; demoCode: string }
   | { ok: false; message: string } {
   if (!isValidPhone(phone))
-    return {
-      ok: false,
-      message: 'Enter a 10 digit mobile number starting with 0.',
-    };
+    return { ok: false, message: loyaltyT(lang)('errPhone') };
   return { ok: true, phone: normalisePhone(phone), demoCode: DEMO_OTP };
 }
 export const verifyOtp = (code: string) => code.trim() === DEMO_OTP;
@@ -122,20 +122,23 @@ export function joinProgramme(
   state: LoyaltyState,
   venueId: string,
   input: JoinInput,
+  lang: Lang = 'en',
 ): ModelResult {
-  if (!isKnownVenue(venueId)) return { ok: false, message: 'Unknown venue.' };
+  const t = loyaltyT(lang);
+  if (!isKnownVenue(venueId))
+    return { ok: false, message: t('errUnknownVenue') };
   if (isMember(state, venueId))
-    return { ok: false, message: 'You already joined this programme.' };
-  const otp = requestOtp(input.phone);
+    return { ok: false, message: t('errAlreadyJoined') };
+  const otp = requestOtp(input.phone, lang);
   if (!otp.ok) return otp;
-  if (!verifyOtp(input.code))
-    return { ok: false, message: 'The code is not correct. Try again.' };
-  if (input.consent !== true)
-    return {
-      ok: false,
-      message: 'Please agree to the data use above to join.',
-    };
-  const friend = checkFriendCode(venueId, otp.phone, input.friendCode ?? '');
+  if (!verifyOtp(input.code)) return { ok: false, message: t('errCode') };
+  if (input.consent !== true) return { ok: false, message: t('errConsent') };
+  const friend = checkFriendCode(
+    venueId,
+    otp.phone,
+    input.friendCode ?? '',
+    lang,
+  );
   if (!friend.ok) return friend;
   return {
     ok: true,
@@ -209,25 +212,24 @@ export function checkFriendCode(
   venueId: string,
   ownPhone: string,
   raw: string,
+  lang: Lang = 'en',
 ): { ok: true; code: string | null } | { ok: false; message: string } {
+  const t = loyaltyT(lang);
   const code = normaliseReferralCode(raw);
   if (!code) return { ok: true, code: null };
   const match = /^([A-Z]+)-([A-Z0-9]{5})([A-Z0-9])$/.exec(code);
   const prefix = match?.[1]?.toLowerCase();
   if (!match || !prefix || !isKnownVenue(prefix))
-    return { ok: false, message: "That friend's code is not valid." };
+    return { ok: false, message: t('errFriendInvalid') };
   if (prefix !== venueId)
-    return {
-      ok: false,
-      message: "That code belongs to another venue's programme.",
-    };
+    return { ok: false, message: t('errFriendOtherVenue') };
   if (
     !CODE_ALPHABET.includes(match[3] ?? '') ||
     match[3] !== checkChar(venueId, match[2] ?? '')
   )
-    return { ok: false, message: "That friend's code is not valid." };
+    return { ok: false, message: t('errFriendInvalid') };
   if (code === referralCode(venueId, ownPhone))
-    return { ok: false, message: 'You cannot use your own referral code.' };
+    return { ok: false, message: t('errOwnCode') };
   return { ok: true, code };
 }
 
@@ -365,14 +367,16 @@ export function setPreferences(
   state: LoyaltyState,
   venueId: string,
   prefs: Preferences,
+  lang: Lang = 'en',
 ): ModelResult {
+  const t = loyaltyT(lang);
   if (!isMember(state, venueId))
-    return { ok: false, message: 'Join the programme to save preferences.' };
+    return { ok: false, message: t('errNeedJoin') };
   const next = { ...prefs, allergyNote: prefs.allergyNote.trim() };
   if (!isPreferences(next))
     return {
       ok: false,
-      message: `Allergy note can be up to ${MAX_ALLERGY_NOTE} characters.`,
+      message: t('errAllergyLength', { max: MAX_ALLERGY_NOTE }),
     };
   return {
     ok: true,
@@ -383,8 +387,8 @@ export function setPreferences(
   };
 }
 export const ALLERGY_NOTICE = 'Staff will always be notified about allergies';
-export const allergyNotice = (prefs: Preferences) =>
-  prefs.allergyNote.trim() ? ALLERGY_NOTICE : null;
+export const allergyNotice = (prefs: Preferences, lang: Lang = 'en') =>
+  prefs.allergyNote.trim() ? loyaltyT(lang)('allergyNotice') : null;
 
 /* ---------- Favourite seats (per venue, at most three) ---------- */
 
@@ -395,16 +399,18 @@ export function toggleFavourite(
   state: LoyaltyState,
   venueId: string,
   seatId: string,
+  lang: Lang = 'en',
 ): ModelResult {
+  const t = loyaltyT(lang);
   if (!isKnownSeat(venueId, seatId))
-    return { ok: false, message: 'That seat is not in this venue.' };
+    return { ok: false, message: t('errUnknownSeat') };
   const current = favouriteSeatIds(state, venueId);
   let next: string[];
   if (current.includes(seatId)) next = current.filter((id) => id !== seatId);
   else if (current.length >= MAX_FAVOURITES)
     return {
       ok: false,
-      message: `You can pin up to ${MAX_FAVOURITES} seats. Unpin one first.`,
+      message: t('errMaxPins', { max: MAX_FAVOURITES }),
     };
   else next = [...current, seatId];
   return {

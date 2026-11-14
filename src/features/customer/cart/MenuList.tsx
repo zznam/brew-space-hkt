@@ -2,24 +2,25 @@ import { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import { formatMoney, getVenue } from '@/core';
 import { Button, colors, Heading, styles } from '@/components/ui';
+import { useT } from '../i18n/useLanguage';
 import { searchMenu } from './cartModel';
+import { cartMessages } from './messages';
 import { useCart } from './useCart';
 
 export function MenuList({ venueId }: { venueId: string }) {
+  const { t } = useT(cartMessages);
   const addItem = useCart((state) => state.addItem);
   const [query, setQuery] = useState('');
   const menu = getVenue(venueId).menu;
   const shown = searchMenu(menu, query);
   return (
     <View style={{ gap: 10 }}>
-      <Heading>Menu</Heading>
-      {menu.length === 0 && (
-        <Text style={styles.text}>No menu items at this venue yet.</Text>
-      )}
+      <Heading>{t('menuTitle')}</Heading>
+      {menu.length === 0 && <Text style={styles.text}>{t('menuEmpty')}</Text>}
       {menu.length > 0 && (
         <TextInput
-          accessibilityLabel="Search menu"
-          placeholder="Search the menu"
+          accessibilityLabel={t('searchLabel')}
+          placeholder={t('searchPlaceholder')}
           value={query}
           onChangeText={setQuery}
           autoCapitalize="none"
@@ -36,7 +37,7 @@ export function MenuList({ venueId }: { venueId: string }) {
       )}
       {menu.length > 0 && shown.length === 0 && (
         <Text accessibilityRole="alert" style={styles.text}>
-          No items match
+          {t('noMatch')}
         </Text>
       )}
       {shown.map((item) => (
@@ -53,7 +54,10 @@ export function MenuList({ venueId }: { venueId: string }) {
             </Text>
             <Text style={styles.text}>{formatMoney(item.price)}</Text>
           </View>
-          <Button label={`Add ${item.name}`} onPress={() => addItem(item)} />
+          <Button
+            label={t('addItem', { name: item.name })}
+            onPress={() => addItem(item)}
+          />
         </View>
       ))}
     </View>

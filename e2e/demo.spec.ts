@@ -130,3 +130,29 @@ test('shared seat link, assistant answers and refund request', async ({
   ).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test('customer screens switch to Vietnamese and remember it', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Customer', exact: true }).click();
+  await page.getByRole('button', { name: 'Tiếng Việt', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Khám phá', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: /^Seat 4, desk, Available/ }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Chi tiết Chỗ 4' }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(
+    page.getByRole('button', { name: 'Bắt đầu tính theo giờ', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'English', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Start metered', exact: true }),
+  ).toBeVisible();
+  expect(errors).toEqual([]);
+});

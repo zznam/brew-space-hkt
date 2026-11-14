@@ -72,6 +72,15 @@ export const SUGGESTED_QUESTIONS_VI = [
 
 export const READ_ONLY_NOTE =
   'I only answer questions. I cannot book, pay, order or change anything.';
+export const READ_ONLY_NOTE_VI =
+  'Mình chỉ trả lời câu hỏi. Mình không thể đặt chỗ, thanh toán, gọi món hay thay đổi gì.';
+
+export const readOnlyNote = (lang: Language = 'en') =>
+  lang === 'vi' ? READ_ONLY_NOTE_VI : READ_ONLY_NOTE;
+
+/** Suggested questions for the app language. */
+export const suggestedQuestions = (lang: Language = 'en') =>
+  lang === 'vi' ? SUGGESTED_QUESTIONS_VI : SUGGESTED_QUESTIONS_EN;
 
 const KINDS: Seat['kind'][] = ['desk', 'pod', 'booth'];
 
@@ -82,10 +91,23 @@ const VI_CHARS =
 const VI_WORDS =
   /(?:^| )(?:khong|cho|ghe|bao nhieu|thuc don|toi|minh|gia|mat khau|diem|noi quy|xin chao|giup|dat|mon|tien|trong|nao|duoc|cach|quan|co)(?: |$)/;
 
-export function detectLanguage(question: string): Language {
+// Clear English function and topic words. Words that collide with unaccented
+// Vietnamese ("the", "do", "an", "on", "me") are left out on purpose.
+const EN_WORDS =
+  /(?:^| )(?:what|whats|which|how|many|much|is|are|does|can|could|my|you|your|we|any|there|have|has|please|where|who|when|why|hi|hello|hey|seat|seats|desk|desks|pods|booths|free|available|availability|cheapest|price|prices|rules|house|points|billing|bill|order|book|pay|cost)(?: |$)/;
+
+/** Language of a question. Vietnamese wins on any Vietnamese cue, English on
+ * a clear English cue. When neither shows (for example "wifi?"), `fallback`
+ * decides, so the app language answers ambiguous questions. */
+export function detectLanguage(
+  question: string,
+  fallback: Language = 'en',
+): Language {
   const raw = question.normalize('NFC').toLowerCase();
   if (VI_CHARS.test(raw)) return 'vi';
-  return VI_WORDS.test(normalizeText(question)) ? 'vi' : 'en';
+  const normalized = normalizeText(question);
+  if (VI_WORDS.test(normalized)) return 'vi';
+  return EN_WORDS.test(normalized) ? 'en' : fallback;
 }
 
 /* ---------- intent rules (tested against normalizeText output) ---------- */
@@ -213,7 +235,7 @@ const KIND_EN: Record<Seat['kind'], [string, string]> = {
   booth: ['booth', 'booths'],
 };
 const KIND_VI: Record<Seat['kind'], string> = {
-  desk: 'bàn làm việc',
+  desk: 'bàn đơn',
   pod: 'pod',
   booth: 'booth',
 };
@@ -265,14 +287,14 @@ function refusal(topic: RefusalTopic, lang: Language): string {
       "I can't redeem points. Points can't be redeemed in this demo; I can only tell you your balance.",
   };
   const vi: Record<RefusalTopic, string> = {
-    book: 'Mình không thể đặt hay giữ chỗ. Hãy chọn chỗ ở Explore rồi bấm nút bắt đầu ở đó.',
+    book: 'Mình không thể đặt hay giữ chỗ. Hãy chọn chỗ ở tab Khám phá rồi bấm nút bắt đầu ở đó.',
     order:
-      'Mình không thể gọi món. Hãy thêm món từ thực đơn ở My session rồi bấm Place order.',
-    pay: 'Mình không thể thanh toán. Bản demo không thu tiền; nút End demo session ở My session sẽ hiện tổng tiền.',
-    end: 'Mình không thể kết thúc phiên của bạn. Hãy dùng nút End demo session ở My session.',
+      'Mình không thể gọi món. Hãy thêm món từ thực đơn ở tab Phiên của tôi rồi bấm Đặt món.',
+    pay: 'Mình không thể thanh toán. Bản demo không thu tiền; tab Phiên của tôi hiện tổng tiền tạm tính của bạn.',
+    end: 'Mình không thể kết thúc phiên của bạn. Hãy dùng nút Kết thúc phiên demo ở tab Phiên của tôi.',
     cancel:
-      'Mình không thể huỷ hay hoàn tiền. Hãy dùng Request a refund trên biên nhận, hoặc bấm Call staff ở My session.',
-    move: 'Mình không thể đổi chỗ cho bạn. Hãy dùng Ask to move seats ở My session để nhân viên hỗ trợ.',
+      'Mình không thể huỷ hay hoàn tiền. Hãy dùng Yêu cầu hoàn tiền trên biên nhận, hoặc bấm Gọi nhân viên ở tab Phiên của tôi.',
+    move: 'Mình không thể đổi chỗ cho bạn. Hãy dùng Xin đổi chỗ ở tab Phiên của tôi để nhân viên hỗ trợ.',
     redeem:
       'Mình không thể đổi điểm. Bản demo chưa cho đổi điểm; mình chỉ cho bạn biết số dư.',
   };
@@ -313,7 +335,7 @@ function availabilityAnswer(
   }
   text +=
     lang === 'vi'
-      ? ' Mình chỉ cho biết số lượng, không cho biết ai ngồi đâu. Xem sơ đồ chỗ ngồi ở Explore.'
+      ? ' Mình chỉ cho biết số lượng, không cho biết ai ngồi đâu. Xem sơ đồ chỗ ngồi ở tab Khám phá.'
       : " I only share counts, never who is sitting where. The seat map on Explore shows each seat's status.";
   return answer('availability', lang, text);
 }
@@ -412,7 +434,7 @@ function menuAnswer(
     wantsPrice ? 'menu_price' : 'menu',
     lang,
     lang === 'vi'
-      ? `Thực đơn ${venue.name}: ${list}. Gọi món ở My session.`
+      ? `Thực đơn ${venue.name}: ${list}. Gọi món ở tab Phiên của tôi.`
       : `Menu at ${venue.name}: ${list}. Order from My session.`,
   );
 }
@@ -428,15 +450,21 @@ function billingAnswer(ctx: ConciergeContext, lang: Language): ConciergeAnswer {
 
 const CALL_STAFF: Record<Language, string> = {
   en: 'For anything else, tap Call staff on My session and a team member will help.',
-  vi: 'Với việc khác, hãy bấm Call staff ở My session để nhân viên hỗ trợ.',
+  vi: 'Với việc khác, hãy bấm Gọi nhân viên ở tab Phiên của tôi để nhân viên hỗ trợ.',
 };
 
-/** Answer one question from published data. Never throws, never acts. */
+/** Answer one question from published data. Never throws, never acts. The
+ * answer follows the question's language; `appLanguage` only decides when the
+ * question itself does not show one. */
 export function answerQuestion(
   question: string,
   ctx: ConciergeContext,
+  appLanguage: Language = 'en',
 ): ConciergeAnswer {
-  const lang = detectLanguage(typeof question === 'string' ? question : '');
+  const lang = detectLanguage(
+    typeof question === 'string' ? question : '',
+    appLanguage,
+  );
   const q = normalizeText(
     typeof question === 'string' ? question.slice(0, MAX_QUESTION_LENGTH) : '',
   );
@@ -458,7 +486,7 @@ export function answerQuestion(
       'privacy',
       lang,
       lang === 'vi'
-        ? 'Mình chỉ cho biết số lượng chỗ trống, không chia sẻ thông tin về khách khác hay trạng thái từng chỗ. Xem sơ đồ chỗ ngồi ở Explore.'
+        ? 'Mình chỉ cho biết số lượng chỗ trống, không chia sẻ thông tin về khách khác hay trạng thái từng chỗ. Xem sơ đồ chỗ ngồi ở tab Khám phá.'
         : "I only share how many seats are free, never who is sitting where or any guest's details. The seat map on Explore shows each seat's status.",
     );
 
@@ -469,7 +497,7 @@ export function answerQuestion(
         'points',
         lang,
         lang === 'vi'
-          ? `Điểm thưởng chỉ dành cho thành viên. Bạn chưa tham gia chương trình của ${venue.name}; hãy tham gia ở tab Member.`
+          ? `Điểm thưởng chỉ dành cho thành viên. Bạn chưa tham gia chương trình của ${venue.name}; hãy tham gia ở tab Thành viên.`
           : `Points are for members. You haven't joined the ${venue.name} programme yet; join on the Member tab.`,
       );
     const points = pointsBalance(loyalty, venue.id);
@@ -483,7 +511,7 @@ export function answerQuestion(
   }
 
   if (WIFI.test(q)) {
-    const info = getVenueInfo(ctx.venue.id);
+    const info = getVenueInfo(ctx.venue.id, lang);
     return answer(
       'wifi',
       lang,
@@ -494,7 +522,7 @@ export function answerQuestion(
   }
 
   if (RULES.test(q)) {
-    const info = getVenueInfo(ctx.venue.id);
+    const info = getVenueInfo(ctx.venue.id, lang);
     return answer(
       'rules',
       lang,
@@ -519,7 +547,7 @@ export function answerQuestion(
       (lang === 'vi'
         ? 'Mình trả lời về chỗ trống, giá chỗ ngồi, thực đơn, Wi-Fi, nội quy, điểm thưởng và cách tính tiền. '
         : 'I can answer questions about free seats, seat prices, the menu, Wi-Fi, house rules, your points and how billing works. ') +
-        READ_ONLY_NOTE,
+        readOnlyNote(lang),
     );
 
   return answer(

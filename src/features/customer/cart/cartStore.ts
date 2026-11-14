@@ -26,6 +26,7 @@ import {
   type Modifiers,
   type PlacedOrder,
 } from './cartModel';
+import { cartText, type CartMessage } from './messages';
 
 /** Minimal slice of the core store the cart needs; tests pass createAppStore(). */
 export interface CoreStoreLike {
@@ -55,11 +56,18 @@ export interface CartStore {
   lines: CartLine[];
   orders: PlacedOrder[];
   nextOrderId: number;
+  /** English text of the latest problem, notice and warning. The UI renders
+   * the matching `*Message` code in the viewer's language instead. */
   error: string | null;
   notice: string | null;
   /** Non-blocking problem after an order that DID go through (e.g. the allergy
    * request to staff failed). Shown separately from `error`. */
   warning: string | null;
+  /** Language-neutral codes behind `error`, `notice` and `warning`; render
+   * with `cartText(message, lang)`. */
+  errorMessage: CartMessage | null;
+  noticeMessage: CartMessage | null;
+  warningMessage: CartMessage | null;
   /** True while the cart holds a drink line that started from saved preferences. */
   prefilled: boolean;
   /** Drinks start from saved preferences (members) or defaults (guests). */
@@ -79,33 +87,47 @@ export interface CartStore {
   reset: () => void;
 }
 
+const textOf = (message: CartMessage | null) =>
+  message ? cartText(message) : null;
+/** The English text and its language-neutral code always change together. */
+const messageFields = (
+  error: CartMessage | null,
+  notice: CartMessage | null,
+  warning: CartMessage | null,
+) => ({
+  error: textOf(error),
+  notice: textOf(notice),
+  warning: textOf(warning),
+  errorMessage: error,
+  noticeMessage: notice,
+  warningMessage: warning,
+});
+
 const initial = () => ({
   lines: [] as CartLine[],
   orders: [] as PlacedOrder[],
   nextOrderId: 1,
-  error: null as string | null,
-  notice: null as string | null,
-  warning: null as string | null,
+  ...messageFields(null, null, null),
   prefilled: false,
 });
 
 type PlaceResult =
   | { ok: true; live: Session; sent: CartLine[] }
-  | { ok: false; message: string; live?: Session; sent: CartLine[] };
+  | { ok: false; message: CartMessage; live?: Session; sent: CartLine[] };
 
 /** The core store stays the source of truth for the bill: every unit goes through
  * core `addItem`. This store only keeps cart state and the customer's order log. */
 export function createCartStore(coreStore: CoreStoreLike, deps: CartDeps = {}) {
   return createStore<CartStore>()((set, get) => {
-    const fail = (message: string): { ok: false; message: string } => {
-      set({ error: message, notice: null, warning: null });
-      return { ok: false, message };
+    const fail = (message: CartMessage): { ok: false; message: string } => {
+      set(messageFields(message, null, null));
+      return { ok: false, message: cartText(message) };
     };
 
     /** Send lines to core one unit at a time; reports exactly what core accepted. */
     function place(session: Session, lines: CartLine[]): PlaceResult {
       if (lines.length === 0)
-        return { ok: false, message: 'Your cart is empty.', sent: [] };
+        return { ok: false, message: { key: 'emptyCart' }, sent: [] };
       const core = coreStore.getState();
       const live = core.sessions.find(
         (entry) =>
@@ -116,7 +138,7 @@ export function createCartStore(coreStore: CoreStoreLike, deps: CartDeps = {}) {
       if (!live)
         return {
           ok: false,
-          message: 'This session is not available in the current venue.',
+          message: { key: 'sessionUnavailable' },
           sent: [],
         };
       const menu = getVenue(core.venueId).menu;
@@ -127,7 +149,7 @@ export function createCartStore(coreStore: CoreStoreLike, deps: CartDeps = {}) {
         if (!item)
           return {
             ok: false,
-            message: `${line.name} is not on this venue's menu. Remove it and try again.`,
+            message: { key: 'itemGone', params: { name: line.name } },
             sent: [],
           };
         priced.push({ ...line, name: item.name, unitPrice: item.price });
@@ -144,7 +166,10 @@ export function createCartStore(coreStore: CoreStoreLike, deps: CartDeps = {}) {
         if (units < line.quantity)
           return {
             ok: false,
-            message: `Could not add ${line.name} (${units} of ${line.quantity} sent). Check your tab and try again.`,
+            message: {
+              key: 'partial',
+              params: { name: line.name, units, quantity: line.quantity },
+            },
             live,
             sent,
           };
@@ -172,13 +197,18 @@ export function createCartStore(coreStore: CoreStoreLike, deps: CartDeps = {}) {
     /** Members with an allergy on file get a staff request with every order
      * that reached the bill. Returns a warning when it could not be raised;
      * the order itself is never undone. */
-    function notifyAllergy(live: Session, sent: CartLine[]): string | null {
+    function notifyAllergy(
+      live: Session,
+      sent: CartLine[],
+    ): CartMessage | null {
       if (sent.length === 0) return null;
       const note = deps.getSavedPreferences?.(live.venueId)?.allergyNote.trim();
       if (!note) return null;
-      const failed = (reason: string) =>
-        `Your order went through, but your allergy note could not be sent to staff (${reason}). Please tell staff about your allergy directly.`;
-      if (!deps.notifyStaff) return failed('staff requests are unavailable');
+      const failed = (reason: string): CartMessage => ({
+        key: 'allergyFailedReason',
+        params: { reason },
+      });
+      if (!deps.notifyStaff) return { key: 'allergyFailedUnavailable' };
       try {
         const result = deps.notifyStaff(
           {
@@ -191,7 +221,7 @@ export function createCartStore(coreStore: CoreStoreLike, deps: CartDeps = {}) {
         );
         return result.ok ? null : failed(result.message);
       } catch {
-        return failed('unexpected error');
+        return { key: 'allergyFailedUnexpected' };
       }
     }
 
@@ -214,9 +244,7 @@ export function createCartStore(coreStore: CoreStoreLike, deps: CartDeps = {}) {
           return {
             lines: addToCart(state.lines, item, modifiers),
             prefilled: state.prefilled || (Boolean(saved) && isNewLine),
-            error: null,
-            notice: null,
-            warning: null,
+            ...messageFields(null, null, null),
           };
         }),
       setQuantity: (key, quantity) =>
@@ -233,7 +261,7 @@ export function createCartStore(coreStore: CoreStoreLike, deps: CartDeps = {}) {
           const lines = removeLine(state.lines, key);
           return { lines, prefilled: keepPrefilled(lines) };
         }),
-      dismissMessages: () => set({ error: null, notice: null, warning: null }),
+      dismissMessages: () => set(messageFields(null, null, null)),
       submit: (session) => {
         const result = place(session, get().lines);
         if (result.ok) {
@@ -241,9 +269,11 @@ export function createCartStore(coreStore: CoreStoreLike, deps: CartDeps = {}) {
           set({
             lines: [],
             prefilled: false,
-            error: null,
-            notice: 'Order placed.',
-            warning: notifyAllergy(result.live, result.sent),
+            ...messageFields(
+              null,
+              { key: 'orderPlaced' },
+              notifyAllergy(result.live, result.sent),
+            ),
           });
           return { ok: true };
         }
@@ -262,7 +292,12 @@ export function createCartStore(coreStore: CoreStoreLike, deps: CartDeps = {}) {
             })
             .filter((line) => line.quantity > 0);
           const failure = fail(result.message);
-          set({ lines: rest, prefilled: keepPrefilled(rest), warning });
+          set({
+            lines: rest,
+            prefilled: keepPrefilled(rest),
+            warning: textOf(warning),
+            warningMessage: warning,
+          });
           return failure;
         }
         return fail(result.message);
@@ -271,13 +306,12 @@ export function createCartStore(coreStore: CoreStoreLike, deps: CartDeps = {}) {
         const core = coreStore.getState();
         const previous = ordersForSession(get().orders, session);
         const last = previous[previous.length - 1];
-        if (!last) return fail('There is no earlier order to repeat.');
+        if (!last) return fail({ key: 'noEarlierOrder' });
         const { lines, dropped } = reorderLines(
           last,
           getVenue(core.venueId).menu,
         );
-        if (lines.length === 0)
-          return fail('None of those items are on the menu any more.');
+        if (lines.length === 0) return fail({ key: 'noneOnMenu' });
         const result = place(session, lines);
         if (result.live) record(result.live, result.sent);
         const warning = result.live
@@ -285,16 +319,21 @@ export function createCartStore(coreStore: CoreStoreLike, deps: CartDeps = {}) {
           : null;
         if (!result.ok) {
           const failure = fail(result.message);
-          set({ warning });
+          set({ warning: textOf(warning), warningMessage: warning });
           return failure;
         }
-        set({
-          error: null,
-          warning,
-          notice: dropped.length
-            ? `Order placed. No longer available: ${dropped.join(', ')}.`
-            : 'Order placed.',
-        });
+        set(
+          messageFields(
+            null,
+            dropped.length
+              ? {
+                  key: 'orderPlacedDropped',
+                  params: { names: dropped.join(', ') },
+                }
+              : { key: 'orderPlaced' },
+            warning,
+          ),
+        );
         return { ok: true, dropped };
       },
       forgetSession: (sessionId) =>
@@ -302,9 +341,7 @@ export function createCartStore(coreStore: CoreStoreLike, deps: CartDeps = {}) {
           orders: state.orders.filter((order) => order.sessionId !== sessionId),
           lines: [],
           prefilled: false,
-          error: null,
-          notice: null,
-          warning: null,
+          ...messageFields(null, null, null),
         })),
       reset: () => set(initial()),
     };

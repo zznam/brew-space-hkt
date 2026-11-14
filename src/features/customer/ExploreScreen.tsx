@@ -9,28 +9,34 @@ import {
   describeOccupancy,
   filterSeats,
   hasActiveFilters,
-  MODE_LABEL,
+  modeLabel,
   noFilters,
   occupancySummary,
   usualSuggestion,
   type SeatFilters,
 } from './explore/exploreModel';
+import { useT } from './i18n/useLanguage';
 import { favouriteSeatIds } from './loyalty/loyaltyModel';
+import { loyaltyWarningText } from './loyalty/messages';
 import { useLoyalty, useLoyaltyReady } from './loyalty/useLoyalty';
 import { CustomerNav } from './shared/CustomerNav';
+import {
+  descriptionText,
+  exploreMessages,
+  startErrorText,
+} from './explore/messages';
 import { parseSeatLink } from './venue/deepLink';
-import { AMENITIES, type Amenity } from './venue/seatAmenities';
+import { kindName, kindWord, seatLabelText } from './venue/messages';
+import { AMENITIES, amenityLabel, type Amenity } from './venue/seatAmenities';
 import { SeatDetailCard } from './venue/SeatDetailCard';
 import { VenuePage } from './venue/VenuePage';
 
-const KINDS: { kind: Seat['kind']; label: string }[] = [
-  { kind: 'desk', label: 'Desk' },
-  { kind: 'pod', label: 'Pod' },
-  { kind: 'booth', label: 'Booth' },
-];
+const KINDS: Seat['kind'][] = ['desk', 'pod', 'booth'];
 const EMPTY_VISITS: never[] = [];
 
 export function ExploreScreen() {
+  const { t, lang } = useT(exploreMessages);
+  const seatText = (label: string) => seatLabelText(label, lang);
   const store = useAppStore((state) => state);
   const { ready, warning } = useLoyaltyReady();
   const loyalty = useLoyalty((state) => state);
@@ -48,7 +54,7 @@ export function ExploreScreen() {
   const [seenLink, setSeenLink] = useState('');
   if (seenLink !== linkKey) {
     setSeenLink(linkKey);
-    setLinkNotice(parseSeatLink(params, store.venueId).notice ?? '');
+    setLinkNotice(parseSeatLink(params, store.venueId, lang).notice ?? '');
   }
   useEffect(() => {
     if (appliedLink.current === linkKey) return;
@@ -61,7 +67,7 @@ export function ExploreScreen() {
 
   function start(mode: BillingMode) {
     const result = store.startSession(mode);
-    if (!result.ok) setError(result.message);
+    if (!result.ok) setError(startErrorText(result.message, lang));
     else {
       setError('');
       router.push('/customer/active-session');
@@ -86,7 +92,7 @@ export function ExploreScreen() {
       <Card>
         <CustomerNav current="explore" />
         <Text accessibilityRole="alert" style={styles.text}>
-          Loading your seats and preferences…
+          {t('loading')}
         </Text>
       </Card>
     );
@@ -96,7 +102,13 @@ export function ExploreScreen() {
   const summary = occupancySummary(venue, store.sessions);
   const visibleSeats = filterSeats(venue, store.sessions, filters);
   const filteredVenue = { ...venue, seats: visibleSeats };
-  const usual = usualSuggestion(visits, venue, store.sessions, favouriteIds);
+  const usual = usualSuggestion(
+    visits,
+    venue,
+    store.sessions,
+    favouriteIds,
+    lang,
+  );
   const selectedSeat = venue.seats.find(
     (seat) => seat.id === store.selectedSeatId,
   );
@@ -117,15 +129,15 @@ export function ExploreScreen() {
     <Card>
       <CustomerNav current="explore" />
       <Text style={{ color: venue.accent, fontWeight: '700' }}>
-        CUSTOMER / FIND YOUR SPACE
+        {t('eyebrow')}
       </Text>
       <Heading>{venue.name}</Heading>
       <Text style={styles.text}>
-        {venue.description} Select an available seat to try a demo session.
+        {t('intro', { description: descriptionText(venue.description, lang) })}
       </Text>
       {warning ? (
         <Text accessibilityRole="alert" style={styles.text}>
-          {warning}
+          {loyaltyWarningText(warning, lang)}
         </Text>
       ) : null}
       {linkNotice ? (
@@ -134,27 +146,34 @@ export function ExploreScreen() {
         </Text>
       ) : null}
       <Text accessibilityLiveRegion="polite" style={styles.text}>
-        {describeOccupancy(summary)}
+        {describeOccupancy(summary, lang)}
       </Text>
       <VenuePage venue={venue} />
 
       {usual ? (
         <Card>
-          <Text style={{ fontWeight: '700' }}>Your usual</Text>
+          <Text style={{ fontWeight: '700' }}>{t('usualTitle')}</Text>
           <Text style={styles.text}>
-            Based on {usual.visitCount} visits here you usually take a{' '}
-            {usual.seatKind} with {MODE_LABEL[usual.mode]}
-            {usual.topItem ? ` and order ${usual.topItem}` : ''}.
+            {t('usualBody', {
+              count: usual.visitCount,
+              kind: kindWord(usual.seatKind, lang),
+              mode: modeLabel(usual.mode, lang),
+              order: usual.topItem
+                ? t('usualOrder', { item: usual.topItem })
+                : '',
+            })}
           </Text>
           {usual.seat ? (
             <>
               <Text style={styles.text}>
-                {usual.seat.label} is free
-                {usual.viaFavourite ? ' and is one of your pinned seats' : ''}.
+                {t('usualFree', {
+                  seat: seatText(usual.seat.label),
+                  pinned: usual.viaFavourite ? t('usualPinned') : '',
+                })}
               </Text>
               <View style={styles.row}>
                 <Button
-                  label={`Select ${usual.seat.label}`}
+                  label={t('usualSelect', { seat: seatText(usual.seat.label) })}
                   onPress={() => choose(usual.seat!.id)}
                 />
               </View>
@@ -166,12 +185,9 @@ export function ExploreScreen() {
       ) : null}
 
       <View style={{ gap: 8 }}>
-        <Text style={{ fontWeight: '700' }}>Your pinned seats</Text>
+        <Text style={{ fontWeight: '700' }}>{t('pinnedTitle')}</Text>
         {favouriteIds.length === 0 ? (
-          <Text style={styles.text}>
-            No pinned seats yet. Select a seat and press Pin seat to find it
-            again in one tap.
-          </Text>
+          <Text style={styles.text}>{t('pinnedNone')}</Text>
         ) : (
           <View style={styles.row}>
             {favouriteIds.map((id) => {
@@ -183,8 +199,8 @@ export function ExploreScreen() {
                   key={id}
                   label={
                     busy
-                      ? `${seat.label} (occupied)`
-                      : `Book my seat again: ${seat.label}`
+                      ? t('pinnedOccupied', { seat: seatText(seat.label) })
+                      : t('pinnedBook', { seat: seatText(seat.label) })
                   }
                   disabled={busy}
                   onPress={() => choose(id)}
@@ -196,9 +212,10 @@ export function ExploreScreen() {
       </View>
 
       <View style={{ gap: 8 }}>
-        <Text style={{ fontWeight: '700' }}>Filter seats</Text>
+        <Text style={{ fontWeight: '700' }}>{t('filterTitle')}</Text>
         <View style={styles.row}>
-          {KINDS.map(({ kind, label }) => {
+          {KINDS.map((kind) => {
+            const label = kindName(kind, lang);
             const on = filters.kinds.includes(kind);
             return (
               <Button
@@ -221,7 +238,9 @@ export function ExploreScreen() {
           {[null, ...priceCaps].map((cap) => {
             const on = filters.maxRate === cap;
             const label =
-              cap === null ? 'Any price' : `≤ ${formatMoney(cap)}/h`;
+              cap === null
+                ? t('anyPrice')
+                : t('priceCap', { price: formatMoney(cap) });
             return (
               <Button
                 key={cap ?? 'any'}
@@ -233,7 +252,9 @@ export function ExploreScreen() {
           })}
           <Button
             label={
-              filters.availableOnly ? '✓ Available only' : 'Available only'
+              filters.availableOnly
+                ? `✓ ${t('availableOnly')}`
+                : t('availableOnly')
             }
             selected={filters.availableOnly}
             onPress={() =>
@@ -242,7 +263,8 @@ export function ExploreScreen() {
           />
         </View>
         <View style={styles.row}>
-          {AMENITIES.map(({ key, label }) => {
+          {AMENITIES.map(({ key }) => {
+            const label = amenityLabel(key, lang);
             const on = (filters.amenities ?? []).includes(key);
             return (
               <Button
@@ -256,7 +278,10 @@ export function ExploreScreen() {
         </View>
         {hasActiveFilters(filters) ? (
           <Text accessibilityLiveRegion="polite" style={styles.text}>
-            Showing {visibleSeats.length} of {venue.seats.length} seats.
+            {t('showing', {
+              shown: visibleSeats.length,
+              total: venue.seats.length,
+            })}
           </Text>
         ) : null}
       </View>
@@ -264,11 +289,11 @@ export function ExploreScreen() {
       {visibleSeats.length === 0 ? (
         <View style={{ gap: 10 }}>
           <Text accessibilityRole="alert" style={styles.text}>
-            No seats match these filters.
+            {t('noMatch')}
           </Text>
           <View style={styles.row}>
             <Button
-              label="Clear filters"
+              label={t('clearFilters')}
               onPress={() => setFilters(noFilters())}
             />
           </View>
@@ -285,16 +310,20 @@ export function ExploreScreen() {
       {selectedSeat ? (
         <View style={styles.row}>
           <Text style={styles.text}>
-            Selected: {selectedSeat.label}
+            {t('selected', { seat: seatText(selectedSeat.label) })}
             {visibleSeats.some((seat) => seat.id === selectedSeat.id)
               ? ''
-              : ' - hidden by filters'}
+              : t('hiddenByFilters')}
           </Text>
           <Button
-            label={selectedPinned ? '★ Unpin seat' : '☆ Pin seat'}
+            label={selectedPinned ? t('unpin') : t('pin')}
             selected={selectedPinned}
             onPress={() => {
-              const result = loyalty.toggleFavourite(venue.id, selectedSeat.id);
+              const result = loyalty.toggleFavourite(
+                venue.id,
+                selectedSeat.id,
+                lang,
+              );
               setError(result.ok ? '' : result.message);
             }}
           />
@@ -309,21 +338,15 @@ export function ExploreScreen() {
       ) : null}
 
       <View style={styles.row}>
-        <Button label="Start metered" onPress={() => start('METERED_OPEN')} />
         <Button
-          label="2h bundle · 15% off"
-          onPress={() => start('BUNDLE_2H')}
+          label={t('startMetered')}
+          onPress={() => start('METERED_OPEN')}
         />
-        <Button
-          label="4h bundle · 15% off"
-          onPress={() => start('BUNDLE_4H')}
-        />
+        <Button label={t('startBundle2h')} onPress={() => start('BUNDLE_2H')} />
+        <Button label={t('startBundle4h')} onPress={() => start('BUNDLE_4H')} />
       </View>
       {error ? <Text accessibilityRole="alert">{error}</Text> : null}
-      <Text style={styles.text}>
-        Demo estimates in VND. Metered time rounds up to 15 minutes; bundles
-        include a 10 minute overtime grace period.
-      </Text>
+      <Text style={styles.text}>{t('footnote')}</Text>
     </Card>
   );
 }

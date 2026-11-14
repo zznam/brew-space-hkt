@@ -1,5 +1,7 @@
 import type { Seat } from '../../../core/domain';
+import type { Lang } from '../i18n/i18n';
 import type { VisitSnapshot } from '../shared/visit';
+import { badgesT } from './messages';
 
 /**
  * Pure badge and streak rules. Badges are cosmetic: no cash value, no points.
@@ -67,7 +69,11 @@ function badge(
 }
 
 /** `visits` must already be filtered to one venue (oldest first). */
-export function computeBadges(visits: VisitSnapshot[]): Badge[] {
+export function computeBadges(
+  visits: VisitSnapshot[],
+  lang: Lang = 'en',
+): Badge[] {
+  const t = badgesT(lang);
   const totalMinutes = visits.reduce((sum, v) => sum + v.minutes, 0);
   const longest = visits.reduce((max, v) => Math.max(max, v.minutes), 0);
   const kinds = new Set(visits.map((v) => v.seatKind)).size;
@@ -79,59 +85,59 @@ export function computeBadges(visits: VisitSnapshot[]): Badge[] {
   return [
     badge(
       'first-visit',
-      'First visit',
-      'Complete your first visit.',
+      t('firstVisitName'),
+      t('firstVisitDesc'),
       visits.length,
       1,
-      (c) => `${c} / 1 visit`,
+      (c) => t('firstVisitProgress', { c }),
     ),
     badge(
       'regular',
-      'Regular',
-      `Complete ${REGULAR_VISITS} visits.`,
+      t('regularName'),
+      t('regularDesc', { n: REGULAR_VISITS }),
       visits.length,
       REGULAR_VISITS,
-      (c) => `${c} / ${REGULAR_VISITS} visits`,
+      (c) => t('regularProgress', { c, n: REGULAR_VISITS }),
     ),
     badge(
       'deep-worker',
-      'Deep worker',
-      `Stay ${DEEP_WORK_MINUTES / 60} hours or more in a single visit.`,
+      t('deepWorkerName'),
+      t('deepWorkerDesc', { h: DEEP_WORK_MINUTES / 60 }),
       longest,
       DEEP_WORK_MINUTES,
-      (c) => `${c} / ${DEEP_WORK_MINUTES} min in your longest visit`,
+      (c) => t('deepWorkerProgress', { c, n: DEEP_WORK_MINUTES }),
     ),
     badge(
       'marathon',
-      'Marathon',
-      `Spend ${MARATHON_MINUTES / 60} hours here in total.`,
+      t('marathonName'),
+      t('marathonDesc', { h: MARATHON_MINUTES / 60 }),
       totalMinutes,
       MARATHON_MINUTES,
-      (c) => `${hours(c)} / ${MARATHON_MINUTES / 60} h in total`,
+      (c) => t('marathonProgress', { c: hours(c), h: MARATHON_MINUTES / 60 }),
     ),
     badge(
       'explorer',
-      'Explorer',
-      'Sit at a desk, a booth and a pod.',
+      t('explorerName'),
+      t('explorerDesc'),
       kinds,
       SEAT_KINDS.length,
-      (c) => `${c} / ${SEAT_KINDS.length} seat types`,
+      (c) => t('explorerProgress', { c, n: SEAT_KINDS.length }),
     ),
     badge(
       'snack-lover',
-      'Snack lover',
-      `Order ${SNACK_ITEMS} food or drink items in total.`,
+      t('snackLoverName'),
+      t('snackLoverDesc', { n: SNACK_ITEMS }),
       items,
       SNACK_ITEMS,
-      (c) => `${c} / ${SNACK_ITEMS} items`,
+      (c) => t('snackLoverProgress', { c, n: SNACK_ITEMS }),
     ),
     badge(
       'on-a-roll',
-      'On a roll',
-      `${STREAK_BADGE_LENGTH} visits in a row of ${STREAK_MIN_MINUTES} minutes or more.`,
+      t('onARollName'),
+      t('onARollDesc', { n: STREAK_BADGE_LENGTH, m: STREAK_MIN_MINUTES }),
       best,
       STREAK_BADGE_LENGTH,
-      (c) => `${c} / ${STREAK_BADGE_LENGTH} visits in a row`,
+      (c) => t('onARollProgress', { c, n: STREAK_BADGE_LENGTH }),
     ),
   ];
 }

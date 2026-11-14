@@ -7,7 +7,9 @@ import {
   type Preferences,
   type Sweetness,
 } from '../loyalty/loyaltyModel';
+import { translate, type Lang } from '../i18n/i18n';
 import { MAX_NOTE_LENGTH as SUPPORT_NOTE_LIMIT } from '../support/supportModel';
+import { cartMessages } from './messages';
 
 /** Pure cart/order helpers. No React, no storage; safe to import from tests. */
 export const MAX_LINE_QUANTITY = 20;
@@ -102,28 +104,34 @@ export function lineKey(
     : line.menuItemId;
 }
 
-const MILK_LABEL: Record<Milk, string> = {
-  dairy: 'Dairy milk',
-  oat: 'Oat milk',
-  almond: 'Almond milk',
-  none: 'No milk',
-};
-const ICE_LABEL: Record<Ice, string> = {
-  none: 'No ice',
-  less: 'Less ice',
-  normal: 'Normal ice',
-};
-export const milkLabel = (milk: Milk) => MILK_LABEL[milk];
-export const sweetnessLabel = (sweetness: Sweetness) => `${sweetness}% sugar`;
-export const iceLabel = (ice: Ice) => ICE_LABEL[ice];
+const MILK_KEY = {
+  dairy: 'milkDairy',
+  oat: 'milkOat',
+  almond: 'milkAlmond',
+  none: 'milkNone',
+} as const;
+const ICE_KEY = {
+  none: 'iceNone',
+  less: 'iceLess',
+  normal: 'iceNormal',
+} as const;
+export const milkLabel = (milk: Milk, lang: Lang = 'en') =>
+  translate(cartMessages, lang, MILK_KEY[milk]);
+export const sweetnessLabel = (sweetness: Sweetness, lang: Lang = 'en') =>
+  translate(cartMessages, lang, 'sugar', { n: sweetness });
+export const iceLabel = (ice: Ice, lang: Lang = 'en') =>
+  translate(cartMessages, lang, ICE_KEY[ice]);
 
 /** "Oat milk · 30% sugar · Less ice"; empty string for food lines. */
-export function formatModifiers(modifiers: Modifiers | null): string {
+export function formatModifiers(
+  modifiers: Modifiers | null,
+  lang: Lang = 'en',
+): string {
   if (!modifiers) return '';
   return [
-    milkLabel(modifiers.milk),
-    sweetnessLabel(modifiers.sweetness),
-    iceLabel(modifiers.ice),
+    milkLabel(modifiers.milk, lang),
+    sweetnessLabel(modifiers.sweetness, lang),
+    iceLabel(modifiers.ice, lang),
   ].join(' · ');
 }
 

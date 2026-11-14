@@ -4,7 +4,9 @@ import { Pressable, Text, TextInput, View } from 'react-native';
 import { formatMoney, getVenue, type Venue } from '@/core';
 import { useAppStore } from '@/core/useAppStore';
 import { Button, Card, Heading, colors, styles } from '@/components/ui';
+import { useT } from '../i18n/useLanguage';
 import { CustomerNav } from '../shared/CustomerNav';
+import { kindWord, seatLabelText } from '../venue/messages';
 import { BadgesPanel } from '../rewards/BadgesPanel';
 import {
   DEMO_OTP,
@@ -24,13 +26,14 @@ import {
   type LoyaltyState,
   type Preferences,
 } from './loyaltyModel';
+import { loyaltyMessages, loyaltyWarningText } from './messages';
 import { useLoyalty, useLoyaltyReady } from './useLoyalty';
 
-const MILK_LABEL = {
-  dairy: 'Dairy',
-  oat: 'Oat',
-  almond: 'Almond',
-  none: 'No milk',
+const MILK_KEY = {
+  dairy: 'milkDairy',
+  oat: 'milkOat',
+  almond: 'milkAlmond',
+  none: 'milkNone',
 } as const;
 const input = {
   borderWidth: 1,
@@ -48,23 +51,19 @@ const venueVisits = (state: LoyaltyState, venueId: string) =>
   state.visits.filter((visit) => visit.venueId === venueId);
 
 function PrivacyLink() {
+  const { t } = useT(loyaltyMessages);
   return (
     <View style={styles.row}>
       <Button
-        label="How we use your data"
+        label={t('privacyLink')}
         onPress={() => router.push('/customer/privacy' as never)}
       />
     </View>
   );
 }
 
-function formatMinutes(total: number) {
-  const hours = Math.floor(total / 60);
-  const minutes = total % 60;
-  return hours ? `${hours} h ${minutes} min` : `${minutes} min`;
-}
-
 export function ProfileScreen() {
+  const { t, lang } = useT(loyaltyMessages);
   const { ready, warning } = useLoyaltyReady();
   const loyalty = useLoyalty((state) => state);
   const venue = getVenue(useAppStore((state) => state.venueId));
@@ -73,7 +72,7 @@ export function ProfileScreen() {
       <Card>
         <CustomerNav current="member" />
         <Text accessibilityRole="alert" style={styles.text}>
-          Loading your member profile…
+          {t('loading')}
         </Text>
       </Card>
     );
@@ -81,12 +80,12 @@ export function ProfileScreen() {
     <Card>
       <CustomerNav current="member" />
       <Text style={{ color: venue.accent, fontWeight: '700' }}>
-        CUSTOMER / MEMBER
+        {t('eyebrow')}
       </Text>
       <Heading>{venue.name}</Heading>
       {warning ? (
         <Text accessibilityRole="alert" style={styles.text}>
-          {warning}
+          {loyaltyWarningText(warning, lang)}
         </Text>
       ) : null}
       {isMember(loyalty, venue.id) ? (
@@ -99,28 +98,36 @@ export function ProfileScreen() {
 }
 
 function Stats({ venue, state }: { venue: Venue; state: LoyaltyState }) {
+  const { t, lang } = useT(loyaltyMessages);
   const stats = venueStats(state, venue.id);
+  const hours = Math.floor(stats.totalMinutes / 60);
+  const minutes = stats.totalMinutes % 60;
+  const time = hours
+    ? t('hoursMinutes', { h: hours, m: minutes })
+    : t('minutesOnly', { m: minutes });
   return (
     <View style={{ gap: 6 }}>
-      <Text style={sectionTitle}>Your stats here</Text>
+      <Text style={sectionTitle}>{t('statsTitle')}</Text>
       {stats.visits === 0 ? (
-        <Text style={styles.text}>
-          No completed visits yet. Stats appear after your first session.
-        </Text>
+        <Text style={styles.text}>{t('statsNone')}</Text>
       ) : (
         <>
-          <Text style={styles.text}>Visits: {stats.visits}</Text>
           <Text style={styles.text}>
-            Time spent: {formatMinutes(stats.totalMinutes)}
+            {t('statVisits', { n: stats.visits })}
+          </Text>
+          <Text style={styles.text}>{t('statTime', { time })}</Text>
+          <Text style={styles.text}>
+            {t('statSpend', { money: formatMoney(stats.totalSpend) })}
           </Text>
           <Text style={styles.text}>
-            Total spend: {formatMoney(stats.totalSpend)}
+            {t('statSeatKind', {
+              kind: stats.favouriteSeatKind
+                ? kindWord(stats.favouriteSeatKind, lang)
+                : t('noneYet'),
+            })}
           </Text>
           <Text style={styles.text}>
-            Favourite seat type: {stats.favouriteSeatKind ?? 'none yet'}
-          </Text>
-          <Text style={styles.text}>
-            Favourite item: {stats.favouriteItem ?? 'none yet'}
+            {t('statItem', { item: stats.favouriteItem ?? t('noneYet') })}
           </Text>
         </>
       )}
@@ -129,6 +136,7 @@ function Stats({ venue, state }: { venue: Venue; state: LoyaltyState }) {
 }
 
 function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
+  const { t, lang } = useT(loyaltyMessages);
   const join = useLoyalty((store) => store.join);
   const leave = useLoyalty((store) => store.leave);
   const [phone, setPhone] = useState('');
@@ -143,7 +151,7 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
     favouriteSeatIds(state, venue.id).length > 0;
 
   function sendCode() {
-    const result = requestOtp(phone);
+    const result = requestOtp(phone, lang);
     if (!result.ok) {
       setSentTo(null);
       setMessage(result.message);
@@ -153,22 +161,21 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
     setMessage('');
   }
   function submit() {
-    const result = join(venue.id, { phone, code, consent, friendCode });
+    const result = join(venue.id, { phone, code, consent, friendCode }, lang);
     setMessage(result.ok ? '' : result.message);
   }
 
   return (
     <>
-      <Text style={styles.text}>
-        You are browsing as a guest. Guests can still buy, but only members earn
-        points. Join to earn points.
-      </Text>
+      <Text style={styles.text}>{t('guestIntro')}</Text>
       <PrivacyLink />
       <View style={{ gap: 10 }}>
-        <Text style={sectionTitle}>Join {venue.name} rewards</Text>
-        <Text style={styles.text}>Mobile number</Text>
+        <Text style={sectionTitle}>
+          {t('joinTitle', { venue: venue.name })}
+        </Text>
+        <Text style={styles.text}>{t('mobileNumber')}</Text>
         <TextInput
-          accessibilityLabel="Mobile number"
+          accessibilityLabel={t('mobileNumber')}
           keyboardType="phone-pad"
           placeholder="0901234567"
           value={phone}
@@ -179,26 +186,25 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
           style={input}
         />
         <View style={styles.row}>
-          <Button label="Send code" onPress={sendCode} />
+          <Button label={t('sendCode')} onPress={sendCode} />
         </View>
         {sentTo ? (
           <Text accessibilityLiveRegion="polite" style={styles.text}>
-            Demo only: no SMS is sent. Your code for {maskPhone(sentTo)} is{' '}
-            {DEMO_OTP}.
+            {t('demoOtp', { phone: maskPhone(sentTo), code: DEMO_OTP })}
           </Text>
         ) : null}
-        <Text style={styles.text}>Verification code</Text>
+        <Text style={styles.text}>{t('verificationCode')}</Text>
         <TextInput
-          accessibilityLabel="Verification code"
+          accessibilityLabel={t('verificationCode')}
           keyboardType="number-pad"
           maxLength={6}
           value={code}
           onChangeText={setCode}
           style={input}
         />
-        <Text style={styles.text}>Friend&apos;s code (optional)</Text>
+        <Text style={styles.text}>{t('friendCodeLabel')}</Text>
         <TextInput
-          accessibilityLabel="Friend's code"
+          accessibilityLabel={t('friendCodeA11y')}
           autoCapitalize="characters"
           placeholder={`${venue.id.toUpperCase()}-XXXXXX`}
           value={friendCode}
@@ -206,9 +212,10 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
           style={input}
         />
         <Text style={styles.text}>
-          A valid code from {venue.name} gives you {REFERRAL_BONUS_POINTS} bonus
-          points once. Demo only: your friend is not credited, because this
-          device holds the only data.
+          {t('referralNote', {
+            venue: venue.name,
+            points: REFERRAL_BONUS_POINTS,
+          })}
         </Text>
         <Pressable
           accessibilityRole="checkbox"
@@ -220,41 +227,38 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
             {consent ? '[x]' : '[ ]'}
           </Text>
           <Text style={[styles.text, { flex: 1 }]}>
-            I agree that {venue.name} stores my mobile number, visit history,
-            points, drink preferences and pinned seats on this device to run its
-            rewards programme. I can leave at any time and my data is deleted.
+            {t('consentText', { venue: venue.name })}
           </Text>
         </Pressable>
         <View style={styles.row}>
-          <Button label="Join" onPress={submit} />
+          <Button label={t('join')} onPress={submit} />
         </View>
         {message ? <Text accessibilityRole="alert">{message}</Text> : null}
-        <Text style={styles.text}>
-          Points are earned from your next completed visit after joining.
-        </Text>
+        <Text style={styles.text}>{t('pointsLater')}</Text>
       </View>
       <Stats venue={venue} state={state} />
       <BadgesPanel visits={venueVisits(state, venue.id)} />
       {hasLocalData ? (
         <View style={{ gap: 10 }}>
-          <Text style={styles.text}>
-            Your guest visits and pinned seats are kept only on this device.
-          </Text>
+          <Text style={styles.text}>{t('guestLocal')}</Text>
           {confirmClear ? (
             <View style={styles.row}>
               <Button
-                label="Yes, delete this data"
+                label={t('confirmDeleteData')}
                 onPress={() => {
                   leave(venue.id);
                   setConfirmClear(false);
                 }}
               />
-              <Button label="Cancel" onPress={() => setConfirmClear(false)} />
+              <Button
+                label={t('cancel')}
+                onPress={() => setConfirmClear(false)}
+              />
             </View>
           ) : (
             <View style={styles.row}>
               <Button
-                label="Delete my visit data"
+                label={t('deleteVisitData')}
                 onPress={() => setConfirmClear(true)}
               />
             </View>
@@ -266,6 +270,7 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
 }
 
 function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
+  const { t, lang } = useT(loyaltyMessages);
   const leave = useLoyalty((store) => store.leave);
   const toggleFavourite = useLoyalty((store) => store.toggleFavourite);
   const setPreferences = useLoyalty((store) => store.setPreferences);
@@ -276,30 +281,29 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
   const [confirmLeave, setConfirmLeave] = useState(false);
   const ledger = state.ledger.filter((entry) => entry.venueId === venue.id);
   const favourites = favouriteSeatIds(state, venue.id);
-  const notice = allergyNotice(draft);
+  const notice = allergyNotice(draft, lang);
   const referral = memberReferralCode(state, venue.id);
 
   return (
     <>
       <View style={{ gap: 6 }}>
         <Text style={styles.text}>
-          Member · {membership ? maskPhone(membership.phone) : ''}
+          {t('memberLine', {
+            phone: membership ? maskPhone(membership.phone) : '',
+          })}
         </Text>
         <Text accessibilityRole="header" style={styles.heading}>
-          {pointsBalance(state, venue.id)} points
+          {t('pointsHeading', { n: pointsBalance(state, venue.id) })}
         </Text>
         <Text style={styles.text}>
-          You earn 1 point per full {formatMoney(1000)} spent after each
-          completed visit. Redeeming points is not available yet.
+          {t('earnNote', { unit: formatMoney(1000) })}
         </Text>
       </View>
 
       <View style={{ gap: 6 }}>
-        <Text style={sectionTitle}>Points history</Text>
+        <Text style={sectionTitle}>{t('historyTitle')}</Text>
         {ledger.length === 0 ? (
-          <Text style={styles.text}>
-            No points yet. Complete a visit to earn your first points.
-          </Text>
+          <Text style={styles.text}>{t('historyNone')}</Text>
         ) : (
           ledger.map((entry) => {
             const visit = state.visits.find(
@@ -307,12 +311,15 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
             );
             return (
               <Text key={entry.id} style={styles.text}>
-                +{entry.points} points ·{' '}
-                {entry.kind === 'referral'
-                  ? 'Referral bonus for using a friend code'
-                  : visit
-                    ? `${visit.seatLabel}, ${formatMoney(visit.total)}`
-                    : `Visit ${entry.sessionId}`}
+                {t('historyLine', {
+                  n: entry.points,
+                  detail:
+                    entry.kind === 'referral'
+                      ? t('historyReferral')
+                      : visit
+                        ? `${seatLabelText(visit.seatLabel, lang)}, ${formatMoney(visit.total)}`
+                        : t('historyVisit', { id: entry.sessionId }),
+                })}
               </Text>
             );
           })
@@ -323,37 +330,40 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
       <BadgesPanel visits={venueVisits(state, venue.id)} />
 
       <View style={{ gap: 6 }}>
-        <Text style={sectionTitle}>Your referral code</Text>
+        <Text style={sectionTitle}>{t('referralTitle')}</Text>
         <Text
-          accessibilityLabel={`Your referral code is ${referral ?? ''}`}
+          accessibilityLabel={t('referralA11y', { code: referral ?? '' })}
           style={{ fontWeight: '700', fontSize: 18, color: colors.ink }}
         >
           {referral}
         </Text>
         <Text style={styles.text}>
-          A friend joining {venue.name} can enter it for {REFERRAL_BONUS_POINTS}{' '}
-          bonus points. Demo only: there is one device and no server, so a
-          friend&apos;s join cannot be checked and you are not credited for it.
+          {t('referralExplain', {
+            venue: venue.name,
+            points: REFERRAL_BONUS_POINTS,
+          })}
         </Text>
       </View>
       <PrivacyLink />
 
       <View style={{ gap: 10 }}>
-        <Text style={sectionTitle}>Drink preferences</Text>
-        <Text style={styles.text}>Milk</Text>
+        <Text style={sectionTitle}>{t('prefsTitle')}</Text>
+        <Text style={styles.text}>{t('milk')}</Text>
         <View style={styles.row}>
           {MILK_OPTIONS.map((milk) => (
             <Button
               key={milk}
               label={
-                draft.milk === milk ? `✓ ${MILK_LABEL[milk]}` : MILK_LABEL[milk]
+                draft.milk === milk
+                  ? `✓ ${t(MILK_KEY[milk])}`
+                  : t(MILK_KEY[milk])
               }
               selected={draft.milk === milk}
               onPress={() => setDraft({ ...draft, milk })}
             />
           ))}
         </View>
-        <Text style={styles.text}>Sweetness</Text>
+        <Text style={styles.text}>{t('sweetness')}</Text>
         <View style={styles.row}>
           {SWEETNESS_OPTIONS.map((sweetness) => (
             <Button
@@ -369,10 +379,13 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
           ))}
         </View>
         <Text style={styles.text}>
-          Allergy note ({draft.allergyNote.length}/{MAX_ALLERGY_NOTE})
+          {t('allergyLabel', {
+            n: draft.allergyNote.length,
+            max: MAX_ALLERGY_NOTE,
+          })}
         </Text>
         <TextInput
-          accessibilityLabel="Allergy note"
+          accessibilityLabel={t('allergyA11y')}
           maxLength={MAX_ALLERGY_NOTE}
           multiline
           value={draft.allergyNote}
@@ -382,10 +395,10 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
         {notice ? <Text style={styles.text}>{notice}</Text> : null}
         <View style={styles.row}>
           <Button
-            label="Save preferences"
+            label={t('savePrefs')}
             onPress={() => {
-              const result = setPreferences(venue.id, draft);
-              setSaved(result.ok ? 'Preferences saved.' : result.message);
+              const result = setPreferences(venue.id, draft, lang);
+              setSaved(result.ok ? t('prefsSaved') : result.message);
             }}
           />
         </View>
@@ -397,11 +410,9 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
       </View>
 
       <View style={{ gap: 6 }}>
-        <Text style={sectionTitle}>Pinned seats</Text>
+        <Text style={sectionTitle}>{t('pinnedTitle')}</Text>
         {favourites.length === 0 ? (
-          <Text style={styles.text}>
-            No pinned seats. Pin one from Explore to find it again quickly.
-          </Text>
+          <Text style={styles.text}>{t('pinnedNone')}</Text>
         ) : (
           <View style={styles.row}>
             {favourites.map((id) => {
@@ -409,7 +420,9 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
               return seat ? (
                 <Button
                   key={id}
-                  label={`★ ${seat.label} · Unpin`}
+                  label={t('unpinSeat', {
+                    seat: seatLabelText(seat.label, lang),
+                  })}
                   onPress={() => toggleFavourite(venue.id, id)}
                 />
               ) : null;
@@ -419,25 +432,27 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
       </View>
 
       <View style={{ gap: 10 }}>
-        <Text style={sectionTitle}>Leave programme</Text>
+        <Text style={sectionTitle}>{t('leaveTitle')}</Text>
         {confirmLeave ? (
           <>
             <Text accessibilityRole="alert" style={styles.text}>
-              This deletes your membership, points, visit history, preferences
-              and pinned seats for {venue.name}. It cannot be undone.
+              {t('leaveConfirm', { venue: venue.name })}
             </Text>
             <View style={styles.row}>
               <Button
-                label="Yes, delete my data"
+                label={t('confirmDeleteMine')}
                 onPress={() => leave(venue.id)}
               />
-              <Button label="Cancel" onPress={() => setConfirmLeave(false)} />
+              <Button
+                label={t('cancel')}
+                onPress={() => setConfirmLeave(false)}
+              />
             </View>
           </>
         ) : (
           <View style={styles.row}>
             <Button
-              label="Leave programme and delete my data"
+              label={t('leaveButton')}
               onPress={() => setConfirmLeave(true)}
             />
           </View>

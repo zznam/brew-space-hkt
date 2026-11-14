@@ -1,5 +1,4 @@
 import { createStore } from 'zustand/vanilla';
-import type { ActionResult } from '../../../core/domain';
 import { getAllVenues } from '../../../core/fixtures';
 import type { VisitSnapshot } from '../shared/visit';
 import {
@@ -13,6 +12,7 @@ import {
   validateOptionalReason,
   type NoteClassification,
   type SeatPreference,
+  type SupportErrorCode,
   type SupportRequest,
 } from './supportModel';
 import {
@@ -38,8 +38,11 @@ export interface Rating {
   comment: string;
 }
 
-export type SubmitResult =
-  { ok: true; request: SupportRequest } | { ok: false; message: string };
+/** Failures carry an English message plus a code the UI translates. */
+export type Failure = { ok: false; message: string; code?: SupportErrorCode };
+export type SupportActionResult = { ok: true } | Failure;
+
+export type SubmitResult = { ok: true; request: SupportRequest } | Failure;
 
 /** The parts of a finished visit a refund request needs (a VisitSnapshot fits). */
 export type RefundVisit = Pick<
@@ -47,8 +50,7 @@ export type RefundVisit = Pick<
   'sessionId' | 'venueId' | 'seatId' | 'total' | 'minutes'
 >;
 
-export type RefundResult =
-  { ok: true; refund: RefundRequest } | { ok: false; message: string };
+export type RefundResult = { ok: true; refund: RefundRequest } | Failure;
 
 const REFUND_CLASSIFICATION: NoteClassification = {
   category: 'payment',
@@ -77,20 +79,24 @@ export interface SupportStore {
   ) => SubmitResult;
   /** Asks a manager to review a visit. One open request per session. Moves no money. */
   requestRefund: (visit: RefundVisit, reason: string) => RefundResult;
-  withdrawRefund: (refundId: string) => ActionResult;
-  markResolved: (requestId: string) => ActionResult;
+  withdrawRefund: (refundId: string) => SupportActionResult;
+  markResolved: (requestId: string) => SupportActionResult;
   setLastReceipt: (receipt: VisitSnapshot | null) => void;
-  rate: (rating: Rating) => ActionResult;
+  rate: (rating: Rating) => SupportActionResult;
   reset: () => void;
 }
 
-const fail = (message: string) => ({ ok: false as const, message });
+const fail = (message: string, code: SupportErrorCode) => ({
+  ok: false as const,
+  message,
+  code,
+});
 
 function validateContext(ctx: SupportContext) {
   const venue = getAllVenues().find((entry) => entry.id === ctx?.venueId);
-  if (!venue) return fail('Unknown venue.');
+  if (!venue) return fail('Unknown venue.', 'UNKNOWN_VENUE');
   if (!venue.seats.some((seat) => seat.id === ctx.seatId))
-    return fail('Unknown seat for this venue.');
+    return fail('Unknown seat for this venue.', 'UNKNOWN_SEAT');
   return null;
 }
 
@@ -151,7 +157,11 @@ export function createSupportStore() {
       },
       reportSeatIssue: (ctx, presetId) => {
         const preset = findSeatIssuePreset(presetId);
-        if (!preset) return fail('Choose one of the listed seat issues.');
+        if (!preset)
+          return fail(
+            'Choose one of the listed seat issues.',
+            'BAD_SEAT_ISSUE',
+          );
         return add(ctx, {
           kind: 'seat_issue',
           text: preset.label,
@@ -161,11 +171,17 @@ export function createSupportStore() {
       requestSeatChange: (ctx, input) => {
         const preferred = input?.preferredKind ?? 'any';
         if (!isSeatPreference(preferred))
-          return fail('Choose desk, pod, booth or any seat.');
+          return fail(
+            'Choose desk, pod, booth or any seat.',
+            'BAD_SEAT_PREFERENCE',
+          );
         const reason = validateOptionalReason(input?.reason);
         if (!reason.ok) return reason;
         if (!ctx?.sessionId)
-          return fail('Start a session before asking to move seats.');
+          return fail(
+            'Start a session before asking to move seats.',
+            'NEED_SESSION',
+          );
         return add(ctx, {
           kind: 'seat_change',
           text: reason.text
@@ -179,15 +195,22 @@ export function createSupportStore() {
         const reason = validateRefundReason(reasonText);
         if (!reason.ok) return reason;
         if (!visit || typeof visit.sessionId !== 'string' || !visit.sessionId)
-          return fail('Missing visit for this refund request.');
+          return fail(
+            'Missing visit for this refund request.',
+            'REFUND_NO_VISIT',
+          );
         if (!Number.isSafeInteger(visit.total) || visit.total < 0)
-          return fail('This visit has an invalid total.');
+          return fail('This visit has an invalid total.', 'REFUND_BAD_TOTAL');
         if (visit.total === 0)
           return fail(
             'Nothing was charged for this visit, so there is nothing to refund.',
+            'REFUND_ZERO',
           );
         if (openRefundForSession(get().refunds, visit.sessionId))
-          return fail('You already have a refund request waiting for review.');
+          return fail(
+            'You already have a refund request waiting for review.',
+            'REFUND_DUPLICATE',
+          );
         const added = add(
           {
             venueId: visit.venueId,
@@ -221,9 +244,13 @@ export function createSupportStore() {
       },
       withdrawRefund: (refundId) => {
         const refund = get().refunds.find((entry) => entry.id === refundId);
-        if (!refund) return fail('Refund request not found.');
+        if (!refund)
+          return fail('Refund request not found.', 'REFUND_NOT_FOUND');
         if (refund.status !== 'requested')
-          return fail('This request is no longer waiting for review.');
+          return fail(
+            'This request is no longer waiting for review.',
+            'REFUND_NOT_OPEN',
+          );
         set({
           refunds: get().refunds.map((entry) =>
             entry.id === refundId
@@ -240,7 +267,7 @@ export function createSupportStore() {
       },
       markResolved: (requestId) => {
         const request = get().requests.find((entry) => entry.id === requestId);
-        if (!request) return fail('Request not found.');
+        if (!request) return fail('Request not found.', 'REQUEST_NOT_FOUND');
         set({
           requests: get().requests.map((entry) =>
             entry.id === requestId
@@ -257,17 +284,23 @@ export function createSupportStore() {
           typeof rating.sessionId !== 'string' ||
           !rating.sessionId
         )
-          return fail('Missing session for this rating.');
+          return fail('Missing session for this rating.', 'RATING_NO_SESSION');
         if (
           !isRating(rating.seat) ||
           !isRating(rating.drinks) ||
           !isRating(rating.service)
         )
-          return fail('Each rating must be a whole number from 1 to 5.');
+          return fail(
+            'Each rating must be a whole number from 1 to 5.',
+            'RATING_RANGE',
+          );
         const comment =
           typeof rating.comment === 'string' ? rating.comment.trim() : '';
         if (comment.length > MAX_NOTE_LENGTH)
-          return fail(`Comments can be at most ${MAX_NOTE_LENGTH} characters.`);
+          return fail(
+            `Comments can be at most ${MAX_NOTE_LENGTH} characters.`,
+            'RATING_COMMENT_TOO_LONG',
+          );
         const clean: Rating = {
           sessionId: rating.sessionId,
           seat: rating.seat,

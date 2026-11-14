@@ -3,6 +3,9 @@
  * wall clock through explicit `nowMs` values passed by the caller and never
  * touches billing or the demo session time. No timers or React in here.
  */
+import { translate, type Lang, type Params } from '../i18n/i18n';
+import { focusMessages } from './messages';
+
 export const FOCUS_PRESETS = [
   { id: '25-5', label: '25 / 5', workMinutes: 25, breakMinutes: 5 },
   { id: '50-10', label: '50 / 10', workMinutes: 50, breakMinutes: 10 },
@@ -140,41 +143,60 @@ export function formatClock(ms: number) {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
-export const phaseLabel = (phase: FocusPhase) =>
-  phase === 'work' ? 'Focus' : phase === 'break' ? 'Break' : 'Ready';
+export const phaseLabel = (phase: FocusPhase, lang: Lang = 'en') =>
+  translate(
+    focusMessages,
+    lang,
+    phase === 'work'
+      ? 'phaseWork'
+      : phase === 'break'
+        ? 'phaseBreak'
+        : 'phaseIdle',
+  );
 
-const MILK_PHRASE = {
-  dairy: 'dairy milk',
-  oat: 'oat milk',
-  almond: 'almond milk',
-  none: 'no milk',
+const MILK_KEY = {
+  dairy: 'milkDairy',
+  oat: 'milkOat',
+  almond: 'milkAlmond',
+  none: 'milkNone',
 } as const;
 /** Gentle break idea. `prefs` is the member's saved drink preference (read
  * only) or null for guests; the allergy note is never repeated here. */
 export function breakSuggestion(
-  prefs: { milk: keyof typeof MILK_PHRASE; sweetness: number } | null,
+  prefs: { milk: keyof typeof MILK_KEY; sweetness: number } | null,
+  lang: Lang = 'en',
 ) {
-  const base = 'Stand up, stretch and rest your eyes for a few minutes.';
+  const base = translate(focusMessages, lang, 'breakBase');
   return prefs
-    ? `${base} Fancy a drink? Your saved preference is ${MILK_PHRASE[prefs.milk]}, ${prefs.sweetness}% sweet. Add one from the menu if you like.`
+    ? translate(focusMessages, lang, 'breakDrink', {
+        base,
+        milk: translate(focusMessages, lang, MILK_KEY[prefs.milk]),
+        sweetness: prefs.sweetness,
+      })
     : base;
 }
 
 /** Text for the polite live region after a change. */
-export function announcement(state: FocusState): string {
+export function announcement(state: FocusState, lang: Lang = 'en'): string {
   const preset = getPreset(state.presetId);
+  const say = (key: keyof typeof focusMessages.en, params?: Params) =>
+    translate(focusMessages, lang, key, params);
   switch (state.lastChange) {
     case 'started':
     case 'work':
-      return `Focus time started: ${preset.workMinutes} minutes.`;
+      return say('announceStarted', { minutes: preset.workMinutes });
     case 'resumed':
-      return `Timer resumed. ${phaseLabel(state.phase)} phase.`;
+      return say('announceResumed', { phase: phaseLabel(state.phase, lang) });
     case 'paused':
-      return 'Timer paused.';
+      return say('announcePaused');
     case 'break':
-      return `Break time: ${preset.breakMinutes} minutes. ${state.cycles} focus block${state.cycles === 1 ? '' : 's'} done.`;
+      return say('announceBreak', {
+        minutes: preset.breakMinutes,
+        cycles: state.cycles,
+        plural: state.cycles === 1 ? '' : 's',
+      });
     case 'reset':
-      return 'Timer reset.';
+      return say('announceReset');
     default:
       return '';
   }

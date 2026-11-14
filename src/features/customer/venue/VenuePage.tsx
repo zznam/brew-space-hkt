@@ -2,20 +2,21 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { formatMoney, type Venue } from '@/core';
 import { Card, Heading, colors, styles } from '@/components/ui';
+import { useT } from '../i18n/useLanguage';
+import { kindName, venueMessages } from './messages';
 import { venuePageInfo } from './venueModel';
-
-const KIND_LABEL = { desk: 'Desk', pod: 'Pod', booth: 'Booth' } as const;
 
 /** F131: hours, address and seat price table, shown before a seat is chosen.
  * All details are demo data; prices come from the core billing function. */
 export function VenuePage({ venue }: { venue: Venue }) {
   // Read once per mount: "open now" is the device clock in venue time.
   const [now] = useState(() => new Date());
-  const info = venuePageInfo(venue, now);
+  const { t, lang } = useT(venueMessages);
+  const info = venuePageInfo(venue, now, lang);
   return (
     <Card>
-      <Heading>Hours, address and prices</Heading>
-      <Text style={styles.text}>Address: {info.address}</Text>
+      <Heading>{t('venueHeading')}</Heading>
+      <Text style={styles.text}>{t('address', { address: info.address })}</Text>
       {info.openNow === null ? null : (
         <Text
           style={{
@@ -23,14 +24,12 @@ export function VenuePage({ venue }: { venue: Venue }) {
             fontWeight: '700',
           }}
         >
-          {info.openNow ? 'Open now' : 'Closed now'}{' '}
-          <Text style={{ fontWeight: '400' }}>
-            (device clock, venue time UTC+7)
-          </Text>
+          {info.openNow ? t('openNow') : t('closedNow')}{' '}
+          <Text style={{ fontWeight: '400' }}>{t('clockNote')}</Text>
         </Text>
       )}
       <View style={{ gap: 2 }}>
-        <Text style={{ fontWeight: '700' }}>Opening hours</Text>
+        <Text style={{ fontWeight: '700' }}>{t('openingHours')}</Text>
         {info.hours.map((line) => (
           <Text key={line.days} style={styles.text}>
             {line.days}: {line.text}
@@ -38,20 +37,21 @@ export function VenuePage({ venue }: { venue: Venue }) {
         ))}
       </View>
       <View style={{ gap: 6 }}>
-        <Text style={{ fontWeight: '700' }}>Seat prices by type</Text>
+        <Text style={{ fontWeight: '700' }}>{t('pricesTitle')}</Text>
         {info.prices.map((row) => (
           <Text key={row.kind} style={styles.text}>
-            {KIND_LABEL[row.kind]} ({row.seatCount}):{' '}
-            {row.varies ? 'from ' : ''}
-            {formatMoney(row.hourlyRate)}/h · 2h bundle{' '}
-            {formatMoney(row.bundle2h)} · 4h bundle {formatMoney(row.bundle4h)}
+            {t('priceRow', {
+              kind: kindName(row.kind, lang),
+              count: row.seatCount,
+              from: row.varies ? t('priceFrom') : '',
+              rate: formatMoney(row.hourlyRate),
+              b2: formatMoney(row.bundle2h),
+              b4: formatMoney(row.bundle4h),
+            })}
           </Text>
         ))}
       </View>
-      <Text style={styles.text}>
-        Demo venue details and estimates. Bundles are 15% off seat time, before
-        any food or drinks.
-      </Text>
+      <Text style={styles.text}>{t('venueDemoNote')}</Text>
     </Card>
   );
 }
