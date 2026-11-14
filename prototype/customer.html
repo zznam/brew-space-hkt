@@ -1,42 +1,295 @@
 <!doctype html>
 <html lang="vi">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="Chọn chỗ ngồi, mua giờ làm việc và gọi cà phê tại Nếp. Prototype tương tác.">
-  <title>Nếp — Chọn một chỗ cho hôm nay</title>
-  <link rel="stylesheet" href="fonts.css">
-  <link rel="stylesheet" href="styles.css">
-  <script src="shared.js" defer></script>
-  <script src="customer.js" defer></script>
-</head>
-<body class="customer-page">
-  <a class="skip-link" href="#main">Đến nội dung chính</a>
-  <header class="customer-header"><a href="index.html" class="wordmark">nếp<span>®</span></a><div class="customer-location"><span data-icon="pin"></span><span>Cafe & coworking <span class="muted">/ Chi nhánh mẫu</span></span></div><button class="button button--outline" id="customer-support"><span data-icon="bell"></span> Cần hỗ trợ?</button></header>
-  <main id="main" class="customer-main">
-    <div class="customer-intro"><div><div class="location-line"><span class="live-dot"></span> Không gian cho một ngày tập trung</div><h1>Chọn một chỗ.<br>Ở lại theo cách của bạn.</h1><p>Một góc yên, cà phê ngon. Chọn chỗ ngồi và thời gian,<br class="desktop-break"> mọi thứ còn lại đã ở đây.</p></div><div class="visit-note"><span data-icon="leaf"></span><strong>Cứ đến, rồi tập trung.</strong><span>Wi-Fi, ổ điện và một khoảng riêng.</span><span class="demo-badge">Bản mẫu · không thu tiền</span></div></div>
-    <div class="customer-layout">
-      <div class="customer-explore">
-        <section class="choose-space" aria-labelledby="choose-heading"><div class="section-heading"><h2 id="choose-heading">Bạn muốn ngồi ở đâu?</h2><span class="muted" id="customer-free-count"></span></div><div class="zone-chips" role="group" aria-label="Loại chỗ ngồi"><button class="chip is-active" data-zone="all" aria-pressed="true">Tất cả</button><button class="chip" data-zone="window" aria-pressed="false"><span data-icon="leaf"></span> Cạnh cửa sổ</button><button class="chip" data-zone="focus" aria-pressed="false"><span data-icon="volume"></span> Tập trung</button><button class="chip" data-zone="meeting" aria-pressed="false"><span data-icon="users"></span> Bàn nhóm</button><button class="chip" data-zone="bar" aria-pressed="false"><span data-icon="cup"></span> Quầy chung</button></div>
-          <div class="customer-map-wrap"><div class="customer-map-label"><span><span class="live-dot"></span> Tầng trệt</span><div class="segmented" role="group" aria-label="Kiểu chọn chỗ"><button class="is-active" data-customer-view="map" aria-pressed="true">Sơ đồ</button><button data-customer-view="list" aria-pressed="false">Danh sách</button></div></div><div class="map-canvas" id="customer-map"></div><div id="customer-seat-list" class="customer-seat-list" hidden></div><div class="customer-map-footer"><span><i class="status-dot status-dot--free"></i> Chỗ sáng màu còn trống</span><span><i class="selected-outline"></i> Chỗ bạn chọn</span></div></div>
-        </section>
-        <section class="menu-section" aria-labelledby="menu-heading"><div class="section-heading"><div><h2 id="menu-heading">Thêm một chút tỉnh táo.</h2><p>Cà phê được mang đến tận chỗ của bạn.</p></div><label class="select-control"><span class="sr-only">Nhóm đồ uống</span><select id="menu-category"><option value="all">Tất cả đồ uống</option><option value="coffee">Cà phê</option><option value="tea">Trà & matcha</option></select></label></div><div id="customer-menu" class="drink-menu"></div></section>
-        <section class="loyalty-strip"><span class="loyalty-mark" data-icon="cup"></span><div><strong>Mỗi lần ghé, thêm một chút thân quen.</strong><p>Thành viên có thể tích điểm và nhận ưu đãi theo thói quen.</p></div><button class="text-link" id="loyalty-info">Tìm hiểu <span data-icon="arrow"></span></button></section>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta
+      name="description"
+      content="Nếp trên điện thoại: chọn chỗ, gọi nước, mượn sách và đồ dùng, mua đồ giải trí và văn phòng phẩm."
+    />
+    <title>Nếp — Không gian & tiện ích</title>
+    <link rel="stylesheet" href="fonts.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="mobile.css" />
+    <link rel="icon" href="data:," />
+    <script src="services.js" defer></script>
+    <script src="shared.js" defer></script>
+    <script src="service-ui.js" defer></script>
+    <script src="customer.js" defer></script>
+  </head>
+  <body class="customer-page mobile-app">
+    <a class="skip-link" href="#main">Đến nội dung chính</a>
+    <header class="customer-header phone-header">
+      <a href="index.html" class="wordmark" aria-label="Nếp — chọn giao diện"
+        >nếp</a
+      >
+      <div class="phone-venue">
+        <strong>Cafe & coworking</strong><span>Quận 3 · chi nhánh mẫu</span>
       </div>
-      <aside class="booking-card" id="booking" aria-labelledby="booking-heading"><div class="booking-heading"><h2 id="booking-heading">Chỗ của bạn hôm nay</h2><span class="booking-icon" data-icon="bag"></span></div><div id="selected-seat-summary"></div>
-        <fieldset class="duration-fieldset"><legend>Bạn muốn ở bao lâu?</legend><div class="duration-options"><button type="button" class="duration-option" data-hours="1" aria-pressed="false">1 giờ</button><button type="button" class="duration-option is-active" data-hours="2" aria-pressed="true">2 giờ</button><button type="button" class="duration-option" data-hours="4" aria-pressed="false">4 giờ</button></div></fieldset>
-        <div class="booking-time"><span data-icon="clock"></span><div><strong>Bắt đầu khi check-in</strong><small>Hôm nay · 14/11 · giờ mô phỏng</small></div><span class="included-tag">Trả trước</span></div>
-        <div class="cart-drinks" id="cart-drinks"></div>
-        <div class="order-note"><label for="order-note">Ghi chú cho quán <span class="muted">(tùy chọn)</span></label><textarea id="order-note" rows="2" maxlength="240" placeholder="Ví dụ: ít đá, cần thêm ổ cắm…"></textarea><span class="field-helper">Nếu cần, nhân viên sẽ hỗ trợ bạn tại bàn.</span></div>
-        <div class="price-summary" id="price-summary" aria-live="polite"></div>
-        <button class="button button--primary checkout-button" id="checkout"><span>Đặt chỗ & thanh toán</span><span data-icon="arrow"></span></button><div class="checkout-assurance"><span data-icon="shield"></span><span>Bản mẫu tương tác. Không thu tiền thật.</span></div><p id="checkout-error" class="form-error" role="alert" hidden></p>
-        <div class="payment-methods"><span data-icon="card"></span><span>Thanh toán online khi triển khai pilot</span></div>
-      </aside>
-    </div>
-  </main>
-  <footer class="customer-footer"><a class="wordmark" href="index.html">nếp<span>®</span></a><span>Cafe, một chỗ ngồi và thời gian của bạn.</span><a href="operations.html" class="text-link">Màn vận hành <span data-icon="external"></span></a></footer>
-  <a class="mobile-cart" href="#booking" aria-label="Xem giỏ đặt chỗ"><span id="mobile-cart-summary"></span><strong id="mobile-cart-total"></strong><span>Xem giỏ <span data-icon="arrow"></span></span></a>
-  <dialog id="customer-dialog" aria-labelledby="customer-dialog-title"><div class="dialog-heading"><h2 id="customer-dialog-title"></h2><button class="icon-button" id="close-customer-dialog" aria-label="Đóng cửa sổ"><span data-icon="close"></span></button></div><div id="customer-dialog-body"></div></dialog>
-  <div id="notice" class="notice" role="status" hidden></div>
-</body>
+      <button
+        class="icon-button"
+        id="customer-support"
+        aria-label="Gọi nhân viên hỗ trợ"
+      >
+        <span data-icon="bell"></span>
+      </button>
+    </header>
+    <main id="main" class="customer-main" tabindex="-1">
+      <section class="phone-welcome">
+        <div class="location-line">
+          <span class="live-dot"></span> Một ngày tập trung tại Nếp
+        </div>
+        <h1 id="customer-view-title">Một chỗ ngồi,<br />đủ điều bạn cần.</h1>
+        <div class="welcome-footer">
+          <span class="demo-badge">Bản mẫu · không thu tiền</span
+          ><button class="context-seat" data-customer-open="cart">
+            <span data-icon="pin"></span
+            ><span id="context-seat-label">Chỗ W03</span
+            ><span data-icon="down"></span>
+          </button>
+        </div>
+      </section>
+      <section data-customer-panel="space" class="phone-panel">
+        <div
+          class="service-shortcuts"
+          id="customer-shortcuts"
+          aria-label="Dịch vụ tại quán"
+        ></div>
+        <section class="choose-space" aria-labelledby="choose-heading">
+          <div class="section-heading">
+            <h2 id="choose-heading">Chỗ ngồi hôm nay</h2>
+            <span class="muted" id="customer-free-count"></span>
+          </div>
+          <div class="zone-chips" role="group" aria-label="Loại chỗ ngồi">
+            <button class="chip is-active" data-zone="all" aria-pressed="true">
+              Tất cả</button
+            ><button class="chip" data-zone="window" aria-pressed="false">
+              <span data-icon="leaf"></span> Cửa sổ</button
+            ><button class="chip" data-zone="focus" aria-pressed="false">
+              <span data-icon="volume"></span> Tập trung</button
+            ><button class="chip" data-zone="meeting" aria-pressed="false">
+              <span data-icon="users"></span> Bàn nhóm</button
+            ><button class="chip" data-zone="bar" aria-pressed="false">
+              Quầy chung
+            </button>
+          </div>
+          <div class="customer-map-wrap">
+            <div class="customer-map-label">
+              <span><span class="live-dot"></span> Tầng trệt</span>
+              <div class="segmented" role="group" aria-label="Kiểu chọn chỗ">
+                <button data-customer-view="map" aria-pressed="false">
+                  Sơ đồ</button
+                ><button
+                  class="is-active"
+                  data-customer-view="list"
+                  aria-pressed="true"
+                >
+                  Danh sách
+                </button>
+              </div>
+            </div>
+            <div class="map-canvas" id="customer-map"></div>
+            <div id="customer-seat-list" class="customer-seat-list"></div>
+            <div class="customer-map-footer">
+              <span
+                ><i class="status-dot status-dot--free"></i> Chỉ chọn được chỗ
+                còn trống</span
+              ><span><i class="selected-outline"></i> Đang chọn</span>
+            </div>
+          </div>
+        </section>
+      </section>
+      <section
+        data-customer-panel="menu"
+        class="phone-panel menu-section"
+        aria-labelledby="menu-heading"
+        hidden
+      >
+        <div class="section-heading">
+          <div>
+            <h2 id="menu-heading">Một chút tỉnh táo.</h2>
+            <p>Đồ uống được mang đến tận chỗ.</p>
+          </div>
+          <label class="select-control"
+            ><span class="sr-only">Nhóm đồ uống</span
+            ><select id="menu-category">
+              <option value="all">Tất cả</option>
+              <option value="coffee">Cà phê</option>
+              <option value="tea">Trà & matcha</option>
+            </select></label
+          >
+        </div>
+        <div id="customer-menu" class="drink-menu"></div>
+      </section>
+      <section data-customer-panel="services" class="phone-panel" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>Mượn & mua tại quán</h2>
+            <p>Những thứ nhỏ, cho một buổi ở lại trọn vẹn.</p>
+          </div>
+        </div>
+        <div
+          class="service-tabs"
+          id="customer-service-tabs"
+          role="group"
+          aria-label="Nhóm dịch vụ"
+        ></div>
+        <div class="service-policy" id="customer-service-policy"></div>
+        <div class="service-catalog" id="customer-service-list"></div>
+        <section class="my-loans">
+          <div class="section-heading">
+            <h2>Phiếu mượn của bạn</h2>
+            <span id="customer-loan-count" class="small-count"></span>
+          </div>
+          <div id="customer-loans" aria-live="polite"></div>
+        </section>
+        <button class="loyalty-link" id="loyalty-info">
+          <span data-icon="cup"></span><span>Tích điểm mỗi lần ghé</span
+          ><span data-icon="arrow"></span>
+        </button>
+      </section>
+      <section data-customer-panel="cart" class="phone-panel" hidden>
+        <aside
+          class="booking-card"
+          id="booking"
+          aria-labelledby="booking-heading"
+        >
+          <div class="booking-heading">
+            <h2 id="booking-heading">Giỏ của bạn</h2>
+            <span class="booking-icon" data-icon="bag"></span>
+          </div>
+          <div id="selected-seat-summary"></div>
+          <button
+            class="quiet-button full-width change-seat-button"
+            data-customer-open="space"
+          >
+            Đổi chỗ ngồi <span data-icon="arrow"></span>
+          </button>
+          <label class="seat-package-toggle"
+            ><input type="checkbox" id="include-seat" checked /><span
+              ><strong>Thêm gói giờ vào đơn</strong
+              ><small>Đã có chỗ? Tắt để chỉ mua món / sản phẩm.</small></span
+            ></label
+          >
+          <div id="purchase-destination" hidden></div>
+          <fieldset class="duration-fieldset">
+            <legend>Bạn muốn ở bao lâu?</legend>
+            <div class="duration-options">
+              <button
+                type="button"
+                class="duration-option"
+                data-hours="1"
+                aria-pressed="false"
+              >
+                1 giờ</button
+              ><button
+                type="button"
+                class="duration-option is-active"
+                data-hours="2"
+                aria-pressed="true"
+              >
+                2 giờ</button
+              ><button
+                type="button"
+                class="duration-option"
+                data-hours="4"
+                aria-pressed="false"
+              >
+                4 giờ
+              </button>
+            </div>
+          </fieldset>
+          <div class="booking-time">
+            <span data-icon="clock"></span>
+            <div>
+              <strong>Bắt đầu khi check-in</strong
+              ><small>14/11/2026 · giờ mô phỏng</small>
+            </div>
+            <span class="included-tag">Trả trước</span>
+          </div>
+          <div class="cart-drinks" id="cart-drinks"></div>
+          <div class="order-note">
+            <label for="order-note"
+              >Ghi chú cho quán <span class="muted">(tùy chọn)</span></label
+            ><textarea
+              id="order-note"
+              rows="2"
+              maxlength="240"
+              placeholder="Ít đá, cần hỗ trợ tại bàn…"
+            ></textarea
+            ><span class="field-helper"
+              >Đồ mượn có phiếu riêng và không cộng vào tiền mua.</span
+            >
+          </div>
+          <div
+            class="price-summary"
+            id="price-summary"
+            aria-live="polite"
+          ></div>
+          <button class="button button--primary checkout-button" id="checkout">
+            <span>Đặt chỗ & thanh toán</span><span data-icon="arrow"></span>
+          </button>
+          <div class="checkout-assurance">
+            <span data-icon="shield"></span
+            ><span>Mô phỏng · không thu tiền thật</span>
+          </div>
+          <p id="checkout-error" class="form-error" role="alert" hidden></p>
+          <div class="payment-methods">
+            <span data-icon="card"></span
+            ><span>Giá và số lượng là dữ liệu mẫu</span>
+          </div>
+        </aside>
+      </section>
+    </main>
+    <footer class="phone-footer">
+      <span>Dữ liệu mẫu lưu trên trình duyệt</span
+      ><a href="operations.html" class="text-link"
+        >Màn nhân viên <span data-icon="external"></span
+      ></a>
+    </footer>
+    <button
+      class="mobile-cart"
+      data-customer-open="cart"
+      aria-label="Xem giỏ đặt chỗ"
+    >
+      <span id="mobile-cart-summary"></span
+      ><strong id="mobile-cart-total"></strong
+      ><span>Xem giỏ <span data-icon="arrow"></span></span>
+    </button>
+    <nav class="phone-nav customer-nav" aria-label="Điều hướng khách">
+      <button class="is-active" data-customer-tab="space" aria-current="page">
+        <span data-icon="grid"></span><span>Không gian</span></button
+      ><button data-customer-tab="menu">
+        <span data-icon="cup"></span><span>Đồ uống</span></button
+      ><button data-customer-tab="services">
+        <span data-icon="book"></span><span>Tiện ích</span
+        ><span id="customer-nav-loans" class="nav-badge" hidden></span></button
+      ><button data-customer-tab="cart">
+        <span data-icon="bag"></span><span>Giỏ hàng</span
+        ><span id="customer-cart-count" class="nav-badge">1</span>
+      </button>
+    </nav>
+    <dialog
+      id="customer-dialog"
+      class="phone-sheet"
+      aria-labelledby="customer-dialog-title"
+    >
+      <div class="sheet-grip" aria-hidden="true"></div>
+      <div class="dialog-heading">
+        <h2 id="customer-dialog-title"></h2>
+        <button
+          class="icon-button"
+          id="close-customer-dialog"
+          aria-label="Đóng cửa sổ"
+        >
+          <span data-icon="close"></span>
+        </button>
+      </div>
+      <div id="customer-dialog-body"></div>
+    </dialog>
+    <div id="notice" class="notice" role="status" hidden></div>
+  </body>
 </html>

@@ -1,6 +1,18 @@
 [
   {
     "date": "2026-11-14",
+    "scope": "app",
+    "macrostructure": "Spatial workbench / service catalogue",
+    "theme": "Existing dark and mint system",
+    "design_system": "design.md",
+    "enrichment": "none; functional service illustrations and floor plan",
+    "brief": "Both HTML screens in phone-width columns; books, shared amenities, entertainment and stationery; handoff/return and retail stock",
+    "nav": "Bottom app tabs shared within each phone column",
+    "footer": "Compact prototype context",
+    "variation": "User-requested phone layout, preserved existing product colors and fonts"
+  },
+  {
+    "date": "2026-11-14",
     "macrostructure": "Split Studio",
     "theme": "Midnight — mint reference adaptation",
     "enrichment": "none; functional SVG floor plan and drink illustrations",

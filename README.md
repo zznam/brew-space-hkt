@@ -63,16 +63,19 @@ Still to build: interactive 3D/editor, real API/auth, transactional booking and 
 
 ## HTML prototype
 
-Hai màn dùng Hallmark và ảnh tham chiếu sơ đồ bàn; tông tối, nhấn mint, font tiếng Việt tự host.
+Hai màn dùng Hallmark và ảnh tham chiếu sơ đồ bàn; tông tối, nhấn mint, font tiếng Việt tự host. Bố cục điện thoại tối đa 480 px, tab điều hướng dưới và bottom sheet. Có mượn sách, đồ dùng chung cần trả lại, mua đồ giải trí và văn phòng phẩm.
 
 ```bash
 rtk proxy python3 -m http.server 4173 --bind 127.0.0.1
 ```
 
 - [Chọn giao diện](http://localhost:4173/prototype/)
+- [Xem hai màn điện thoại cạnh nhau](http://localhost:4173/prototype/preview.html)
 - [FE1 — Vận hành, sơ đồ bàn và POS](http://localhost:4173/prototype/operations.html)
 - [FE2 — Khách đặt chỗ và self checkout](http://localhost:4173/prototype/customer.html)
 
 Các màn chia sẻ dữ liệu mẫu qua localStorage khi mở cùng origin (giữ cùng hostname và port). Đơn từ checkout khách xuất hiện ở màn vận hành. Không thu tiền thật; chưa có backend, AI thật hoặc WebGL. [Hướng dẫn prototype](docs/prototype.md).
+
+Kiểm tra quy tắc mượn/trả/tồn sản phẩm: `rtk proxy node --test prototype/services.check.cjs`. Hai HTML vẫn chạy độc lập với ứng dụng Expo; lượt cập nhật này không thay đổi demo core trong `src/`.
 
 [Ảnh hai màn và kết quả kiểm tra](docs/prototype-verification.md).

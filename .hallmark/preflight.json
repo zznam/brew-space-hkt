@@ -6,12 +6,30 @@
   "existing_motion": null,
   "existing_spacing": null,
   "source": "User supplied floor-plan screenshot and MVP PRD",
-  "scope": "Two buildless HTML frontends; no existing production UI",
+  "scope": "Phone-first HTML prototypes only; separate Expo app core preserved",
   "decisions": {
-    "audience": ["Cafe staff", "Cafe and coworking guests"],
-    "use_case": ["Manage seats and orders", "Select a seat and self checkout"],
+    "audience": [
+      "Cafe staff",
+      "Cafe and coworking guests"
+    ],
+    "use_case": [
+      "Manage seats and orders",
+      "Select a seat and self checkout"
+    ],
     "tone": "Utilitarian, dark, mint accent — confirmed by user",
-    "fonts": ["Space Grotesk", "Be Vietnam Pro"],
-    "motion": "Only purposeful transform feedback; reduced-motion supported"
-  }
+    "fonts": [
+      "Space Grotesk",
+      "Be Vietnam Pro"
+    ],
+    "motion": "Only purposeful transform feedback; reduced-motion supported",
+    "layout": "480px content column, bottom app navigation and native dialog sheets",
+    "services": [
+      "Books on loan",
+      "Shared amenities on loan",
+      "Entertainment retail",
+      "Stationery retail"
+    ]
+  },
+  "root_framework": "Expo / React Native",
+  "prototype_framework": "Buildless HTML and JavaScript"
 }
