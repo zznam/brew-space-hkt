@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useStore } from 'zustand';
+import { setActiveCustomVenues } from './fixtures';
 import { createAppStore, isDemoState, type AppStore } from './store';
 
 export const appStore = createAppStore();
@@ -24,7 +25,9 @@ export function initializeStore(): Promise<string | null> {
             selectedSeatId,
             sessions,
             nextSessionId,
+            customVenues,
           } = data;
+          setActiveCustomVenues(customVenues ?? []);
           appStore.setState({
             role,
             venueId,
@@ -32,6 +35,7 @@ export function initializeStore(): Promise<string | null> {
             selectedSeatId,
             sessions,
             nextSessionId,
+            ...(customVenues !== undefined ? { customVenues } : {}),
           });
         } else
           warning = 'Saved demo was incompatible. Fresh sample data loaded.';

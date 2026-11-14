@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
 import { Text, View } from 'react-native';
-import { venues } from '@/core';
+import { getAllVenues } from '@/core';
 import { useAppStore } from '@/core/useAppStore';
 import { Button, Card, styles } from './ui';
 export function SimulatorBar() {
   const store = useAppStore((state) => state);
+  const allVenues = getAllVenues(store.customVenues);
   return (
     <Card>
       <Text style={{ fontWeight: '700' }}>
@@ -28,7 +29,7 @@ export function SimulatorBar() {
         ))}
       </View>
       <View style={styles.row}>
-        {venues.map((venue) => (
+        {allVenues.map((venue) => (
           <Button
             key={venue.id}
             label={venue.name}
