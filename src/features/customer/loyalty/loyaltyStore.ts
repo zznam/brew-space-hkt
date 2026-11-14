@@ -2,6 +2,7 @@ import { createStore } from 'zustand/vanilla';
 import type { ActionResult } from '../../../core/domain';
 import type { VisitSnapshot } from '../shared/visit';
 import {
+  LEDGER_KINDS,
   MAX_FAVOURITES,
   initialLoyaltyState,
   isKnownSeat,
@@ -13,16 +14,14 @@ import {
   recordVisit,
   setPreferences,
   toggleFavourite,
+  type JoinInput,
   type LoyaltyState,
   type ModelResult,
   type Preferences,
 } from './loyaltyModel';
 
 export interface LoyaltyStore extends LoyaltyState {
-  join: (
-    venueId: string,
-    input: { phone: string; code: string; consent: boolean },
-  ) => ActionResult;
+  join: (venueId: string, input: JoinInput) => ActionResult;
   leave: (venueId: string) => void;
   recordVisit: (snapshot: VisitSnapshot) => void;
   toggleFavourite: (venueId: string, seatId: string) => ActionResult;
@@ -110,7 +109,9 @@ export function isLoyaltyState(value: unknown): value is LoyaltyState {
       member.venueId === venueId &&
       typeof member.phone === 'string' &&
       isValidPhone(member.phone) &&
-      member.consent === true,
+      member.consent === true &&
+      (member.referredBy === undefined ||
+        typeof member.referredBy === 'string'),
   );
   const visitsOk =
     visits.every(isVisit) &&
@@ -127,7 +128,7 @@ export function isLoyaltyState(value: unknown): value is LoyaltyState {
         isKnownVenue(entry.venueId) &&
         typeof entry.sessionId === 'string' &&
         isCount(entry.points) &&
-        entry.kind === 'earn',
+        LEDGER_KINDS.includes(entry.kind as 'earn'),
     );
   const preferencesOk = Object.entries(preferences).every(
     ([venueId, prefs]) => isKnownVenue(venueId) && isPreferences(prefs),

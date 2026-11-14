@@ -12,6 +12,17 @@ import {
   createSupportStore,
   type SupportContext,
 } from '../src/features/customer/support/supportStore';
+import {
+  MAX_REFUND_REASON,
+  REFUND_NOTICE,
+  REFUND_STATUS_LABEL,
+  latestRefundForSession,
+  openRefundForSession,
+} from '../src/features/customer/support/refundModel';
+import {
+  SEAT_CHANGE_NOTE,
+  validateOptionalReason,
+} from '../src/features/customer/support/supportModel';
 import { getVenueInfo } from '../src/features/customer/support/venueInfo';
 import { calculateBill } from '../src/core';
 
@@ -283,12 +294,17 @@ describe('support store', () => {
     expect(Object.keys(store.getState()).sort()).toEqual(
       [
         'requests',
+        'refunds',
+        'nextRefundId',
         'lastReceipt',
         'ratings',
         'nextRequestId',
         'callStaff',
         'submitNote',
         'reportSeatIssue',
+        'requestSeatChange',
+        'requestRefund',
+        'withdrawRefund',
         'markResolved',
         'setLastReceipt',
         'rate',
@@ -397,5 +413,181 @@ describe('venue info', () => {
   });
   it('falls back for an unknown venue', () => {
     expect(getVenueInfo('unknown').rules).toHaveLength(3);
+  });
+});
+
+const visit = {
+  sessionId: 'demo-1',
+  venueId: 'grind',
+  seatId: 'grind-seat-8',
+  total: 20000,
+  minutes: 30,
+};
+
+describe('refund request', () => {
+  it('requires a reason of at most 300 characters', () => {
+    const store = createSupportStore();
+    expect(store.getState().requestRefund(visit, '').ok).toBe(false);
+    expect(store.getState().requestRefund(visit, '   ').ok).toBe(false);
+    expect(
+      store.getState().requestRefund(visit, 'x'.repeat(MAX_REFUND_REASON + 1))
+        .ok,
+    ).toBe(false);
+    expect(store.getState().refunds).toHaveLength(0);
+    expect(store.getState().requests).toHaveLength(0);
+    expect(
+      store.getState().requestRefund(visit, 'x'.repeat(MAX_REFUND_REASON)).ok,
+    ).toBe(true);
+  });
+
+  it('creates a requested refund and a mandatory payment support item', () => {
+    const store = createSupportStore();
+    const result = store.getState().requestRefund(visit, '  Wrong total  ');
+    expect(result.ok).toBe(true);
+    const { refunds, requests } = store.getState();
+    expect(refunds).toHaveLength(1);
+    expect(refunds[0]).toMatchObject({
+      sessionId: 'demo-1',
+      amount: 20000,
+      reason: 'Wrong total',
+      status: 'requested',
+    });
+    expect(requests).toHaveLength(1);
+    const item = requests[0];
+    expect(item?.id).toBe(refunds[0]?.supportRequestId);
+    expect(item).toMatchObject({ kind: 'refund', sessionId: 'demo-1' });
+    expect(item?.classification).toMatchObject({
+      category: 'payment',
+      needsStaff: true,
+    });
+    expect(mustEscalate(item!.classification!)).toBe(true);
+  });
+
+  it('allows one open request per session', () => {
+    const store = createSupportStore();
+    expect(store.getState().requestRefund(visit, 'one').ok).toBe(true);
+    expect(store.getState().requestRefund(visit, 'two').ok).toBe(false);
+    expect(store.getState().refunds).toHaveLength(1);
+    expect(
+      store.getState().requestRefund({ ...visit, sessionId: 'demo-2' }, 'ok')
+        .ok,
+    ).toBe(true);
+    expect(
+      openRefundForSession(store.getState().refunds, 'demo-1')?.reason,
+    ).toBe('one');
+  });
+
+  it('can be withdrawn while requested, then asked again', () => {
+    const store = createSupportStore();
+    store.getState().requestRefund(visit, 'one');
+    const id = store.getState().refunds[0]?.id ?? '';
+    expect(store.getState().withdrawRefund(id).ok).toBe(true);
+    expect(store.getState().refunds[0]?.status).toBe('withdrawn');
+    expect(store.getState().requests[0]?.status).toBe('resolved');
+    expect(store.getState().withdrawRefund(id).ok).toBe(false);
+    expect(store.getState().withdrawRefund('missing').ok).toBe(false);
+    expect(
+      openRefundForSession(store.getState().refunds, 'demo-1'),
+    ).toBeUndefined();
+    expect(store.getState().requestRefund(visit, 'again').ok).toBe(true);
+    expect(
+      latestRefundForSession(store.getState().refunds, 'demo-1')?.reason,
+    ).toBe('again');
+  });
+
+  it('rejects unknown visits and zero totals', () => {
+    const store = createSupportStore();
+    const bad = [
+      { ...visit, venueId: 'nope' },
+      { ...visit, sessionId: '' },
+      { ...visit, total: 0 },
+      { ...visit, total: 1.5 },
+    ];
+    for (const entry of bad)
+      expect(store.getState().requestRefund(entry, 'x').ok).toBe(false);
+    expect(store.getState().refunds).toHaveLength(0);
+  });
+
+  it('never shows "refunded" in any status text and explains the demo', () => {
+    for (const label of Object.values(REFUND_STATUS_LABEL))
+      expect(label.toLowerCase()).not.toContain('refunded');
+    expect(REFUND_STATUS_LABEL.requested).toMatch(/manager review/);
+    expect(REFUND_NOTICE.toLowerCase()).not.toContain('refunded');
+    expect(REFUND_NOTICE).toMatch(
+      /only confirmed once the money has been returned/,
+    );
+    expect(Object.keys(REFUND_STATUS_LABEL).sort()).toEqual([
+      'requested',
+      'withdrawn',
+    ]);
+  });
+
+  it('resets refunds', () => {
+    const store = createSupportStore();
+    store.getState().requestRefund(visit, 'one');
+    store.getState().reset();
+    expect(store.getState().refunds).toHaveLength(0);
+    expect(store.getState().nextRefundId).toBe(1);
+  });
+});
+
+describe('seat-change request', () => {
+  it('creates a seat_change request with a preferred kind and reason', () => {
+    const store = createSupportStore();
+    const result = store
+      .getState()
+      .requestSeatChange(ctx, { preferredKind: 'pod', reason: ' too loud ' });
+    expect(result.ok).toBe(true);
+    expect(store.getState().requests[0]).toMatchObject({
+      kind: 'seat_change',
+      preferredKind: 'pod',
+      status: 'open',
+      sessionId: 'demo-1',
+    });
+    expect(store.getState().requests[0]?.text).toContain('too loud');
+    expect(store.getState().requests[0]?.classification?.needsStaff).toBe(true);
+  });
+
+  it('defaults to any seat and allows an empty reason', () => {
+    const store = createSupportStore();
+    expect(store.getState().requestSeatChange(ctx, {}).ok).toBe(true);
+    expect(store.getState().requests[0]?.preferredKind).toBe('any');
+    expect(validateOptionalReason(undefined)).toEqual({ ok: true, text: '' });
+  });
+
+  it('validates kind, reason length, session and seat', () => {
+    const store = createSupportStore();
+    expect(
+      store
+        .getState()
+        .requestSeatChange(ctx, { preferredKind: 'sofa' as never }).ok,
+    ).toBe(false);
+    expect(
+      store
+        .getState()
+        .requestSeatChange(ctx, { reason: 'r'.repeat(MAX_NOTE_LENGTH + 1) }).ok,
+    ).toBe(false);
+    expect(
+      store.getState().requestSeatChange({ ...ctx, sessionId: null }, {}).ok,
+    ).toBe(false);
+    expect(
+      store
+        .getState()
+        .requestSeatChange({ ...ctx, seatId: 'matcha-seat-1' }, {}).ok,
+    ).toBe(false);
+    expect(store.getState().requests).toHaveLength(0);
+  });
+
+  it('keeps existing request kinds working and says only staff can move you', () => {
+    const store = createSupportStore();
+    store.getState().callStaff(ctx);
+    store.getState().reportSeatIssue(ctx, 'wifi_weak');
+    store.getState().requestSeatChange(ctx, {});
+    expect(store.getState().requests.map((r) => r.kind)).toEqual([
+      'call_staff',
+      'seat_issue',
+      'seat_change',
+    ]);
+    expect(SEAT_CHANGE_NOTE).toMatch(/Only a team member can move you/);
   });
 });

@@ -3,11 +3,16 @@ import { getVenue, scenarioSessions, type Session } from '../src/core';
 import {
   describeOccupancy,
   filterSeats,
+  hasActiveFilters,
   noFilters,
   occupancySummary,
   usualSuggestion,
 } from '../src/features/customer/explore/exploreModel';
 import type { VisitSnapshot } from '../src/features/customer/shared/visit';
+import {
+  seatAmenities,
+  type Amenity,
+} from '../src/features/customer/venue/seatAmenities';
 
 const venue = getVenue('grind');
 // Afternoon: seats 1 and 2 (desks) occupied.
@@ -93,6 +98,75 @@ describe('filterSeats', () => {
   it('does not mutate the venue', () => {
     filterSeats(venue, afternoon, { ...noFilters(), kinds: ['booth'] });
     expect(venue.seats).toHaveLength(8);
+  });
+});
+
+describe('amenity filters', () => {
+  const only = (amenities: Amenity[]) => ({
+    ...noFilters(),
+    amenities,
+  });
+  it('is inactive by default and counts as an active filter once set', () => {
+    expect(hasActiveFilters(noFilters())).toBe(false);
+    expect(hasActiveFilters(only(['window']))).toBe(true);
+    // Filters built without the field still work.
+    expect(
+      filterSeats(venue, afternoon, {
+        kinds: [],
+        maxRate: null,
+        availableOnly: false,
+      }),
+    ).toHaveLength(8);
+  });
+  it('narrows to seats that have the amenity', () => {
+    expect(ids(filterSeats(venue, afternoon, only(['window'])))).toEqual([
+      'grind-seat-1',
+      'grind-seat-4',
+      'grind-seat-5',
+    ]);
+  });
+  it('uses AND semantics across amenities', () => {
+    const both = filterSeats(venue, afternoon, only(['window', 'quiet']));
+    expect(ids(both)).toEqual(['grind-seat-5']);
+    expect(
+      both.every((seat) => {
+        const have = seatAmenities(seat);
+        return have.includes('window') && have.includes('quiet');
+      }),
+    ).toBe(true);
+  });
+  it('can match nothing', () => {
+    expect(filterSeats(venue, afternoon, only(['window', 'monitor']))).toEqual(
+      [],
+    );
+  });
+  it('combines with kind, price and availability filters', () => {
+    expect(
+      ids(
+        filterSeats(venue, afternoon, {
+          kinds: ['pod', 'booth'],
+          maxRate: 40000,
+          availableOnly: true,
+          amenities: ['power', 'monitor'],
+        }),
+      ),
+    ).toEqual(['grind-seat-6', 'grind-seat-7', 'grind-seat-8']);
+    // Seat 1 has a window but is occupied in the afternoon scenario.
+    expect(
+      ids(
+        filterSeats(venue, afternoon, {
+          ...only(['window']),
+          availableOnly: true,
+        }),
+      ),
+    ).toEqual(['grind-seat-4', 'grind-seat-5']);
+    expect(
+      filterSeats(venue, afternoon, {
+        ...only(['power']),
+        kinds: ['booth'],
+        maxRate: 30000,
+      }),
+    ).toEqual([]);
   });
 });
 

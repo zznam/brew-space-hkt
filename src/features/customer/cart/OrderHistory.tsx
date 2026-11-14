@@ -1,7 +1,14 @@
 import { Text, View } from 'react-native';
 import { formatMoney, type Session } from '@/core';
 import { Button, colors, Heading, styles } from '@/components/ui';
-import { orderStatus, ordersForSession, type OrderStatus } from './cartModel';
+import {
+  formatModifiers,
+  lineKey,
+  orderStatus,
+  ordersForSession,
+  type OrderStatus,
+} from './cartModel';
+import { useLoyaltyReady } from '../loyalty/useLoyalty';
 import { useCart } from './useCart';
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
@@ -10,9 +17,16 @@ const STATUS_LABEL: Record<OrderStatus, string> = {
   served: 'Status: Served',
 };
 
-export function OrderHistory({ session }: { session: Session }) {
+export function OrderHistory({
+  session,
+  disabledReason = null,
+}: {
+  session: Session;
+  disabledReason?: string | null;
+}) {
   const allOrders = useCart((state) => state.orders);
   const reorder = useCart((state) => state.reorder);
+  const { ready } = useLoyaltyReady();
   const orders = ordersForSession(allOrders, session);
   const latestId = orders[orders.length - 1]?.id;
   return (
@@ -37,15 +51,23 @@ export function OrderHistory({ session }: { session: Session }) {
             {STATUS_LABEL[orderStatus(order, session.elapsedMinutes)]} ·{' '}
             {formatMoney(order.total)}
           </Text>
-          {order.lines.map((line) => (
-            <Text key={line.menuItemId} style={styles.text}>
-              {line.quantity} × {line.name}
-              {line.note ? ` (${line.note})` : ''}
-            </Text>
-          ))}
+          {order.lines.map((line) => {
+            const options = formatModifiers(line.modifiers);
+            return (
+              <Text key={lineKey(line)} style={styles.text}>
+                {line.quantity} × {line.name}
+                {options ? ` · ${options}` : ''}
+                {line.note ? ` (${line.note})` : ''}
+              </Text>
+            );
+          })}
           {order.id === latestId && (
             <View style={styles.row}>
-              <Button label="Order again" onPress={() => reorder(session)} />
+              <Button
+                label="Order again"
+                disabled={!ready || disabledReason !== null}
+                onPress={() => reorder(session)}
+              />
             </View>
           )}
         </View>

@@ -1,19 +1,23 @@
 import { useState } from 'react';
+import { router } from 'expo-router';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { formatMoney, getVenue, type Venue } from '@/core';
 import { useAppStore } from '@/core/useAppStore';
 import { Button, Card, Heading, colors, styles } from '@/components/ui';
 import { CustomerNav } from '../shared/CustomerNav';
+import { BadgesPanel } from '../rewards/BadgesPanel';
 import {
   DEMO_OTP,
   MAX_ALLERGY_NOTE,
   MILK_OPTIONS,
+  REFERRAL_BONUS_POINTS,
   SWEETNESS_OPTIONS,
   allergyNotice,
   favouriteSeatIds,
   getPreferences,
   isMember,
   maskPhone,
+  memberReferralCode,
   pointsBalance,
   requestOtp,
   venueStats,
@@ -39,6 +43,20 @@ const input = {
   color: colors.ink,
 } as const;
 const sectionTitle = { fontWeight: '700', fontSize: 17 } as const;
+
+const venueVisits = (state: LoyaltyState, venueId: string) =>
+  state.visits.filter((visit) => visit.venueId === venueId);
+
+function PrivacyLink() {
+  return (
+    <View style={styles.row}>
+      <Button
+        label="How we use your data"
+        onPress={() => router.push('/customer/privacy' as never)}
+      />
+    </View>
+  );
+}
 
 function formatMinutes(total: number) {
   const hours = Math.floor(total / 60);
@@ -115,6 +133,7 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
   const leave = useLoyalty((store) => store.leave);
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
+  const [friendCode, setFriendCode] = useState('');
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
   const [message, setMessage] = useState('');
@@ -134,7 +153,7 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
     setMessage('');
   }
   function submit() {
-    const result = join(venue.id, { phone, code, consent });
+    const result = join(venue.id, { phone, code, consent, friendCode });
     setMessage(result.ok ? '' : result.message);
   }
 
@@ -144,6 +163,7 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
         You are browsing as a guest. Guests can still buy, but only members earn
         points. Join to earn points.
       </Text>
+      <PrivacyLink />
       <View style={{ gap: 10 }}>
         <Text style={sectionTitle}>Join {venue.name} rewards</Text>
         <Text style={styles.text}>Mobile number</Text>
@@ -176,6 +196,20 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
           onChangeText={setCode}
           style={input}
         />
+        <Text style={styles.text}>Friend&apos;s code (optional)</Text>
+        <TextInput
+          accessibilityLabel="Friend's code"
+          autoCapitalize="characters"
+          placeholder={`${venue.id.toUpperCase()}-XXXXXX`}
+          value={friendCode}
+          onChangeText={setFriendCode}
+          style={input}
+        />
+        <Text style={styles.text}>
+          A valid code from {venue.name} gives you {REFERRAL_BONUS_POINTS} bonus
+          points once. Demo only: your friend is not credited, because this
+          device holds the only data.
+        </Text>
         <Pressable
           accessibilityRole="checkbox"
           accessibilityState={{ checked: consent }}
@@ -200,6 +234,7 @@ function GuestView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
         </Text>
       </View>
       <Stats venue={venue} state={state} />
+      <BadgesPanel visits={venueVisits(state, venue.id)} />
       {hasLocalData ? (
         <View style={{ gap: 10 }}>
           <Text style={styles.text}>
@@ -242,6 +277,7 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
   const ledger = state.ledger.filter((entry) => entry.venueId === venue.id);
   const favourites = favouriteSeatIds(state, venue.id);
   const notice = allergyNotice(draft);
+  const referral = memberReferralCode(state, venue.id);
 
   return (
     <>
@@ -272,9 +308,11 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
             return (
               <Text key={entry.id} style={styles.text}>
                 +{entry.points} points ·{' '}
-                {visit
-                  ? `${visit.seatLabel}, ${formatMoney(visit.total)}`
-                  : `Visit ${entry.sessionId}`}
+                {entry.kind === 'referral'
+                  ? 'Referral bonus for using a friend code'
+                  : visit
+                    ? `${visit.seatLabel}, ${formatMoney(visit.total)}`
+                    : `Visit ${entry.sessionId}`}
               </Text>
             );
           })
@@ -282,6 +320,23 @@ function MemberView({ venue, state }: { venue: Venue; state: LoyaltyState }) {
       </View>
 
       <Stats venue={venue} state={state} />
+      <BadgesPanel visits={venueVisits(state, venue.id)} />
+
+      <View style={{ gap: 6 }}>
+        <Text style={sectionTitle}>Your referral code</Text>
+        <Text
+          accessibilityLabel={`Your referral code is ${referral ?? ''}`}
+          style={{ fontWeight: '700', fontSize: 18, color: colors.ink }}
+        >
+          {referral}
+        </Text>
+        <Text style={styles.text}>
+          A friend joining {venue.name} can enter it for {REFERRAL_BONUS_POINTS}{' '}
+          bonus points. Demo only: there is one device and no server, so a
+          friend&apos;s join cannot be checked and you are not credited for it.
+        </Text>
+      </View>
+      <PrivacyLink />
 
       <View style={{ gap: 10 }}>
         <Text style={sectionTitle}>Drink preferences</Text>

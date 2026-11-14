@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { router } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Text, View } from 'react-native';
 import { formatMoney, getVenue, type BillingMode, type Seat } from '@/core';
-import { useAppStore } from '@/core/useAppStore';
+import { appStore, useAppStore } from '@/core/useAppStore';
 import { SeatMap } from '@/components/SeatMap';
 import { Button, Card, Heading, styles } from '@/components/ui';
 import {
@@ -18,6 +18,10 @@ import {
 import { favouriteSeatIds } from './loyalty/loyaltyModel';
 import { useLoyalty, useLoyaltyReady } from './loyalty/useLoyalty';
 import { CustomerNav } from './shared/CustomerNav';
+import { parseSeatLink } from './venue/deepLink';
+import { AMENITIES, type Amenity } from './venue/seatAmenities';
+import { SeatDetailCard } from './venue/SeatDetailCard';
+import { VenuePage } from './venue/VenuePage';
 
 const KINDS: { kind: Seat['kind']; label: string }[] = [
   { kind: 'desk', label: 'Desk' },
@@ -33,6 +37,27 @@ export function ExploreScreen() {
   const venue = getVenue(store.venueId);
   const [error, setError] = useState('');
   const [filters, setFilters] = useState<SeatFilters>(noFilters());
+  const [linkNotice, setLinkNotice] = useState('');
+  const params = useLocalSearchParams<{ venue?: string; seat?: string }>();
+  const appliedLink = useRef('');
+
+  // F137: apply a shared seat link once per distinct set of params. The
+  // notice is frozen at that moment (state adjusted during render); the store
+  // calls run in an effect.
+  const linkKey = `${String(params.venue ?? '')}|${String(params.seat ?? '')}`;
+  const [seenLink, setSeenLink] = useState('');
+  if (seenLink !== linkKey) {
+    setSeenLink(linkKey);
+    setLinkNotice(parseSeatLink(params, store.venueId).notice ?? '');
+  }
+  useEffect(() => {
+    if (appliedLink.current === linkKey) return;
+    appliedLink.current = linkKey;
+    const link = parseSeatLink(params, appStore.getState().venueId);
+    if (link.venueId) appStore.getState().setVenue(link.venueId);
+    if (link.seatId) appStore.getState().selectSeat(link.seatId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run per link only
+  }, [linkKey]);
 
   function start(mode: BillingMode) {
     const result = store.startSession(mode);
@@ -41,6 +66,15 @@ export function ExploreScreen() {
       setError('');
       router.push('/customer/active-session');
     }
+  }
+  function toggleAmenity(amenity: Amenity) {
+    const current = filters.amenities ?? [];
+    setFilters({
+      ...filters,
+      amenities: current.includes(amenity)
+        ? current.filter((entry) => entry !== amenity)
+        : [...current, amenity],
+    });
   }
   function choose(id: string) {
     setError('');
@@ -94,9 +128,15 @@ export function ExploreScreen() {
           {warning}
         </Text>
       ) : null}
+      {linkNotice ? (
+        <Text accessibilityRole="alert" style={styles.text}>
+          {linkNotice}
+        </Text>
+      ) : null}
       <Text accessibilityLiveRegion="polite" style={styles.text}>
         {describeOccupancy(summary)}
       </Text>
+      <VenuePage venue={venue} />
 
       {usual ? (
         <Card>
@@ -201,6 +241,19 @@ export function ExploreScreen() {
             }
           />
         </View>
+        <View style={styles.row}>
+          {AMENITIES.map(({ key, label }) => {
+            const on = (filters.amenities ?? []).includes(key);
+            return (
+              <Button
+                key={key}
+                label={on ? `✓ ${label}` : label}
+                selected={on}
+                onPress={() => toggleAmenity(key)}
+              />
+            );
+          })}
+        </View>
         {hasActiveFilters(filters) ? (
           <Text accessibilityLiveRegion="polite" style={styles.text}>
             Showing {visibleSeats.length} of {venue.seats.length} seats.
@@ -232,8 +285,7 @@ export function ExploreScreen() {
       {selectedSeat ? (
         <View style={styles.row}>
           <Text style={styles.text}>
-            Selected: {selectedSeat.label} ({selectedSeat.kind},{' '}
-            {formatMoney(selectedSeat.hourlyRate)}/h)
+            Selected: {selectedSeat.label}
             {visibleSeats.some((seat) => seat.id === selectedSeat.id)
               ? ''
               : ' - hidden by filters'}
@@ -247,6 +299,13 @@ export function ExploreScreen() {
             }}
           />
         </View>
+      ) : null}
+      {selectedSeat ? (
+        <SeatDetailCard
+          key={selectedSeat.id}
+          seat={selectedSeat}
+          occupied={occupied(selectedSeat.id)}
+        />
       ) : null}
 
       <View style={styles.row}>

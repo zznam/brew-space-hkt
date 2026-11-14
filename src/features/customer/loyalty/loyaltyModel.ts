@@ -21,13 +21,25 @@ export interface Membership {
   /** Normalised 10 digit number. Display it through maskPhone only. */
   phone: string;
   consent: true;
+  /** Friend's referral code applied at join (optional: old snapshots lack it). */
+  referredBy?: string;
 }
+export const LEDGER_KINDS = ['earn', 'referral'] as const;
+export type LedgerKind = (typeof LEDGER_KINDS)[number];
 export interface LedgerEntry {
   id: string;
   venueId: string;
+  /** Visit session for 'earn'; the constant REFERRAL_ENTRY_SESSION for 'referral'. */
   sessionId: string;
   points: number;
-  kind: 'earn';
+  kind: LedgerKind;
+}
+export interface JoinInput {
+  phone: string;
+  code: string;
+  consent: boolean;
+  /** Optional friend's referral code (same venue). */
+  friendCode?: string;
 }
 export interface Preferences {
   milk: Milk;
@@ -109,7 +121,7 @@ export const isMember = (state: LoyaltyState, venueId: string) =>
 export function joinProgramme(
   state: LoyaltyState,
   venueId: string,
-  input: { phone: string; code: string; consent: boolean },
+  input: JoinInput,
 ): ModelResult {
   if (!isKnownVenue(venueId)) return { ok: false, message: 'Unknown venue.' };
   if (isMember(state, venueId))
@@ -123,20 +135,100 @@ export function joinProgramme(
       ok: false,
       message: 'Please agree to the data use above to join.',
     };
+  const friend = checkFriendCode(venueId, otp.phone, input.friendCode ?? '');
+  if (!friend.ok) return friend;
   return {
     ok: true,
     state: {
       ...state,
       memberships: {
         ...state.memberships,
-        [venueId]: { venueId, phone: otp.phone, consent: true },
+        [venueId]: {
+          venueId,
+          phone: otp.phone,
+          consent: true,
+          ...(friend.code ? { referredBy: friend.code } : {}),
+        },
       },
       preferences: {
         ...state.preferences,
         [venueId]: defaultPreferences(),
       },
+      ledger: friend.code
+        ? [
+            ...state.ledger,
+            {
+              id: `referral-${venueId}`,
+              venueId,
+              sessionId: REFERRAL_ENTRY_SESSION,
+              points: REFERRAL_BONUS_POINTS,
+              kind: 'referral',
+            },
+          ]
+        : state.ledger,
     },
   };
+}
+
+/* ---------- Referral (demo: one device, no backend) ----------
+ * Codes are deterministic and structural: PREFIX-DDDDDC where PREFIX is the
+ * venue id, DDDDD is derived from venue + masked phone (never the raw phone)
+ * and C is a check character. Validity means "well formed, same venue, not
+ * your own"; nobody can look up whether the friend really exists, and the
+ * friend's side is never credited because there is only this device. */
+export const REFERRAL_BONUS_POINTS = 50;
+export const REFERRAL_ENTRY_SESSION = 'referral';
+const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function fnv1a(text: string, seed: number) {
+  let hash = seed >>> 0;
+  for (let i = 0; i < text.length; i += 1) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619) >>> 0;
+  }
+  return hash >>> 0;
+}
+const checkChar = (venueId: string, body: string) =>
+  CODE_ALPHABET.charAt(fnv1a(`${venueId}:${body}`, 0x1b873593) % 32);
+
+export function referralCode(venueId: string, phone: string) {
+  const hash = fnv1a(`${venueId}|${maskPhone(phone)}`, 0x811c9dc5);
+  let body = '';
+  for (let i = 0; i < 5; i += 1)
+    body += CODE_ALPHABET.charAt((hash >>> (i * 5)) & 31);
+  return `${venueId.toUpperCase()}-${body}${checkChar(venueId, body)}`;
+}
+export const normaliseReferralCode = (raw: string) =>
+  raw.replace(/\s/g, '').toUpperCase();
+/** Own code for a member of this venue; null for non-members. */
+export function memberReferralCode(state: LoyaltyState, venueId: string) {
+  const membership = state.memberships[venueId];
+  return membership ? referralCode(venueId, membership.phone) : null;
+}
+/** Empty input is fine (no code). `code` is the normalised code when accepted. */
+export function checkFriendCode(
+  venueId: string,
+  ownPhone: string,
+  raw: string,
+): { ok: true; code: string | null } | { ok: false; message: string } {
+  const code = normaliseReferralCode(raw);
+  if (!code) return { ok: true, code: null };
+  const match = /^([A-Z]+)-([A-Z0-9]{5})([A-Z0-9])$/.exec(code);
+  const prefix = match?.[1]?.toLowerCase();
+  if (!match || !prefix || !isKnownVenue(prefix))
+    return { ok: false, message: "That friend's code is not valid." };
+  if (prefix !== venueId)
+    return {
+      ok: false,
+      message: "That code belongs to another venue's programme.",
+    };
+  if (
+    !CODE_ALPHABET.includes(match[3] ?? '') ||
+    match[3] !== checkChar(venueId, match[2] ?? '')
+  )
+    return { ok: false, message: "That friend's code is not valid." };
+  if (code === referralCode(venueId, ownPhone))
+    return { ok: false, message: 'You cannot use your own referral code.' };
+  return { ok: true, code };
 }
 
 /** Removes membership, points, visits, preferences and favourites of one venue. */

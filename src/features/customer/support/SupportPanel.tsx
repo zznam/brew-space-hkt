@@ -4,7 +4,10 @@ import { Button, Card, Heading, colors, styles } from '@/components/ui';
 import {
   MAX_NOTE_LENGTH,
   REQUEST_STATUS_LABEL,
+  SEAT_CHANGE_NOTE,
   SEAT_ISSUE_PRESETS,
+  SEAT_PREFERENCES,
+  type SeatPreference,
   mustEscalate,
   requestStatus,
 } from './supportModel';
@@ -18,15 +21,20 @@ export function SupportPanel({ context }: { context: SupportContext }) {
   const callStaff = useSupport((state) => state.callStaff);
   const submitNote = useSupport((state) => state.submitNote);
   const reportSeatIssue = useSupport((state) => state.reportSeatIssue);
+  const requestSeatChange = useSupport((state) => state.requestSeatChange);
   const markResolved = useSupport((state) => state.markResolved);
   const [note, setNote] = useState('');
+  const [preferred, setPreferred] = useState<SeatPreference>('any');
+  const [moveReason, setMoveReason] = useState('');
   const [feedback, setFeedback] = useState<{ ok: boolean; text: string }>();
 
   const mine = requests
     .filter(
       (request) =>
         request.venueId === context.venueId &&
-        request.seatId === context.seatId,
+        request.seatId === context.seatId &&
+        // Same session only, so the next guest at a seat never sees old requests.
+        request.sessionId === context.sessionId,
     )
     .slice()
     .reverse();
@@ -34,6 +42,13 @@ export function SupportPanel({ context }: { context: SupportContext }) {
   function report(result: SubmitResult, clearNote = false) {
     if (!result.ok) return setFeedback({ ok: false, text: result.message });
     if (clearNote) setNote('');
+    if (result.request.kind === 'seat_change') {
+      setMoveReason('');
+      return setFeedback({
+        ok: true,
+        text: 'Request sent. A team member will talk to you before anything moves.',
+      });
+    }
     const { classification } = result.request;
     setFeedback({
       ok: true,
@@ -86,6 +101,46 @@ export function SupportPanel({ context }: { context: SupportContext }) {
         label="Send note"
         disabled={!note.trim() || note.length > MAX_NOTE_LENGTH}
         onPress={() => report(submitNote(context, note), true)}
+      />
+      <Text style={styles.text}>Ask to move seats</Text>
+      <Text style={styles.text}>{SEAT_CHANGE_NOTE}</Text>
+      <View style={styles.row}>
+        {SEAT_PREFERENCES.map((option) => (
+          <Button
+            key={option.id}
+            label={option.label}
+            selected={preferred === option.id}
+            onPress={() => setPreferred(option.id)}
+          />
+        ))}
+      </View>
+      <TextInput
+        accessibilityLabel="Reason for moving seats (optional)"
+        maxLength={MAX_NOTE_LENGTH + 50}
+        value={moveReason}
+        onChangeText={setMoveReason}
+        placeholder="Reason (optional), e.g. too noisy here"
+        style={{
+          minHeight: 44,
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: 12,
+          paddingHorizontal: 12,
+          paddingVertical: 10,
+          color: colors.ink,
+        }}
+      />
+      <Button
+        label="Ask to move seats"
+        disabled={moveReason.length > MAX_NOTE_LENGTH}
+        onPress={() =>
+          report(
+            requestSeatChange(context, {
+              preferredKind: preferred,
+              reason: moveReason,
+            }),
+          )
+        }
       />
       {feedback ? (
         <Text

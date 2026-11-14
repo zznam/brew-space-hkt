@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   ALLERGY_NOTICE,
   MAX_ALLERGY_NOTE,
+  REFERRAL_BONUS_POINTS,
   allergyNotice,
+  checkFriendCode,
+  memberReferralCode,
+  referralCode,
   defaultPreferences,
   initialLoyaltyState,
   isValidPhone,
@@ -450,5 +454,156 @@ describe('isLoyaltyState', () => {
     ],
   ])('rejects %s', (_name, value) => {
     expect(isLoyaltyState(value)).toBe(false);
+  });
+});
+
+describe('referral', () => {
+  const phone = '0901234567';
+  const friendPhone = '0912345678';
+  const join = (
+    state: LoyaltyState,
+    venueId: string,
+    friendCode?: string,
+    ownPhone = phone,
+  ) =>
+    joinProgramme(state, venueId, {
+      phone: ownPhone,
+      code: '123456',
+      consent: true,
+      friendCode,
+    });
+  const friendCode = referralCode('grind', friendPhone);
+  const brokenCheck =
+    friendCode.slice(0, -1) + (friendCode.endsWith('A') ? 'B' : 'A');
+
+  it('derives a deterministic code per venue and masked phone', () => {
+    expect(referralCode('grind', phone)).toBe(referralCode('grind', phone));
+    expect(referralCode('grind', phone)).toBe(
+      referralCode('grind', '090 123 4567'),
+    );
+    expect(referralCode('grind', phone)).not.toBe(
+      referralCode('matcha', phone),
+    );
+    expect(referralCode('grind', phone)).not.toBe(friendCode);
+    expect(referralCode('grind', phone)).toMatch(/^GRIND-[A-Z0-9]{6}$/);
+    expect(referralCode('grind', phone)).not.toContain('1234567');
+  });
+  it('gives a code to members only', () => {
+    expect(memberReferralCode(initialLoyaltyState(), 'grind')).toBeNull();
+    expect(memberReferralCode(memberState(), 'grind')).toBe(
+      referralCode('grind', phone),
+    );
+    expect(memberReferralCode(memberState(), 'matcha')).toBeNull();
+  });
+  it('grants the bonus once at join with a valid friend code', () => {
+    const result = join(
+      initialLoyaltyState(),
+      'grind',
+      ` ${friendCode.toLowerCase()} `,
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(pointsBalance(result.state, 'grind')).toBe(REFERRAL_BONUS_POINTS);
+    expect(result.state.ledger).toEqual([
+      expect.objectContaining({
+        kind: 'referral',
+        points: 50,
+        venueId: 'grind',
+      }),
+    ]);
+    expect(result.state.memberships.grind?.referredBy).toBe(friendCode);
+    expect(isLoyaltyState(result.state)).toBe(true);
+    // Joining again is refused, so the bonus cannot be claimed twice.
+    expect(join(result.state, 'grind', friendCode).ok).toBe(false);
+    expect(pointsBalance(result.state, 'grind')).toBe(50);
+  });
+  it('stacks with visit points and stays venue scoped', () => {
+    const result = join(initialLoyaltyState(), 'grind', friendCode);
+    if (!result.ok) throw new Error(result.message);
+    const next = recordVisit(result.state, visit('s1'));
+    expect(pointsBalance(next, 'grind')).toBe(50 + 75);
+    expect(pointsBalance(next, 'matcha')).toBe(0);
+  });
+  it('grants nothing without a code and keeps the membership shape', () => {
+    const result = join(initialLoyaltyState(), 'grind', '   ');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.state.ledger).toEqual([]);
+      expect(result.state.memberships.grind).toEqual({
+        venueId: 'grind',
+        phone,
+        consent: true,
+      });
+    }
+  });
+  it.each([
+    ['your own code', referralCode('grind', phone)],
+    ['a code from another venue', referralCode('matcha', friendPhone)],
+    ['a code for an unknown venue', 'NOWHERE-ABCDEF'],
+    ['garbage', 'hello'],
+    ['a bad check character', brokenCheck],
+  ])('rejects %s without joining', (_name, code) => {
+    const store = createLoyaltyStore();
+    const result = store.getState().join('grind', {
+      phone,
+      code: '123456',
+      consent: true,
+      friendCode: code,
+    });
+    expect(result.ok).toBe(false);
+    expect(store.getState().memberships).toEqual({});
+    expect(store.getState().ledger).toEqual([]);
+  });
+  it('reports distinct messages', () => {
+    expect(
+      checkFriendCode('grind', phone, referralCode('grind', phone)),
+    ).toEqual({ ok: false, message: 'You cannot use your own referral code.' });
+    expect(
+      checkFriendCode('grind', phone, referralCode('matcha', friendPhone)),
+    ).toMatchObject({
+      ok: false,
+      message: expect.stringContaining('another venue'),
+    });
+    expect(checkFriendCode('grind', phone, '')).toEqual({
+      ok: true,
+      code: null,
+    });
+  });
+  it('removes the bonus when leaving', () => {
+    const result = join(initialLoyaltyState(), 'grind', friendCode);
+    if (!result.ok) throw new Error(result.message);
+    expect(leaveProgramme(result.state, 'grind').ledger).toEqual([]);
+  });
+  it('works through the store', () => {
+    const store = createLoyaltyStore();
+    expect(
+      store.getState().join('grind', {
+        phone,
+        code: '123456',
+        consent: true,
+        friendCode,
+      }),
+    ).toEqual({ ok: true });
+    expect(pointsBalance(store.getState(), 'grind')).toBe(50);
+  });
+  it('still validates old snapshots without referral fields', () => {
+    const old = JSON.parse(JSON.stringify(memberState()));
+    expect(old.memberships.grind.referredBy).toBeUndefined();
+    expect(isLoyaltyState(old)).toBe(true);
+    const oldWithEarn = JSON.parse(
+      JSON.stringify(recordVisit(memberState(), visit('s1'))),
+    );
+    expect(oldWithEarn.ledger[0].kind).toBe('earn');
+    expect(isLoyaltyState(oldWithEarn)).toBe(true);
+  });
+  it('rejects malformed referral fields', () => {
+    const base = JSON.parse(JSON.stringify(memberState()));
+    base.memberships.grind.referredBy = 42;
+    expect(isLoyaltyState(base)).toBe(false);
+    const ledger = JSON.parse(
+      JSON.stringify(recordVisit(memberState(), visit('s1'))),
+    );
+    ledger.ledger[0].kind = 'gift';
+    expect(isLoyaltyState(ledger)).toBe(false);
   });
 });
