@@ -6,6 +6,7 @@ Shared Expo / React Native foundation for the 3D cafe and coworking platform. On
 - [React Native 3D Architecture & Implementation Plan (English)](docs/react-native-plan.md)
 - [Brainstorm tính năng cho khách hàng](docs/user-features-brainstorm.md)
 - [100-feature MVP spec (English)](docs/mvp-features.md)
+- [MVP spec batch 2: F101–F200, PRD gaps and post-core additions](docs/mvp-features-batch-2.md)
 
 ## Start here
 
