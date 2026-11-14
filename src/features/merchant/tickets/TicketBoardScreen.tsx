@@ -1,8 +1,8 @@
 import { Text } from 'react-native';
-import { formatMoney } from '@/core';
+import { formatMoney, getVenue, type Venue } from '@/core';
 import { useAppStore } from '@/core/useAppStore';
 import { Button, Card, Heading, styles } from '@/components/ui';
-import { calculateOrderTotal } from '../pos/posStore';
+import { calculateOrderTotal, ticketLabel } from '../pos/posStore';
 import type { FulfillmentStatus, PosOrder } from '../pos/types';
 import { posStore, usePosStore } from '../pos/usePosStore';
 
@@ -35,22 +35,26 @@ const COLUMNS: {
 
 function TicketLine({
   order,
+  venue,
   advanceTo,
   actionLabel,
 }: {
   order: PosOrder;
+  venue: Venue;
   advanceTo: FulfillmentStatus | null;
   actionLabel: string | null;
 }) {
+  const label = ticketLabel(order, venue);
   return (
     <>
       <Text style={styles.text}>
+        {label} ·{' '}
         {order.lines.map((line) => `${line.name} ×${line.quantity}`).join(', ')}{' '}
         · {formatMoney(calculateOrderTotal(order))}
       </Text>
       {advanceTo && actionLabel && (
         <Button
-          label={actionLabel}
+          label={`${actionLabel}, ${label}`}
           onPress={() => posStore.getState().advanceTicket(order.id, advanceTo)}
         />
       )}
@@ -60,6 +64,7 @@ function TicketLine({
 
 export function TicketBoardScreen() {
   const venueId = useAppStore((state) => state.venueId);
+  const venue = getVenue(venueId);
   const orders = usePosStore((state) => state.orders).filter(
     (order) => order.venueId === venueId && order.fulfillment !== null,
   );
@@ -79,6 +84,7 @@ export function TicketBoardScreen() {
                 <TicketLine
                   key={order.id}
                   order={order}
+                  venue={venue}
                   advanceTo={column.advanceTo}
                   actionLabel={column.actionLabel}
                 />

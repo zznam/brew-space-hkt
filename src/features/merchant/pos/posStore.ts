@@ -1,5 +1,5 @@
 import { createStore } from 'zustand/vanilla';
-import type { ActionResult } from '@/core';
+import type { ActionResult, Venue } from '@/core';
 import type {
   FulfillmentStatus,
   PaymentMethod,
@@ -30,6 +30,14 @@ export function calculateOrderTotal(order: PosOrder): number {
 
 function isEditable(order: PosOrder): boolean {
   return order.status === 'draft';
+}
+
+/** Distinguishes tickets on the board (F035: "with seat label"). */
+export function ticketLabel(order: PosOrder, venue: Venue): string {
+  const seat = order.seatId
+    ? venue.seats.find((entry) => entry.id === order.seatId)
+    : null;
+  return seat ? seat.label : `Walk-in #${order.id}`;
 }
 
 export interface PosStore {

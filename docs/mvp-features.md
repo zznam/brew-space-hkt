@@ -41,7 +41,7 @@ This is the flat backlog for the 10–12 week pilot. The [MVP requirements (PRD)
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | F010 | Categories and item management for food and drink, time packages and services | Manager | A manager can create, edit and archive an item; a cashier cannot | FR02, §5 | M | BE, FE1 | Part |
 | F011 | Size options per item | Manager | An item with sizes shows each size with its own price and the chosen size is stored on the order line | FR02 | M | BE, FE2 | No |
-| F012 | Sold-out toggle | Server | Marking an item sold out hides it from new carts at once; lifting it restores it | FR02, §5 | M | BE, FE1 | No |
+| F012 | Sold-out toggle | Server | Marking an item sold out hides it from new carts at once; lifting it restores it | FR02, §5 | M | BE, FE1 | Part |
 | F013 | Fixed services with staff availability confirmation | Cashier | A limited service (e.g. monitor rental) is only fulfilled after staff confirm it is available | FR02 | M | BE, FE1 | No |
 | F014 | Seat-time packages | Manager | Seat time can only be sold from 30 minutes upward in 30-minute steps | FR02 | M | BE | Part |
 | F015 | Fee and tax configuration | Owner | Configured fees and taxes appear as separate lines in the quote before payment | FR02 | M | BE | No |
@@ -56,8 +56,8 @@ This is the flat backlog for the 10–12 week pilot. The [MVP requirements (PRD)
 | F019 | Re-quote after expiry | Customer | Confirming an expired quote is refused and the customer must accept a fresh quote | FR06 | M | BE, FE2 | No |
 | F020 | Order totals with lines, discount and fees | System | The order total equals the sum of snapshot lines minus discount plus fees, as an integer | FR02 | M | BE | Part |
 | F021 | One capped promotion per order | System | Applying a voucher or points to an order that already has a flash sale is refused | FR02 | M | BE | No |
-| F022 | Cashier walk-in order | Cashier | A cashier can build and take payment for an order on behalf of a walk-in customer | FR02 | M | FE1, BE | No |
-| F023 | Order state machine | System | An order moves draft → awaiting payment → paid → completed; it can be cancelled only before payment | §4 | M | BE | No |
+| F022 | Cashier walk-in order | Cashier | A cashier can build and take payment for an order on behalf of a walk-in customer | FR02 | M | FE1, BE | Part |
+| F023 | Order state machine | System | An order moves draft → awaiting payment → paid → completed; it can be cancelled only before payment | §4 | M | BE | Part |
 | F024 | Idempotent create and pay commands | System | Repeating a request with the same idempotency key produces one order and one charge | FR02 | M | BE | No |
 | F025 | Mixed order activation | System | For an order with items and seat time, items reach fulfilment after payment and the seat is granted only when the reservation confirms | FR02 | M | BE | No |
 
@@ -78,8 +78,8 @@ This is the flat backlog for the 10–12 week pilot. The [MVP requirements (PRD)
 
 | ID | Feature | Actor | Acceptance check | PRD | Pri | Own | Demo |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| F034 | Fulfilment queue | System | Only paid orders enter the queue and move queued → preparing → ready → served | §4 | M | BE | No |
-| F035 | Staff ticket board | Server | Staff see open tickets with seat label and items and can advance each ticket's status | FR05 | M | FE1 | No |
+| F034 | Fulfilment queue | System | Only paid orders enter the queue and move queued → preparing → ready → served | §4 | M | BE | Part |
+| F035 | Staff ticket board | Server | Staff see open tickets with seat label and items and can advance each ticket's status | FR05 | M | FE1 | Part |
 | F036 | Customer order progress and own orders | Customer | A customer sees the live status of their own orders and cannot open anyone else's | FR05, §5 | M | FE2, BE | No |
 | F037 | Durable retry of the paid-to-fulfilment event | System | If publishing the ticket fails it is retried until it succeeds without creating a second charge | §4 | M | BE | No |
 | F038 | Fulfilment cancel separate from refund | Manager | Cancelling a ticket does not refund the order, and refunding does not mark the ticket cancelled or served | §4 | M | BE | No |
