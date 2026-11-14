@@ -6,6 +6,8 @@
     "version": "0.1.0",
     "orientation": "default",
     "userInterfaceStyle": "light",
+    "android": { "package": "com.brewspace.app" },
+    "ios": { "bundleIdentifier": "com.brewspace.app" },
     "plugins": ["expo-router"],
     "web": { "bundler": "metro", "output": "single" }
   }

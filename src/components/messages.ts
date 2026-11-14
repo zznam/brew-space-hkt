@@ -13,6 +13,7 @@ export const shellMessages = defineMessages(
     morning: 'Morning · 7/8 seats',
     afternoon: 'Afternoon · 2/8 seats',
     advance: '+30m · all venues',
+    speedrun: '⚡ Speedrun · Seed all',
     reset: 'Reset all demo data',
     warnIncompatible: 'Saved demo was incompatible. Fresh sample data loaded.',
     warnUnreadable: 'Saved demo could not be loaded. Using sample data.',
@@ -28,6 +29,7 @@ export const shellMessages = defineMessages(
     morning: 'Buổi sáng · 7/8 chỗ',
     afternoon: 'Buổi chiều · 2/8 chỗ',
     advance: '+30 phút · mọi quán',
+    speedrun: '⚡ Nạp đủ dữ liệu demo',
     reset: 'Đặt lại dữ liệu demo',
     warnIncompatible:
       'Bản demo đã lưu không còn tương thích. Đã nạp dữ liệu mẫu mới.',

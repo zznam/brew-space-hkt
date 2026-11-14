@@ -1,7 +1,11 @@
 node_modules/
 .expo/
+/android/
+/ios/
 dist/
 coverage/
+*.apk
+*.aab
 .env*
 !.env.example
 *.tsbuildinfo

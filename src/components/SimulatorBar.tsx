@@ -2,6 +2,10 @@ import { router } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
 import { getAllVenues } from '@/core';
 import { useAppStore } from '@/core/useAppStore';
+import {
+  resetAllDemoStores,
+  seedSpeedrunDemo,
+} from '@/features/gallery/seedDemo';
 import { useT } from '@/i18n/useLanguage';
 import { shellMessages } from './messages';
 import { Chip, colors, radius, SegmentedControl, space, styles } from './ui';
@@ -77,10 +81,11 @@ export function SimulatorBar() {
           onPress={() => store.setScenario('afternoon')}
         />
         <Chip label={t('advance')} onPress={store.advanceTime} />
+        <Chip label={t('speedrun')} onPress={seedSpeedrunDemo} />
         <Chip
           label={t('reset')}
           onPress={() => {
-            store.reset();
+            resetAllDemoStores();
             router.replace('/merchant/live-floor');
           }}
         />

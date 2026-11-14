@@ -1,4 +1,5 @@
 import type {
+  BillingMode,
   DemoState,
   Scenario,
   Scene3DConfig,
@@ -311,21 +312,44 @@ export function getAllVenues(
   return Array.from(byId.values());
 }
 
+const SEEDED_MODES: BillingMode[] = ['BUNDLE_2H', 'METERED_OPEN', 'BUNDLE_4H'];
+
 export function scenarioSessions(venue: Venue, scenario: Scenario): Session[] {
   const count =
     scenario === 'morning'
       ? Math.max(1, Math.min(venue.seats.length - 1, 7))
       : Math.min(2, venue.seats.length);
-  return venue.seats.slice(0, count).map((seat, i) => ({
-    id: `seed-${venue.id}-${i}`,
-    venueId: venue.id,
-    seatId: seat.id,
-    customerId: `sample-guest-${i}`,
-    mode: 'METERED_OPEN',
-    elapsedMinutes: 15 + i * 10,
-    lockedHourlyRate: seat.hourlyRate,
-    orders: [],
-  }));
+  const drink = venue.menu[0];
+  const snack = venue.menu[1];
+  return venue.seats.slice(0, count).map((seat, i) => {
+    const orders: Session['orders'] = [];
+    if (drink) {
+      orders.push({
+        menuItemId: drink.id,
+        name: drink.name,
+        unitPrice: drink.price,
+        quantity: i % 3 === 0 ? 2 : 1,
+      });
+    }
+    if (snack && i % 2 === 0) {
+      orders.push({
+        menuItemId: snack.id,
+        name: snack.name,
+        unitPrice: snack.price,
+        quantity: 1,
+      });
+    }
+    return {
+      id: `seed-${venue.id}-${i}`,
+      venueId: venue.id,
+      seatId: seat.id,
+      customerId: `sample-guest-${i}`,
+      mode: SEEDED_MODES[i % SEEDED_MODES.length] ?? 'METERED_OPEN',
+      elapsedMinutes: 15 + i * 10,
+      lockedHourlyRate: seat.hourlyRate,
+      orders,
+    };
+  });
 }
 export function initialState(): DemoState {
   return {
