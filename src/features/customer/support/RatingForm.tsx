@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
-import { Button, Card, Heading, colors, styles } from '@/components/ui';
+import { Badge, Button, Card, colors, Heading, styles } from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
 import { supportMessages, type SupportMessageKey } from './messages';
 import { MAX_NOTE_LENGTH, failureText } from './supportModel';
@@ -25,7 +25,7 @@ function Selector({
   const { t } = useT(supportMessages);
   return (
     <View style={{ gap: 6 }}>
-      <Text style={styles.text}>{label}</Text>
+      <Text style={styles.sectionLabel}>{label}</Text>
       <View style={styles.row}>
         {[1, 2, 3, 4, 5].map((n) => (
           <Pressable
@@ -35,20 +35,21 @@ function Selector({
             accessibilityState={{ selected: value === n }}
             onPress={() => onChange(n)}
             style={{
-              minWidth: 44,
+              minWidth: 46,
               minHeight: 44,
               alignItems: 'center',
               justifyContent: 'center',
               borderRadius: 12,
               borderWidth: 1,
               borderColor: value === n ? colors.green : colors.border,
-              backgroundColor: value === n ? colors.green : '#eef1e9',
+              backgroundColor: value === n ? colors.green : colors.paperAlt,
             }}
           >
             <Text
               style={{
-                color: value === n ? 'white' : colors.ink,
-                fontWeight: '600',
+                color: value === n ? '#ffffff' : colors.ink,
+                fontWeight: '700',
+                fontSize: 15,
               }}
             >
               {n}
@@ -77,34 +78,40 @@ export function RatingForm({ sessionId }: { sessionId: string }) {
 
   if (existing && !editing)
     return (
-      <Card>
-        <Heading>{t('thankYou')}</Heading>
-        <Text style={styles.text}>
+      <Card variant="accent">
+        <View style={styles.rowBetween}>
+          <Heading style={{ fontSize: 22 }}>{t('thankYou')}</Heading>
+          <Badge label="Rated" tone="success" />
+        </View>
+        <Text style={[styles.text, { color: colors.ink, fontWeight: '600' }]}>
           {t('yourRating', {
             seat: existing.seat,
             drinks: existing.drinks,
             service: existing.service,
           })}
         </Text>
-        <Button
-          label={t('changeRating')}
-          onPress={() => {
-            setScores({
-              seat: existing.seat,
-              drinks: existing.drinks,
-              service: existing.service,
-            });
-            setComment(existing.comment);
-            setEditing(true);
-          }}
-        />
+        <View style={styles.row}>
+          <Button
+            size="sm"
+            label={t('changeRating')}
+            onPress={() => {
+              setScores({
+                seat: existing.seat,
+                drinks: existing.drinks,
+                service: existing.service,
+              });
+              setComment(existing.comment);
+              setEditing(true);
+            }}
+          />
+        </View>
       </Card>
     );
 
   const complete = GROUPS.every((group) => scores[group.key] > 0);
   return (
     <Card>
-      <Heading>{t('ratingHeading')}</Heading>
+      <Heading style={{ fontSize: 22 }}>{t('ratingHeading')}</Heading>
       {GROUPS.map((group) => (
         <Selector
           key={group.key}
@@ -121,38 +128,39 @@ export function RatingForm({ sessionId }: { sessionId: string }) {
         value={comment}
         onChangeText={setComment}
         placeholder={t('commentPlaceholder')}
-        style={{
-          minHeight: 72,
-          borderWidth: 1,
-          borderColor: colors.border,
-          borderRadius: 12,
-          padding: 12,
-          color: colors.ink,
-        }}
+        style={[styles.input, { minHeight: 72 }]}
       />
-      <Text
-        style={{
-          color: comment.length > MAX_NOTE_LENGTH ? '#a33' : colors.muted,
-        }}
-      >
-        {t('characters', { n: comment.length, max: MAX_NOTE_LENGTH })}
-      </Text>
+      <View style={styles.rowBetween}>
+        <Text
+          style={{
+            fontSize: 13,
+            color:
+              comment.length > MAX_NOTE_LENGTH ? colors.danger : colors.muted,
+          }}
+        >
+          {t('characters', { n: comment.length, max: MAX_NOTE_LENGTH })}
+        </Text>
+        <Button
+          variant="primary"
+          label={t('submitRating')}
+          disabled={!complete}
+          onPress={() => {
+            const result = rate({ sessionId, ...scores, comment });
+            if (result.ok) {
+              setError('');
+              setEditing(false);
+            } else setError(failureText(result, lang));
+          }}
+        />
+      </View>
       {error ? (
-        <Text accessibilityRole="alert" style={{ color: '#a33' }}>
+        <Text
+          accessibilityRole="alert"
+          style={{ color: colors.danger, fontWeight: '700' }}
+        >
           {error}
         </Text>
       ) : null}
-      <Button
-        label={t('submitRating')}
-        disabled={!complete}
-        onPress={() => {
-          const result = rate({ sessionId, ...scores, comment });
-          if (result.ok) {
-            setError('');
-            setEditing(false);
-          } else setError(failureText(result, lang));
-        }}
-      />
     </Card>
   );
 }

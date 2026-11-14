@@ -1,16 +1,45 @@
 import { Text, View } from 'react-native';
 import { formatMoney } from '@/core';
-import { Card, Heading, colors, styles } from '@/components/ui';
+import { Badge, Card, colors, Divider, Heading, styles } from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
 import type { VisitSnapshot } from '../shared/visit';
 import { supportMessages } from './messages';
 import { seatLabelText } from './supportModel';
 
-function Line({ label, value }: { label: string; value: string }) {
+function Line({
+  label,
+  value,
+  bold = false,
+}: {
+  label: string;
+  value: string;
+  bold?: boolean;
+}) {
   return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-      <Text style={styles.text}>{label}</Text>
-      <Text style={{ color: colors.ink, fontWeight: '600' }}>{value}</Text>
+    <View
+      style={{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingVertical: 4,
+      }}
+    >
+      <Text
+        style={[
+          styles.text,
+          bold ? { color: colors.ink, fontWeight: '700' } : undefined,
+        ]}
+      >
+        {label}
+      </Text>
+      <Text
+        style={{
+          color: colors.ink,
+          fontWeight: bold ? '800' : '600',
+          fontSize: bold ? 18 : 15,
+        }}
+      >
+        {value}
+      </Text>
     </View>
   );
 }
@@ -21,17 +50,25 @@ export function ReceiptView({ receipt }: { receipt: VisitSnapshot }) {
     lang === 'vi' ? t(`kind.${receipt.seatKind}`) : receipt.seatKind;
   return (
     <Card>
-      <Heading>{t('receiptHeading')}</Heading>
-      <Text style={styles.text}>
+      <View style={styles.rowBetween}>
+        <Heading>{t('receiptHeading')}</Heading>
+        <Badge label="Completed Visit" tone="success" />
+      </View>
+
+      <Text style={[styles.text, { color: colors.ink, fontWeight: '700' }]}>
         {receipt.venueName} · {seatLabelText(receipt.seatLabel, lang)} (
         {seatKind})
       </Text>
+
+      <Divider />
+
       <Line label={t('receiptMode')} value={t(`mode.${receipt.mode}`)} />
       <Line
         label={t('receiptTime')}
         value={t('receiptMinutes', { n: receipt.minutes })}
       />
       <Line label={t('receiptSeatTime')} value={formatMoney(receipt.time)} />
+
       {receipt.orders.length === 0 ? (
         <Text style={styles.text}>{t('receiptNoItems')}</Text>
       ) : (
@@ -43,8 +80,11 @@ export function ReceiptView({ receipt }: { receipt: VisitSnapshot }) {
           />
         ))
       )}
-      <Line label={t('receiptTotal')} value={formatMoney(receipt.total)} />
-      <Text style={styles.text}>{t('receiptDemo')}</Text>
+
+      <Divider />
+
+      <Line label={t('receiptTotal')} value={formatMoney(receipt.total)} bold />
+      <Text style={[styles.text, { fontSize: 13 }]}>{t('receiptDemo')}</Text>
     </Card>
   );
 }

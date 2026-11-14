@@ -1,11 +1,18 @@
 import { router } from 'expo-router';
 import { Text, View } from 'react-native';
-import { Button, Card, Heading, styles } from '@/components/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  colors,
+  Divider,
+  Eyebrow,
+  Heading,
+  styles,
+} from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
 import { CustomerNav } from '../shared/CustomerNav';
 import { loyaltyMessages } from './messages';
-
-const sectionTitle = { fontWeight: '700', fontSize: 17 } as const;
 
 type Key = keyof typeof loyaltyMessages.en;
 const SECTIONS: { title: Key; lines: Key[] }[] = [
@@ -22,32 +29,54 @@ export function PrivacyScreen() {
   return (
     <Card>
       <CustomerNav current="member" />
-      <Heading>{t('privTitle')}</Heading>
-      <Text style={styles.text}>{t('privIntro')}</Text>
-      {SECTIONS.map((section) => (
-        <View key={section.title} style={{ gap: 6 }}>
-          <Text accessibilityRole="header" style={sectionTitle}>
-            {t(section.title)}
-          </Text>
-          {section.lines.map((line) => (
-            <Text key={line} style={styles.text}>
-              {t(line)}
-            </Text>
-          ))}
+
+      <View style={styles.rowBetween}>
+        <View style={{ gap: 4 }}>
+          <Eyebrow>CUSTOMER / DATA PRIVACY & TRANSPARENCY</Eyebrow>
+          <Heading>{t('privTitle')}</Heading>
         </View>
-      ))}
-      <View style={{ gap: 6 }}>
-        <Text accessibilityRole="header" style={sectionTitle}>
+        <Badge label="Local Device Only" tone="success" />
+      </View>
+
+      <Text style={styles.text}>{t('privIntro')}</Text>
+
+      <Divider />
+
+      <View style={{ gap: 12 }}>
+        {SECTIONS.map((section) => (
+          <Card key={section.title} variant="subtle" style={{ gap: 6 }}>
+            <Text accessibilityRole="header" style={styles.subheading}>
+              {t(section.title)}
+            </Text>
+            {section.lines.map((line) => (
+              <Text key={line} style={styles.text}>
+                {t(line)}
+              </Text>
+            ))}
+          </Card>
+        ))}
+      </View>
+
+      <Card
+        variant="subtle"
+        style={{
+          gap: 8,
+          backgroundColor: colors.surface,
+          borderColor: colors.borderStrong,
+        }}
+      >
+        <Text accessibilityRole="header" style={styles.subheading}>
           {t('privDeleteTitle')}
         </Text>
         <Text style={styles.text}>{t('privDeleteBody')}</Text>
         <View style={styles.row}>
           <Button
+            variant="primary"
             label={t('privGoMember')}
             onPress={() => router.replace('/customer/profile' as never)}
           />
         </View>
-      </View>
+      </Card>
     </Card>
   );
 }

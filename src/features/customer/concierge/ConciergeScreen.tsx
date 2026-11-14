@@ -3,7 +3,16 @@ import { router } from 'expo-router';
 import { Text, TextInput, View } from 'react-native';
 import { getVenue } from '@/core';
 import { useAppStore } from '@/core/useAppStore';
-import { Button, Card, Heading, colors, styles } from '@/components/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  colors,
+  Divider,
+  Eyebrow,
+  Heading,
+  styles,
+} from '@/components/ui';
 import { useT } from '../i18n/useLanguage';
 import { useLoyalty, useLoyaltyReady } from '../loyalty/useLoyalty';
 import {
@@ -64,84 +73,120 @@ export function ConciergeScreen() {
   return (
     <Card>
       <CustomerNav current="assistant" />
-      <Heading>{t('heading')}</Heading>
+
+      <View style={styles.rowBetween}>
+        <View style={{ gap: 4 }}>
+          <Eyebrow color={venue.accent}>CUSTOMER / VENUE CONCIERGE</Eyebrow>
+          <Heading>{t('heading')}</Heading>
+        </View>
+        <Badge label={venue.name} tone="info" />
+      </View>
+
       <Text style={styles.text}>
         {t('intro', { venue: venue.name, note: readOnlyNote(lang) })}
       </Text>
-      <Text style={styles.text}>{t('suggested')}</Text>
-      {/* English keeps both rows as before; Vietnamese shows its own row. */}
-      {lang === 'vi' ? null : (
+
+      <Card variant="subtle" style={{ gap: 10 }}>
+        <Text style={styles.sectionLabel}>{t('suggested')}</Text>
+        {/* English keeps both rows as before; Vietnamese shows its own row. */}
+        {lang === 'vi' ? null : (
+          <View style={styles.row}>
+            {SUGGESTED_QUESTIONS_EN.map((question) => (
+              <Button
+                key={question}
+                size="sm"
+                label={question}
+                onPress={() => ask(question)}
+              />
+            ))}
+          </View>
+        )}
         <View style={styles.row}>
-          {SUGGESTED_QUESTIONS_EN.map((question) => (
+          {SUGGESTED_QUESTIONS_VI.map((question) => (
             <Button
               key={question}
+              size="sm"
               label={question}
               onPress={() => ask(question)}
             />
           ))}
         </View>
-      )}
-      <View style={styles.row}>
-        {SUGGESTED_QUESTIONS_VI.map((question) => (
+      </Card>
+
+      <View style={{ gap: 10 }}>
+        <TextInput
+          accessibilityLabel={t('inputLabel')}
+          maxLength={MAX_QUESTION_LENGTH}
+          value={draft}
+          onChangeText={setDraft}
+          onSubmitEditing={() => ask(draft)}
+          returnKeyType="send"
+          placeholder={t('placeholder')}
+          style={styles.input}
+        />
+        <View style={styles.row}>
           <Button
-            key={question}
-            label={question}
-            onPress={() => ask(question)}
+            variant="primary"
+            label={t('ask')}
+            disabled={!draft.trim()}
+            onPress={() => ask(draft)}
           />
-        ))}
+        </View>
       </View>
-      <TextInput
-        accessibilityLabel={t('inputLabel')}
-        maxLength={MAX_QUESTION_LENGTH}
-        value={draft}
-        onChangeText={setDraft}
-        onSubmitEditing={() => ask(draft)}
-        returnKeyType="send"
-        placeholder={t('placeholder')}
-        style={{
-          minHeight: 44,
-          borderWidth: 1,
-          borderColor: colors.border,
-          borderRadius: 12,
-          paddingHorizontal: 14,
-          paddingVertical: 10,
-          color: colors.ink,
-        }}
-      />
-      <Button
-        label={t('ask')}
-        disabled={!draft.trim()}
-        onPress={() => ask(draft)}
-      />
-      <Text style={styles.text}>{t('conversation')}</Text>
+
+      <Divider />
+
+      <View style={styles.rowBetween}>
+        <Text style={styles.subheading}>{t('conversation')}</Text>
+        <Badge label={`${messages.length} msg`} tone="neutral" />
+      </View>
+
       <View accessibilityLabel={t('conversation')} style={{ gap: 10 }}>
         {messages.length === 0 ? (
-          <Text style={styles.text}>{t('empty')}</Text>
+          <Card variant="subtle">
+            <Text style={styles.text}>{t('empty')}</Text>
+          </Card>
         ) : (
-          messages.map((message) => (
-            <View
-              key={message.id}
-              style={{
-                borderTopWidth: 1,
-                borderTopColor: colors.border,
-                paddingTop: 8,
-                gap: 2,
-              }}
-            >
-              <Text style={{ color: colors.ink, fontWeight: '700' }}>
-                {message.from === 'you' ? t('you') : t('assistant')}
-              </Text>
-              <Text style={{ color: colors.ink, lineHeight: 22 }}>
-                {message.text}
-              </Text>
-            </View>
-          ))
+          messages.map((message) => {
+            const isYou = message.from === 'you';
+            return (
+              <View
+                key={message.id}
+                style={{
+                  padding: 14,
+                  borderRadius: 14,
+                  borderWidth: 1,
+                  borderColor: isYou ? colors.greenBorder : colors.border,
+                  backgroundColor: isYou
+                    ? colors.greenSurface
+                    : colors.surfaceSubtle,
+                  gap: 4,
+                }}
+              >
+                <Text
+                  style={{
+                    color: isYou ? colors.green : colors.ink,
+                    fontWeight: '800',
+                    fontSize: 13,
+                  }}
+                >
+                  {isYou ? t('you') : t('assistant')}
+                </Text>
+                <Text style={{ color: colors.ink, lineHeight: 22 }}>
+                  {message.text}
+                </Text>
+              </View>
+            );
+          })
         )}
       </View>
-      <Button
-        label={t('back')}
-        onPress={() => router.replace('/customer/explore')}
-      />
+
+      <View style={styles.row}>
+        <Button
+          label={t('back')}
+          onPress={() => router.replace('/customer/explore')}
+        />
+      </View>
     </Card>
   );
 }

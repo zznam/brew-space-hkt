@@ -14,10 +14,13 @@ export function LanguageToggle() {
   const { t, lang } = useT(messages);
   return (
     <View style={styles.row}>
-      <Text style={styles.text}>{t('language')}:</Text>
+      <Text style={[styles.text, { fontSize: 13, fontWeight: '600' }]}>
+        {t('language')}:
+      </Text>
       {LANGUAGES.map((code) => (
         <Button
           key={code}
+          size="sm"
           label={LANGUAGE_NAMES[code]}
           selected={code === lang}
           onPress={() => languageStore.getState().setLang(code)}
