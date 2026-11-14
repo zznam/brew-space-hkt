@@ -1,0 +1,1822 @@
+<!doctype html>
+<html lang="vi" data-lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vibing HKT — Tính năng và kiến trúc / Features and architecture</title>
+    <style>
+      :root {
+        --paper: #f6f4ee;
+        --surface: #ffffff;
+        --sunk: #ece9e0;
+        --ink: #1d2420;
+        --muted: #5b655f;
+        --line: #d8d5ca;
+        --accent: #2f6a4c;
+        --accent-soft: #dcebe2;
+        --warn: #8a5a12;
+        --warn-soft: #f5e8cf;
+        --blue: #275b91;
+        --blue-soft: #dde8f4;
+        --brown: #88502d;
+        --brown-soft: #f1e3d8;
+        --radius: 10px;
+        --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --paper: #141917;
+          --surface: #1c2320;
+          --sunk: #232b27;
+          --ink: #e9eeea;
+          --muted: #a0aba4;
+          --line: #323c37;
+          --accent: #7fd6ac;
+          --accent-soft: #1f3a2e;
+          --warn: #e6bd72;
+          --warn-soft: #3a2f18;
+          --blue: #8fbcec;
+          --blue-soft: #1c2c3f;
+          --brown: #dba27c;
+          --brown-soft: #3a2a20;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 64px;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font:
+          16px/1.6 system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          'Helvetica Neue',
+          Arial,
+          sans-serif;
+      }
+      /* Language switch: every translated element carries lang="vi" or lang="en". */
+      html[data-lang='vi'] body [lang='en'],
+      html[data-lang='en'] body [lang='vi'] {
+        display: none;
+      }
+      .bar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: var(--paper);
+        border-bottom: 1px solid var(--line);
+      }
+      .bar-inner,
+      main,
+      footer {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 0 16px;
+      }
+      .bar-inner {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        min-height: 52px;
+      }
+      .brand {
+        font-weight: 800;
+        white-space: nowrap;
+      }
+      .bar nav {
+        display: flex;
+        gap: 14px;
+        overflow-x: auto;
+        flex: 1;
+        font-size: 14px;
+        white-space: nowrap;
+      }
+      .bar nav a {
+        color: var(--muted);
+        text-decoration: none;
+        padding: 6px 0;
+      }
+      .bar nav a:hover {
+        color: var(--accent);
+      }
+      .lang {
+        display: flex;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        overflow: hidden;
+        flex: none;
+      }
+      .lang button {
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 5px 12px;
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+      }
+      .lang button[aria-pressed='true'] {
+        background: var(--accent);
+        color: var(--paper);
+      }
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      header.hero {
+        padding: 44px 0 8px;
+      }
+      h1 {
+        font-size: clamp(28px, 5vw, 42px);
+        line-height: 1.15;
+        margin: 0 0 12px;
+        letter-spacing: -0.02em;
+        text-wrap: balance;
+      }
+      h2 {
+        font-size: 26px;
+        line-height: 1.25;
+        margin: 56px 0 6px;
+        letter-spacing: -0.01em;
+      }
+      h3 {
+        font-size: 18px;
+        margin: 28px 0 8px;
+      }
+      h4 {
+        font-size: 15px;
+        margin: 0 0 6px;
+      }
+      p {
+        margin: 0 0 12px;
+        max-width: 72ch;
+      }
+      .lede {
+        font-size: 18px;
+        color: var(--muted);
+      }
+      .kicker {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+      a {
+        color: var(--accent);
+      }
+      code {
+        font-family: var(--mono);
+        font-size: 0.88em;
+        background: var(--sunk);
+        padding: 1px 5px;
+        border-radius: 4px;
+        overflow-wrap: anywhere;
+      }
+      pre {
+        font-family: var(--mono);
+        font-size: 13px;
+        line-height: 1.55;
+        background: var(--sunk);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 14px;
+        overflow-x: auto;
+        margin: 0 0 12px;
+      }
+      ul {
+        margin: 0 0 12px;
+        padding-left: 20px;
+      }
+      li {
+        margin-bottom: 4px;
+      }
+      .note {
+        background: var(--warn-soft);
+        border-left: 4px solid var(--warn);
+        border-radius: 6px;
+        padding: 12px 14px;
+        margin: 16px 0;
+      }
+      .note p {
+        margin: 0;
+        max-width: none;
+      }
+      .grid {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        margin: 14px 0;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 16px;
+      }
+      .card ul {
+        margin: 0;
+        font-size: 15px;
+      }
+      .card p {
+        font-size: 15px;
+      }
+      .card p:last-child {
+        margin-bottom: 0;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+        margin: 20px 0 0;
+      }
+      .stat {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 12px 14px;
+      }
+      .stat b {
+        display: block;
+        font-size: 24px;
+        line-height: 1.2;
+      }
+      .stat span {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .tag {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 1px 8px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+      .tag.built {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+      .tag.proto {
+        background: var(--blue-soft);
+        color: var(--blue);
+      }
+      .tag.plan {
+        background: var(--warn-soft);
+        color: var(--warn);
+      }
+      .scroll {
+        overflow-x: auto;
+        margin: 12px 0;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 14.5px;
+        min-width: 560px;
+      }
+      th,
+      td {
+        text-align: left;
+        vertical-align: top;
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--line);
+      }
+      tr:last-child td {
+        border-bottom: 0;
+      }
+      th {
+        font-size: 12px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--muted);
+        background: var(--sunk);
+      }
+      td.num {
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      /* Diagrams */
+      .diagram {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 16px;
+        margin: 14px 0;
+      }
+      .layer {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px 12px;
+        background: var(--sunk);
+      }
+      .layer > .name {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+      .boxes {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      }
+      .box {
+        border-radius: 6px;
+        padding: 8px 10px;
+        font-size: 13.5px;
+        line-height: 1.4;
+        background: var(--surface);
+        border: 1px solid var(--line);
+      }
+      .box b {
+        display: block;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        overflow-wrap: anywhere;
+      }
+      .box.green {
+        background: var(--accent-soft);
+        border-color: transparent;
+      }
+      .box.blue {
+        background: var(--blue-soft);
+        border-color: transparent;
+      }
+      .box.brown {
+        background: var(--brown-soft);
+        border-color: transparent;
+      }
+      .box.dashed {
+        border-style: dashed;
+        background: transparent;
+      }
+      .arrow {
+        text-align: center;
+        color: var(--muted);
+        font-size: 13px;
+        padding: 6px 0;
+      }
+      .flow {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        counter-reset: step;
+      }
+      .flow .box {
+        counter-increment: step;
+      }
+      .flow .box::before {
+        content: counter(step);
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+        text-align: center;
+        border-radius: 50%;
+        background: var(--accent);
+        color: var(--paper);
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+      figure {
+        margin: 14px 0;
+      }
+      figure img {
+        max-width: 100%;
+        height: auto;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        display: block;
+      }
+      figcaption {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+      footer {
+        margin-top: 64px;
+        padding-top: 20px;
+        padding-bottom: 40px;
+        border-top: 1px solid var(--line);
+        font-size: 14px;
+        color: var(--muted);
+      }
+      @media print {
+        .bar {
+          position: static;
+        }
+        .lang {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bar">
+      <div class="bar-inner">
+        <span class="brand">vibing / HKT</span>
+        <nav aria-label="Sections">
+          <a href="#overview"
+            ><span lang="vi">Tổng quan</span><span lang="en">Overview</span></a
+          >
+          <a href="#features"
+            ><span lang="vi">Tính năng</span><span lang="en">Features</span></a
+          >
+          <a href="#architecture"
+            ><span lang="vi">Kiến trúc</span
+            ><span lang="en">Architecture</span></a
+          >
+          <a href="#domain"
+            ><span lang="vi">Dữ liệu và tính tiền</span
+            ><span lang="en">Data and billing</span></a
+          >
+          <a href="#prototype">Prototype</a>
+          <a href="#quality"
+            ><span lang="vi">Kiểm thử</span><span lang="en">Testing</span></a
+          >
+          <a href="#target"
+            ><span lang="vi">Kiến trúc đích</span
+            ><span lang="en">Target system</span></a
+          >
+        </nav>
+        <div class="lang" role="group" aria-label="Ngôn ngữ / Language">
+          <button type="button" data-set-lang="vi" aria-pressed="true">
+            VI
+          </button>
+          <button type="button" data-set-lang="en" aria-pressed="false">
+            EN
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <main>
+      <header class="hero" id="overview">
+        <div class="kicker">
+          <span lang="vi">Tài liệu tổng quan</span
+          ><span lang="en">System overview</span>
+        </div>
+        <h1>
+          <span lang="vi"
+            >Vibing HKT: tính năng và kiến trúc hệ thống</span
+          >
+          <span lang="en">Vibing HKT: features and system architecture</span>
+        </h1>
+        <p class="lede" lang="vi">
+          Nền tảng quản lý quán cà phê và coworking. Một ứng dụng Expo / React
+          Native chứa cả giao diện chủ quán lẫn giao diện khách, chạy trên một
+          lõi demo cục bộ. Bên cạnh đó là một prototype HTML độc lập để thử
+          thiết kế.
+        </p>
+        <p class="lede" lang="en">
+          A platform for running cafes and coworking spaces. One Expo / React
+          Native app holds both the merchant and the customer experience on top
+          of a local demo core. A separate static HTML prototype sits beside it
+          for design exploration.
+        </p>
+
+        <div class="note">
+          <p lang="vi">
+            <strong>Hiện trạng:</strong> đây là bản demo trên một thiết bị.
+            Chưa có backend, đăng nhập, thanh toán, AI hay 3D thật. Mọi giao
+            dịch đều là mô phỏng, và bản demo chưa đạt các tiêu chí mở pilot
+            trong PRD.
+          </p>
+          <p lang="en">
+            <strong>Current state:</strong> this is a single-device demo. There
+            is no backend, sign-in, payment, AI, or real 3D yet. Every
+            transaction is simulated, and the demo does not yet meet the pilot
+            gates in the PRD.
+          </p>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <b>2</b>
+            <span lang="vi">vai trò trong một ứng dụng</span>
+            <span lang="en">roles in one app</span>
+          </div>
+          <div class="stat">
+            <b>3 × 8</b>
+            <span lang="vi">quán mẫu × chỗ ngồi</span>
+            <span lang="en">sample venues × seats</span>
+          </div>
+          <div class="stat">
+            <b>5</b>
+            <span lang="vi">màn hình (1 chủ quán, 4 khách)</span>
+            <span lang="en">screens (1 merchant, 4 customer)</span>
+          </div>
+          <div class="stat">
+            <b>185</b>
+            <span lang="vi">kiểm thử đơn vị (Vitest)</span>
+            <span lang="en">unit tests (Vitest)</span>
+          </div>
+          <div class="stat">
+            <b>200</b>
+            <span lang="vi">tính năng trong đặc tả MVP</span>
+            <span lang="en">features in the MVP spec</span>
+          </div>
+        </div>
+      </header>
+
+      <h3>
+        <span lang="vi">Hai phần độc lập trong repository</span>
+        <span lang="en">Two independent things in the repository</span>
+      </h3>
+      <div class="grid">
+        <div class="card">
+          <h4>
+            <span class="tag built">Expo</span>
+            <span lang="vi">Ứng dụng chính</span
+            ><span lang="en">The app</span>
+          </h4>
+          <p>
+            <code>app/</code> <code>src/</code> <code>tests/</code>
+            <code>e2e/</code>
+          </p>
+          <p lang="vi">
+            Mã nguồn thật: Expo SDK 58, React Native 0.88, Expo Router, Zustand,
+            TypeScript. Chạy trên web, iOS và Android.
+          </p>
+          <p lang="en">
+            The real codebase: Expo SDK 58, React Native 0.88, Expo Router,
+            Zustand, TypeScript. Runs on web, iOS and Android.
+          </p>
+        </div>
+        <div class="card">
+          <h4>
+            <span class="tag proto">HTML</span>
+            <span lang="vi">Prototype “Nếp”</span
+            ><span lang="en">The “Nếp” prototype</span>
+          </h4>
+          <p>
+            <code>prototype/</code> <code>tokens.css</code>
+            <code>design.md</code>
+          </p>
+          <p lang="vi">
+            Hai màn HTML tĩnh (vận hành và khách), không cần build, dữ liệu mẫu
+            riêng trong <code>localStorage</code>. Không dùng chung mã với ứng
+            dụng Expo.
+          </p>
+          <p lang="en">
+            Two static HTML screens (operations and customer), no build step,
+            with their own sample data in <code>localStorage</code>. It shares
+            no code with the Expo app.
+          </p>
+        </div>
+      </div>
+
+      <!-- ================= FEATURES ================= -->
+      <h2 id="features">
+        <span lang="vi">Tính năng</span><span lang="en">Features</span>
+      </h2>
+      <p lang="vi">
+        Ba nhãn dưới đây cho biết mỗi tính năng đang ở đâu:
+        <span class="tag built">Ứng dụng</span> đã chạy trong ứng dụng Expo,
+        <span class="tag proto">Prototype</span> chỉ có trong bản HTML,
+        <span class="tag plan">Kế hoạch</span> mới nằm trong tài liệu.
+      </p>
+      <p lang="en">
+        Three labels show where each feature lives:
+        <span class="tag built">App</span> works in the Expo app,
+        <span class="tag proto">Prototype</span> exists only in the HTML
+        prototype, <span class="tag plan">Planned</span> is documented but not
+        built.
+      </p>
+
+      <h3>
+        <span class="tag built"
+          ><span lang="vi">Ứng dụng</span><span lang="en">App</span></span
+        >
+        <span lang="vi">Khách hàng</span><span lang="en">Customer</span>
+      </h3>
+      <div class="grid">
+        <div class="card">
+          <h4>
+            <span lang="vi">Khám phá và chọn chỗ</span
+            ><span lang="en">Seat discovery</span>
+          </h4>
+          <p><code>/customer/explore</code></p>
+          <ul lang="vi">
+            <li>Danh sách chỗ có nhãn chữ: loại, giá/giờ, còn trống hay đang dùng.</li>
+            <li>Lọc theo loại chỗ (desk, pod, booth), giá trần và “chỉ chỗ trống”.</li>
+            <li>Tóm tắt công suất, ví dụ “5 trên 8 chỗ trống”.</li>
+            <li>Ghim tối đa 3 chỗ yêu thích mỗi quán.</li>
+            <li>Gợi ý “chỗ quen” sau 3 lượt ghé cùng quán.</li>
+            <li>Bắt đầu phiên: tính theo phút, gói 2 giờ hoặc gói 4 giờ.</li>
+          </ul>
+          <ul lang="en">
+            <li>Text-labelled seat list: kind, hourly rate, available or occupied.</li>
+            <li>Filter by seat kind (desk, pod, booth), price ceiling and “available only”.</li>
+            <li>Occupancy summary, e.g. “5 of 8 seats free”.</li>
+            <li>Pin up to 3 favourite seats per venue.</li>
+            <li>“Your usual” suggestion after 3 visits to the same venue.</li>
+            <li>Start a session: metered, 2-hour bundle or 4-hour bundle.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>
+            <span lang="vi">Phiên đang dùng và giỏ hàng</span
+            ><span lang="en">Live session and cart</span>
+          </h4>
+          <p><code>/customer/active-session</code></p>
+          <ul lang="vi">
+            <li>Hóa đơn tạm tính trực tiếp: tiền chỗ + tiền món.</li>
+            <li>Thông báo thời gian: còn lại, sắp hết (≤ 15 phút), ân hạn 10 phút, quá giờ.</li>
+            <li>Giỏ hàng: tối đa 20 mỗi món, ghi chú 120 ký tự cho từng món.</li>
+            <li>Theo dõi đơn: đã nhận → đang làm → đã phục vụ (theo giờ mô phỏng).</li>
+            <li>Đặt lại đơn gần nhất theo giá hiện tại.</li>
+            <li>Thẻ Wi-Fi và nội quy quán.</li>
+          </ul>
+          <ul lang="en">
+            <li>Live estimate: seat time plus menu items.</li>
+            <li>Time banner: remaining, ending soon (≤ 15 min), 10-minute grace, overtime.</li>
+            <li>Cart: up to 20 per item, a 120-character note per line.</li>
+            <li>Order tracking: queued → preparing → served (on simulated time).</li>
+            <li>Reorder the latest order at current prices.</li>
+            <li>Wi-Fi and house-rules card.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>
+            <span lang="vi">Hỗ trợ tại chỗ</span
+            ><span lang="en">In-seat support</span>
+          </h4>
+          <ul lang="vi">
+            <li>Nút “Gọi nhân viên” luôn tạo yêu cầu, không phụ thuộc bộ phân loại.</li>
+            <li>Báo sự cố chỗ ngồi bằng các mẫu có sẵn.</li>
+            <li>Ghi chú tự do (300 ký tự), hiểu cả tiếng Việt có dấu và không dấu.</li>
+            <li>Phân loại theo từ khóa: dị ứng, an toàn, thanh toán, thiết bị, vệ sinh, đơn món, khác.</li>
+            <li>Dị ứng, an toàn, thanh toán hoặc độ tin cậy dưới 0,6 luôn chuyển cho người.</li>
+            <li>Trạng thái: đang chờ → đã nhận → đã xử lý.</li>
+          </ul>
+          <ul lang="en">
+            <li>“Call staff” always creates a request, with no classifier in the way.</li>
+            <li>Report a seat issue from presets.</li>
+            <li>Free-text note (300 characters), matching Vietnamese with or without diacritics.</li>
+            <li>Keyword triage: allergy, safety, payment, equipment, cleaning, order, other.</li>
+            <li>Allergy, safety, payment, or confidence below 0.6 always goes to a human.</li>
+            <li>Status: open → acknowledged → resolved.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>
+            <span lang="vi">Biên nhận và đánh giá</span
+            ><span lang="en">Receipt and rating</span>
+          </h4>
+          <p><code>/customer/receipt</code></p>
+          <ul lang="vi">
+            <li>Kết thúc phiên sẽ trả chỗ và hiện biên nhận: gói, số phút, tiền chỗ, từng món, tổng.</li>
+            <li>Chấm điểm lượt ghé từ 1 đến 5 và sửa lại được.</li>
+            <li>Không thu tiền: tổng chỉ là ước tính demo.</li>
+          </ul>
+          <ul lang="en">
+            <li>Ending a session releases the seat and shows a receipt: mode, minutes, seat time, each item, total.</li>
+            <li>Rate the visit from 1 to 5, and change it later.</li>
+            <li>No money is collected: the total is a demo estimate.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>
+            <span lang="vi">Thành viên</span
+            ><span lang="en">Membership</span>
+          </h4>
+          <p><code>/customer/profile</code></p>
+          <ul lang="vi">
+            <li>Tham gia bằng số điện thoại và mã OTP demo, theo từng quán.</li>
+            <li>Tích 1 điểm cho mỗi 1.000 ₫; ghi nhận một lần cho mỗi phiên. Chưa đổi điểm được.</li>
+            <li>Thống kê lượt ghé và thói quen (chỗ, gói hay dùng).</li>
+            <li>Sở thích: loại sữa, độ ngọt, ghi chú dị ứng.</li>
+            <li>Xóa dữ liệu lượt ghé, hoặc rời chương trình và xóa toàn bộ dữ liệu của quán đó.</li>
+          </ul>
+          <ul lang="en">
+            <li>Join with a phone number and a demo OTP, per venue.</li>
+            <li>Earn 1 point per 1,000 ₫, recorded once per session. Points cannot be redeemed yet.</li>
+            <li>Visit stats and habits (usual seat and mode).</li>
+            <li>Preferences: milk, sweetness, allergy note.</li>
+            <li>Delete visit data, or leave the programme and delete everything for that venue.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>
+        <span class="tag built"
+          ><span lang="vi">Ứng dụng</span><span lang="en">App</span></span
+        >
+        <span lang="vi">Chủ quán và công cụ demo</span
+        ><span lang="en">Merchant and demo tools</span>
+      </h3>
+      <div class="grid">
+        <div class="card">
+          <h4>
+            <span lang="vi">Sàn trực tiếp</span
+            ><span lang="en">Live floor</span>
+          </h4>
+          <p><code>/merchant/live-floor</code></p>
+          <ul lang="vi">
+            <li>Số chỗ đang dùng trên tổng số chỗ của quán.</li>
+            <li>Cùng danh sách chỗ với phía khách.</li>
+            <li>Danh sách phiên đang mở: chỗ, số phút, tổng tạm tính.</li>
+            <li>Thấy ngay phiên và món khách vừa thêm.</li>
+          </ul>
+          <ul lang="en">
+            <li>Occupied seats out of the venue's total.</li>
+            <li>The same seat list the customer sees.</li>
+            <li>Live tabs: seat, minutes, running total.</li>
+            <li>Customer sessions and added items show up immediately.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>
+            <span lang="vi">Thanh mô phỏng</span
+            ><span lang="en">Simulator bar</span>
+          </h4>
+          <ul lang="vi">
+            <li>Đổi vai trò chủ quán / khách. Đây là cách trình bày, không phải phân quyền.</li>
+            <li>Đổi quán; phiên của quán khác được giữ nguyên.</li>
+            <li>Kịch bản buổi sáng (7/8 chỗ) và buổi chiều (2/8 chỗ).</li>
+            <li>Tua +30 phút cho mọi phiên. Không có đồng hồ chạy nền.</li>
+            <li>Khôi phục toàn bộ dữ liệu mẫu.</li>
+          </ul>
+          <ul lang="en">
+            <li>Switch merchant / customer. This is presentation, not permission.</li>
+            <li>Switch venue; other venues keep their sessions.</li>
+            <li>Morning (7/8 seats) and afternoon (2/8 seats) scenarios.</li>
+            <li>Advance every session by 30 minutes. There is no background clock.</li>
+            <li>Reset all sample data.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>
+            <span lang="vi">Lưu trạng thái</span
+            ><span lang="en">Persistence</span>
+          </h4>
+          <ul lang="vi">
+            <li>Phiên và dữ liệu thành viên được lưu trên thiết bị và khôi phục khi tải lại.</li>
+            <li>Dữ liệu lưu bị hỏng sẽ được thay bằng dữ liệu mẫu, kèm cảnh báo.</li>
+            <li>Giỏ hàng và yêu cầu hỗ trợ chỉ tồn tại trong lần chạy hiện tại.</li>
+          </ul>
+          <ul lang="en">
+            <li>Sessions and membership data are saved on the device and restored on reload.</li>
+            <li>A corrupt snapshot falls back to sample data with a warning.</li>
+            <li>The cart and support requests live only for the current run.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>
+        <span lang="vi">Bảng hiện trạng theo nhóm chức năng</span
+        ><span lang="en">Status by product area</span>
+      </h3>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>
+                <span lang="vi">Nhóm</span><span lang="en">Area</span>
+              </th>
+              <th>
+                <span lang="vi">Ứng dụng Expo</span
+                ><span lang="en">Expo app</span>
+              </th>
+              <th>Prototype HTML</th>
+              <th>
+                <span lang="vi">Còn phải làm</span
+                ><span lang="en">Still to build</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <span lang="vi">Chỗ ngồi và sơ đồ</span
+                ><span lang="en">Seats and floor</span>
+              </td>
+              <td>
+                <span lang="vi">Danh sách chỗ dễ tiếp cận, lọc, ghim</span
+                ><span lang="en">Accessible seat list, filters, pins</span>
+              </td>
+              <td>
+                <span lang="vi">Sơ đồ SVG 2D, góc nghiêng 2.5D, chỉnh bố trí</span
+                ><span lang="en">2D SVG map, 2.5D tilt, layout editing</span>
+              </td>
+              <td>
+                <span lang="vi">Trình xem và trình dựng 3D</span
+                ><span lang="en">3D viewer and builder</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span lang="vi">Phiên và đặt chỗ</span
+                ><span lang="en">Sessions and booking</span>
+              </td>
+              <td>
+                <span lang="vi">Vào chỗ ngay, 3 kiểu tính tiền</span
+                ><span lang="en">Walk-in sessions, 3 billing modes</span>
+              </td>
+              <td>
+                <span lang="vi">Đặt trước, check-in, hủy</span
+                ><span lang="en">Reservations, check-in, cancel</span>
+              </td>
+              <td>
+                <span lang="vi">Giữ chỗ, chống trùng, gia hạn trên server</span
+                ><span lang="en">Server-side holds, concurrency, extensions</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span lang="vi">Gọi món</span><span lang="en">Ordering</span>
+              </td>
+              <td>
+                <span lang="vi">Giỏ hàng, theo dõi đơn, đặt lại</span
+                ><span lang="en">Cart, order tracking, reorder</span>
+              </td>
+              <td>
+                <span lang="vi">POS mẫu, đánh dấu đã phục vụ</span
+                ><span lang="en">Sample POS, mark served</span>
+              </td>
+              <td>
+                <span lang="vi">Menu thật, modifier, hàng chờ bếp</span
+                ><span lang="en">Real catalogue, modifiers, kitchen queue</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span lang="vi">Mượn đồ và bán lẻ</span
+                ><span lang="en">Borrowing and retail</span>
+              </td>
+              <td>—</td>
+              <td>
+                <span lang="vi">Mượn sách, đồ dùng chung; bán đồ giải trí, văn phòng phẩm</span
+                ><span lang="en">Borrow books and shared gear; buy games and stationery</span>
+              </td>
+              <td>
+                <span lang="vi">Tồn kho giao dịch, đặt cọc, phí trễ</span
+                ><span lang="en">Transactional stock, deposits, late fees</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span lang="vi">Thanh toán</span><span lang="en">Payment</span>
+              </td>
+              <td>
+                <span lang="vi">Chỉ ước tính và biên nhận</span
+                ><span lang="en">Estimate and receipt only</span>
+              </td>
+              <td>
+                <span lang="vi">Checkout mô phỏng, thử lỗi và thử lại</span
+                ><span lang="en">Simulated checkout, failure and retry</span>
+              </td>
+              <td>
+                <span lang="vi">Cổng thanh toán, sổ giao dịch, hoàn tiền, ca</span
+                ><span lang="en">Gateway, ledger, refunds, shifts</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span lang="vi">Hỗ trợ</span><span lang="en">Support</span>
+              </td>
+              <td>
+                <span lang="vi">Gọi nhân viên, phân loại theo quy tắc</span
+                ><span lang="en">Call staff, rule-based triage</span>
+              </td>
+              <td>
+                <span lang="vi">Hàng chờ hỗ trợ phía nhân viên</span
+                ><span lang="en">Staff support queue</span>
+              </td>
+              <td>
+                <span lang="vi">Phân loại bằng AI có người duyệt</span
+                ><span lang="en">AI triage with human review</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span lang="vi">Giá và ưu đãi</span
+                ><span lang="en">Pricing and promotions</span>
+              </td>
+              <td>
+                <span lang="vi">Giảm 15% cho gói giờ</span
+                ><span lang="en">15% bundle discount</span>
+              </td>
+              <td>
+                <span lang="vi">Duyệt ưu đãi mẫu giảm 10%</span
+                ><span lang="en">Approve a sample 10% offer</span>
+              </td>
+              <td>
+                <span lang="vi">Báo giá từ server, giá theo giờ, flash sale</span
+                ><span lang="en">Server quotes, time-based pricing, flash sales</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span lang="vi">Thành viên</span><span lang="en">Loyalty</span>
+              </td>
+              <td>
+                <span lang="vi">Tham gia, tích điểm, sở thích</span
+                ><span lang="en">Join, earn points, preferences</span>
+              </td>
+              <td>—</td>
+              <td>
+                <span lang="vi">OTP thật, đổi điểm, sổ điểm trên server</span
+                ><span lang="en">Real OTP, redemption, server point ledger</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span lang="vi">Tài khoản và quán</span
+                ><span lang="en">Identity and tenancy</span>
+              </td>
+              <td>
+                <span lang="vi">Đổi vai trò/quán để demo</span
+                ><span lang="en">Demo role and venue switch</span>
+              </td>
+              <td>—</td>
+              <td>
+                <span lang="vi">Đăng nhập, vai trò, cô lập dữ liệu theo quán</span
+                ><span lang="en">Sign-in, roles, tenant isolation</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ================= ARCHITECTURE ================= -->
+      <h2 id="architecture">
+        <span lang="vi">Kiến trúc ứng dụng</span
+        ><span lang="en">App architecture</span>
+      </h2>
+      <p lang="vi">
+        Ứng dụng chia thành bốn tầng. Tầng trên chỉ gọi xuống tầng dưới. Nghiệp
+        vụ nằm trong lõi và các file <code>*Model.ts</code>; route, màn hình và
+        component không tự tính tiền.
+      </p>
+      <p lang="en">
+        The app has four layers, and each one only calls downward. Business
+        rules live in the core and in <code>*Model.ts</code> files; routes,
+        screens and components never price anything themselves.
+      </p>
+
+      <div class="diagram" role="img" aria-label="Layer diagram">
+        <div class="layer">
+          <div class="name">
+            <span lang="vi">1 · Route</span><span lang="en">1 · Routes</span>
+            — <code>app/</code>
+          </div>
+          <div class="boxes">
+            <div class="box">
+              <b>_layout.tsx</b>
+              <span lang="vi">Chờ khôi phục dữ liệu, gắn thanh mô phỏng</span
+              ><span lang="en">Awaits restore, mounts the simulator bar</span>
+            </div>
+            <div class="box">
+              <b>index.tsx</b>
+              <span lang="vi">Chuyển hướng theo vai trò</span
+              ><span lang="en">Redirects by role</span>
+            </div>
+            <div class="box">
+              <b>merchant/* · customer/*</b>
+              <span lang="vi">Mỗi file một dòng, re-export màn hình</span
+              ><span lang="en">One-line re-exports of screens</span>
+            </div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="layer">
+          <div class="name">
+            <span lang="vi">2 · Màn hình theo tính năng</span
+            ><span lang="en">2 · Feature screens</span> —
+            <code>src/features/</code>
+          </div>
+          <div class="boxes">
+            <div class="box brown">
+              <b>merchant/</b>
+              LiveFloorScreen
+            </div>
+            <div class="box blue">
+              <b>customer/</b>
+              ExploreScreen · ActiveSessionScreen
+            </div>
+            <div class="box blue">
+              <b>customer/cart</b>
+              <span lang="vi">Giỏ hàng, đơn</span
+              ><span lang="en">Cart, orders</span>
+            </div>
+            <div class="box blue">
+              <b>customer/support</b>
+              <span lang="vi">Hỗ trợ, biên nhận, đánh giá</span
+              ><span lang="en">Support, receipt, rating</span>
+            </div>
+            <div class="box blue">
+              <b>customer/loyalty</b>
+              <span lang="vi">Thành viên</span
+              ><span lang="en">Membership</span>
+            </div>
+            <div class="box blue">
+              <b>customer/explore</b>
+              <span lang="vi">Lọc và gợi ý chỗ</span
+              ><span lang="en">Seat filters and suggestions</span>
+            </div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="layer">
+          <div class="name">
+            <span lang="vi">3 · Component dùng chung</span
+            ><span lang="en">3 · Shared components</span> —
+            <code>src/components/</code>
+          </div>
+          <div class="boxes">
+            <div class="box">
+              <b>SeatMap.tsx</b>
+              <span lang="vi">Hợp đồng renderer <code>SeatMapProps</code></span
+              ><span lang="en"
+                >The <code>SeatMapProps</code> renderer contract</span
+              >
+            </div>
+            <div class="box">
+              <b>SimulatorBar.tsx</b>
+              <span lang="vi">Vai trò, quán, kịch bản, +30 phút</span
+              ><span lang="en">Role, venue, scenario, +30m</span>
+            </div>
+            <div class="box">
+              <b>ui.tsx</b>
+              Button · Card · Heading
+            </div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="layer">
+          <div class="name">
+            <span lang="vi">4 · Lõi dùng chung</span
+            ><span lang="en">4 · Shared core</span> — <code>src/core/</code>
+          </div>
+          <div class="boxes">
+            <div class="box green">
+              <b>domain.ts</b>
+              <span lang="vi">Kiểu dữ liệu</span><span lang="en">Types</span>
+            </div>
+            <div class="box green">
+              <b>fixtures.ts</b>
+              <span lang="vi">Ba quán mẫu</span
+              ><span lang="en">Three seeded venues</span>
+            </div>
+            <div class="box green">
+              <b>billing.ts</b>
+              <span lang="vi">Nơi duy nhất tính tiền</span
+              ><span lang="en">The only place that prices</span>
+            </div>
+            <div class="box green">
+              <b>store.ts</b>
+              <span lang="vi">Store Zustand thuần + kiểm tra snapshot</span
+              ><span lang="en">Vanilla Zustand store + snapshot validation</span>
+            </div>
+            <div class="box dashed">
+              <b>useAppStore.ts</b>
+              <span lang="vi">Cầu nối React + AsyncStorage</span
+              ><span lang="en">React + AsyncStorage binding</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3>
+        <span lang="vi">Lõi được tách đôi có chủ đích</span
+        ><span lang="en">The core is split in two on purpose</span>
+      </h3>
+      <div class="grid">
+        <div class="card">
+          <h4><code>@/core</code></h4>
+          <p lang="vi">
+            Phần thuần, không phụ thuộc framework: kiểu dữ liệu, dữ liệu mẫu,
+            tính tiền và <code>createAppStore()</code>, hàm trả về một store
+            mới mỗi lần gọi. Kiểm thử dùng trực tiếp phần này.
+          </p>
+          <p lang="en">
+            The pure, framework-independent part: types, fixtures, billing and
+            <code>createAppStore()</code>, which returns a fresh store on every
+            call. Tests use this part directly.
+          </p>
+        </div>
+        <div class="card">
+          <h4><code>@/core/useAppStore</code></h4>
+          <p lang="vi">
+            Module duy nhất của lõi chạm vào React và AsyncStorage. Nó giữ
+            singleton <code>appStore</code>, hook
+            <code>useAppStore(selector)</code> và
+            <code>initializeStore()</code>.
+          </p>
+          <p lang="en">
+            The only core module that touches React and AsyncStorage. It owns
+            the <code>appStore</code> singleton, the
+            <code>useAppStore(selector)</code> hook and
+            <code>initializeStore()</code>.
+          </p>
+        </div>
+      </div>
+      <p lang="vi">
+        Các tính năng phía khách lặp lại đúng mẫu này: một file
+        <code>*Model.ts</code> chứa quy tắc thuần, một <code>*Store.ts</code>
+        là factory tạo store, và một hook <code>use*.ts</code> giữ singleton.
+      </p>
+      <p lang="en">
+        Customer features repeat the same pattern: a <code>*Model.ts</code> of
+        pure rules, a <code>*Store.ts</code> store factory, and a
+        <code>use*.ts</code> hook that owns the singleton.
+      </p>
+
+      <h3>
+        <span lang="vi">Bốn store trạng thái</span
+        ><span lang="en">Four state stores</span>
+      </h3>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Store</th>
+              <th>
+                <span lang="vi">Giữ gì</span><span lang="en">Holds</span>
+              </th>
+              <th>
+                <span lang="vi">Lưu trên thiết bị</span
+                ><span lang="en">Persisted</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>appStore</code></td>
+              <td>
+                <span lang="vi">Vai trò, quán, kịch bản, chỗ đang chọn, mọi phiên. Nguồn sự thật của hóa đơn.</span
+                ><span lang="en">Role, venue, scenario, selected seat, all sessions. The source of truth for the bill.</span>
+              </td>
+              <td><code>vibing-hkt:demo:v1</code></td>
+            </tr>
+            <tr>
+              <td><code>loyaltyStore</code></td>
+              <td>
+                <span lang="vi">Thành viên, sổ điểm, lượt ghé, sở thích, chỗ ghim; theo từng quán.</span
+                ><span lang="en">Memberships, point ledger, visits, preferences, pinned seats; keyed by venue.</span>
+              </td>
+              <td><code>vibing-hkt:customer:v1</code></td>
+            </tr>
+            <tr>
+              <td><code>cartStore</code></td>
+              <td>
+                <span lang="vi">Các dòng trong giỏ và nhật ký đơn. Mỗi đơn vị món đi qua <code>addItem</code> của lõi.</span
+                ><span lang="en">Cart lines and the order log. Every unit goes through the core's <code>addItem</code>.</span>
+              </td>
+              <td>
+                <span lang="vi">Không (trong bộ nhớ)</span
+                ><span lang="en">No (in memory)</span>
+              </td>
+            </tr>
+            <tr>
+              <td><code>supportStore</code></td>
+              <td>
+                <span lang="vi">Yêu cầu hỗ trợ, biên nhận gần nhất, đánh giá.</span
+                ><span lang="en">Support requests, the last receipt, ratings.</span>
+              </td>
+              <td>
+                <span lang="vi">Không (trong bộ nhớ)</span
+                ><span lang="en">No (in memory)</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>
+        <span lang="vi">Khởi động và lưu trữ</span
+        ><span lang="en">Startup and persistence</span>
+      </h3>
+      <div class="diagram">
+        <div class="flow">
+          <div class="box">
+            <span lang="vi">Root layout gọi <code>initializeStore()</code> và chưa cho thao tác.</span
+            ><span lang="en">The root layout calls <code>initializeStore()</code> and blocks interaction.</span>
+          </div>
+          <div class="box">
+            <span lang="vi">Đọc snapshot từ AsyncStorage.</span
+            ><span lang="en">The snapshot is read from AsyncStorage.</span>
+          </div>
+          <div class="box">
+            <span lang="vi"><code>isDemoState</code> kiểm tra hình dạng dữ liệu.</span
+            ><span lang="en"><code>isDemoState</code> validates its shape.</span>
+          </div>
+          <div class="box">
+            <span lang="vi">Hợp lệ thì nạp vào store; không thì dùng dữ liệu mẫu và hiện cảnh báo.</span
+            ><span lang="en">Valid data is loaded; otherwise fixtures are used and a warning is shown.</span>
+          </div>
+          <div class="box">
+            <span lang="vi">Mọi thay đổi sau đó được ghi qua một hàng đợi tuần tự.</span
+            ><span lang="en">Every later change is written through a serialized queue.</span>
+          </div>
+        </div>
+      </div>
+      <p lang="vi">
+        Khi đổi hình dạng <code>DemoState</code>, phải đổi khóa lưu trữ hoặc
+        thêm bước chuyển đổi dữ liệu.
+      </p>
+      <p lang="en">
+        If the shape of <code>DemoState</code> changes, change the storage key
+        or add a migration.
+      </p>
+
+      <h3>
+        <span lang="vi">Luồng dữ liệu: kết thúc một phiên</span
+        ><span lang="en">Data flow: ending a session</span>
+      </h3>
+      <p lang="vi">
+        Đây là chỗ các store phía khách phối hợp với lõi, qua
+        <code>finishSession()</code>:
+      </p>
+      <p lang="en">
+        This is where the customer stores coordinate with the core, through
+        <code>finishSession()</code>:
+      </p>
+      <div class="diagram">
+        <div class="flow">
+          <div class="box">
+            <span lang="vi">Chụp <code>VisitSnapshot</code> (chỗ, phút, tiền, món) trước khi lõi xóa phiên.</span
+            ><span lang="en">Build a <code>VisitSnapshot</code> (seat, minutes, totals, items) before the core drops the session.</span>
+          </div>
+          <div class="box green">
+            <span lang="vi"><code>appStore.endSession()</code> trả chỗ.</span
+            ><span lang="en"><code>appStore.endSession()</code> releases the seat.</span>
+          </div>
+          <div class="box blue">
+            <span lang="vi"><code>supportStore</code> giữ snapshot làm biên nhận.</span
+            ><span lang="en"><code>supportStore</code> keeps the snapshot as the receipt.</span>
+          </div>
+          <div class="box blue">
+            <span lang="vi"><code>cartStore</code> quên giỏ và đơn của phiên đó.</span
+            ><span lang="en"><code>cartStore</code> forgets that session's cart and orders.</span>
+          </div>
+          <div class="box blue">
+            <span lang="vi"><code>loyaltyStore</code> ghi lượt ghé và cộng điểm nếu là thành viên.</span
+            ><span lang="en"><code>loyaltyStore</code> records the visit and adds points for members.</span>
+          </div>
+          <div class="box">
+            <span lang="vi">Chuyển đến <code>/customer/receipt</code>.</span
+            ><span lang="en">Navigate to <code>/customer/receipt</code>.</span>
+          </div>
+        </div>
+      </div>
+
+      <h3>
+        <span lang="vi">Các quy ước quan trọng</span
+        ><span lang="en">Rules that hold everywhere</span>
+      </h3>
+      <ul lang="vi">
+        <li><strong>Vai trò chỉ là cách trình bày.</strong> Cả hai vai trò thấy cùng các phiên; không được coi vai trò là quyền.</li>
+        <li><strong>Thời gian chỉ đi qua thanh mô phỏng.</strong> Tải lại trang không cộng thêm phút nào.</li>
+        <li><strong>Mọi tra cứu theo quán.</strong> Phiên của mọi quán nằm chung một mảng và luôn được lọc theo <code>venueId</code>.</li>
+        <li><strong>Giá được chụp lại.</strong> Phiên giữ giá giờ và giá món tại lúc tạo, nên đổi dữ liệu mẫu không làm đổi hóa đơn đang mở.</li>
+        <li><strong>Hành động trả kết quả rõ ràng.</strong> <code>startSession</code>, <code>addItem</code>, <code>endSession</code> trả <code>ActionResult</code> để màn hình hiển thị; ID quán sai là lỗi lập trình và sẽ ném lỗi.</li>
+        <li><strong>Không cần màu để hiểu.</strong> Tình trạng chỗ luôn có nhãn chữ; renderer 3D sau này phải nhận cùng <code>SeatMapProps</code> và giữ danh sách này.</li>
+      </ul>
+      <ul lang="en">
+        <li><strong>Roles are presentation.</strong> Both roles see the same sessions; a role is never a permission check.</li>
+        <li><strong>Time only moves through the simulator.</strong> A reload adds no elapsed minutes.</li>
+        <li><strong>Every lookup is venue-scoped.</strong> Sessions for all venues share one array and are always filtered by <code>venueId</code>.</li>
+        <li><strong>Prices are snapshotted.</strong> A session keeps the hourly rate and item prices from when it was created, so fixture changes do not alter open tabs.</li>
+        <li><strong>Actions return explicit results.</strong> <code>startSession</code>, <code>addItem</code> and <code>endSession</code> return an <code>ActionResult</code> for the screen to show; an invalid venue ID is a programmer error and throws.</li>
+        <li><strong>Colour is never required.</strong> Availability always has a text label; a future 3D renderer must take the same <code>SeatMapProps</code> and keep this list.</li>
+      </ul>
+
+      <!-- ================= DOMAIN ================= -->
+      <h2 id="domain">
+        <span lang="vi">Mô hình dữ liệu và tính tiền</span
+        ><span lang="en">Data model and billing</span>
+      </h2>
+      <div class="grid">
+        <div class="card">
+          <h4>Venue</h4>
+          <p lang="vi">Quán: tên, màu nhấn, 8 chỗ và 2 món. Có ba quán mẫu: The Grind Co-Work, Matcha &amp; Muse Studio, CyberPod 24/7 Hub.</p>
+          <p lang="en">A venue: name, accent colour, 8 seats and 2 menu items. Three are seeded: The Grind Co-Work, Matcha &amp; Muse Studio, CyberPod 24/7 Hub.</p>
+        </div>
+        <div class="card">
+          <h4>Seat</h4>
+          <p lang="vi">Chỗ 1–5 là desk giá 30.000 ₫/giờ; chỗ 6–7 là pod và chỗ 8 là booth, giá 40.000 ₫/giờ. Mỗi chỗ có tọa độ lưới <code>x, z</code> cho bản 3D sau này.</p>
+          <p lang="en">Seats 1–5 are desks at 30,000 ₫/h; seats 6–7 are pods and seat 8 is a booth, at 40,000 ₫/h. Each seat has grid coordinates <code>x, z</code> for a later 3D view.</p>
+        </div>
+        <div class="card">
+          <h4>Session</h4>
+          <p lang="vi">Một phiên dùng chỗ: quán, chỗ, khách, kiểu tính tiền, số phút đã trôi, giá giờ đã chụp và các món đã gọi.</p>
+          <p lang="en">One seat session: venue, seat, customer, billing mode, elapsed minutes, the locked hourly rate and the items ordered.</p>
+        </div>
+        <div class="card">
+          <h4>DemoState</h4>
+          <p lang="vi">Toàn bộ trạng thái lõi: vai trò, quán đang chọn, kịch bản, chỗ đang chọn, danh sách phiên và bộ đếm ID.</p>
+          <p lang="en">The whole core state: role, active venue, scenario, selected seat, the session list and an ID counter.</p>
+        </div>
+      </div>
+
+      <h3>
+        <span lang="vi">Quy tắc tính tiền</span
+        ><span lang="en">Billing rules</span>
+        (<code>src/core/billing.ts</code>)
+      </h3>
+      <p lang="vi">
+        Tiền là số nguyên VND. Đây là chính sách demo, chưa phải giá được duyệt
+        cho pilot.
+      </p>
+      <p lang="en">
+        Money is integer VND. These are demo policies, not approved pilot
+        pricing.
+      </p>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>
+                <span lang="vi">Kiểu</span><span lang="en">Mode</span>
+              </th>
+              <th>
+                <span lang="vi">Cách tính tiền chỗ</span
+                ><span lang="en">Seat time charge</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>METERED_OPEN</code></td>
+              <td>
+                <span lang="vi">Làm tròn lên theo block 15 phút, mỗi block bằng 1/4 giá giờ.</span
+                ><span lang="en">Rounded up to 15-minute blocks, each a quarter of the hourly rate.</span>
+              </td>
+            </tr>
+            <tr>
+              <td><code>BUNDLE_2H</code> · <code>BUNDLE_4H</code></td>
+              <td>
+                <span lang="vi">Trả trước 2 hoặc 4 giờ với giá giảm 15%. Quá giờ có 10 phút ân hạn; vượt ân hạn thì phần vượt được tính theo block 15 phút.</span
+                ><span lang="en">2 or 4 hours up front at 15% off. Overtime has a 10-minute grace; beyond it, the excess is charged in 15-minute blocks.</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p lang="vi">
+        <strong>Ví dụ kiểm tra tay:</strong> chỗ 8 (40.000 ₫/giờ), tính theo
+        phút, một ly 45.000 ₫, tua +30 phút → 2 block × 10.000 ₫ + 45.000 ₫ =
+        <strong>65.000 ₫</strong>. Gói 2 giờ ở chỗ 30.000 ₫/giờ có giá
+        51.000 ₫.
+      </p>
+      <p lang="en">
+        <strong>Manual check:</strong> seat 8 (40,000 ₫/h), metered, one
+        45,000 ₫ drink, advance +30m → 2 blocks × 10,000 ₫ + 45,000 ₫ =
+        <strong>65,000 ₫</strong>. A 2-hour bundle on a 30,000 ₫/h seat costs
+        51,000 ₫.
+      </p>
+
+      <!-- ================= PROTOTYPE ================= -->
+      <h2 id="prototype">
+        <span lang="vi">Prototype HTML “Nếp”</span
+        ><span lang="en">The “Nếp” HTML prototype</span>
+      </h2>
+      <p lang="vi">
+        Bản thử thiết kế chạy độc lập: nền tối, nhấn xanh mint, bố cục điện
+        thoại rộng tối đa 480 px với thanh điều hướng dưới và bottom sheet. Hai
+        màn dùng chung dữ liệu qua <code>localStorage</code> khi mở cùng origin,
+        nên đơn của khách hiện ngay bên màn vận hành.
+      </p>
+      <p lang="en">
+        A standalone design exploration: dark surfaces, mint accents, a phone
+        layout up to 480 px wide with bottom navigation and bottom sheets. The
+        two screens share data through <code>localStorage</code> on the same
+        origin, so a customer order appears on the operations screen at once.
+      </p>
+      <figure>
+        <img
+          src="previews/mobile-pair.png"
+          alt="Operations and customer prototype screens side by side"
+          loading="lazy"
+        />
+        <figcaption>
+          <span lang="vi">Màn vận hành (trái) và màn khách (phải) trong trang xem song song.</span
+          ><span lang="en">The operations screen (left) and customer screen (right) in the side-by-side preview.</span>
+        </figcaption>
+      </figure>
+      <div class="grid">
+        <div class="card">
+          <h4>
+            <span class="tag proto">FE1</span>
+            <span lang="vi">Vận hành</span><span lang="en">Operations</span>
+          </h4>
+          <ul lang="vi">
+            <li>Sơ đồ và danh sách chỗ, lọc theo khu, trạng thái, khách, ngày.</li>
+            <li>Tạo đặt chỗ mẫu, check-in, kết thúc phiên, hủy.</li>
+            <li>POS mẫu: tạo đơn đồ uống, đánh dấu đã phục vụ.</li>
+            <li>Nhận và hoàn tất yêu cầu hỗ trợ.</li>
+            <li>Duyệt hoặc dừng ưu đãi mẫu giảm 10%.</li>
+            <li>Chỉnh bố trí chỗ bằng nút hoặc phím mũi tên.</li>
+            <li>Tab Dịch vụ: giao đồ mượn, nhận trả, hủy yêu cầu.</li>
+          </ul>
+          <ul lang="en">
+            <li>Seat map and list, filtered by zone, status, guest and date.</li>
+            <li>Create sample reservations, check in, end a session, cancel.</li>
+            <li>Sample POS: create drink orders, mark them served.</li>
+            <li>Take and complete support requests.</li>
+            <li>Approve or stop a sample 10% offer.</li>
+            <li>Edit the layout with buttons or arrow keys.</li>
+            <li>Services tab: hand out loans, take returns, cancel requests.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>
+            <span class="tag proto">FE2</span>
+            <span lang="vi">Khách</span><span lang="en">Customer</span>
+          </h4>
+          <ul lang="vi">
+            <li>Chọn chỗ trống, gói 1, 2 hoặc 4 giờ, thêm đồ uống.</li>
+            <li>Checkout mô phỏng, có thử lỗi thanh toán và thử lại.</li>
+            <li>Gửi yêu cầu hỗ trợ bằng văn bản tự do.</li>
+            <li>Mượn miễn phí: sách đọc tại quán, ổ cắm nối dài, rổ, cáp.</li>
+            <li>Mua mang về: đồ giải trí và văn phòng phẩm.</li>
+            <li>Phiếu mượn: chờ giao → đang mượn → đã trả.</li>
+          </ul>
+          <ul lang="en">
+            <li>Pick a free seat, a 1, 2 or 4-hour package, add drinks.</li>
+            <li>Simulated checkout, with a payment failure and retry path.</li>
+            <li>Send a free-text support request.</li>
+            <li>Borrow for free: in-house books, extension sockets, baskets, cables.</li>
+            <li>Buy to keep: games and stationery.</li>
+            <li>Loan slips: requested → borrowed → returned.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>
+                <span lang="vi">Tệp</span><span lang="en">File</span>
+              </th>
+              <th>
+                <span lang="vi">Vai trò</span><span lang="en">Role</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>prototype/shared.js</code></td>
+              <td>
+                <span lang="vi">Dữ liệu mẫu, <code>localStorage</code>, SVG mặt bằng và icon dùng chung.</span
+                ><span lang="en">Sample data, <code>localStorage</code>, the floor-plan SVG and shared icons.</span>
+              </td>
+            </tr>
+            <tr>
+              <td><code>services.js</code> · <code>service-ui.js</code></td>
+              <td>
+                <span lang="vi">Danh mục, tồn mẫu, mượn/giao/trả và bán hàng.</span
+                ><span lang="en">Catalogue, sample stock, borrow/hand-out/return and sales.</span>
+              </td>
+            </tr>
+            <tr>
+              <td><code>operations.*</code> · <code>customer.*</code></td>
+              <td>
+                <span lang="vi">Hai màn và logic riêng của từng màn.</span
+                ><span lang="en">The two screens and their own logic.</span>
+              </td>
+            </tr>
+            <tr>
+              <td><code>preview.html</code></td>
+              <td>
+                <span lang="vi">Hai màn thật đặt cạnh nhau bằng iframe.</span
+                ><span lang="en">Both real screens side by side in iframes.</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <code>tokens.css</code> · <code>styles.css</code> ·
+                <code>mobile.css</code>
+              </td>
+              <td>
+                <span lang="vi">Design token, style nền và bố cục điện thoại.</span
+                ><span lang="en">Design tokens, base styles and the phone layout.</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p lang="vi">
+        Chạy ở thư mục gốc của repository (vì trang nạp
+        <code>../tokens.css</code>) rồi mở <code>/prototype/</code>:
+      </p>
+      <p lang="en">
+        Serve the repository root (the pages load <code>../tokens.css</code>),
+        then open <code>/prototype/</code>:
+      </p>
+      <pre>python3 -m http.server 4173 --bind 127.0.0.1</pre>
+
+      <!-- ================= QUALITY ================= -->
+      <h2 id="quality">
+        <span lang="vi">Kiểm thử, CI và cách chạy</span
+        ><span lang="en">Testing, CI and running it</span>
+      </h2>
+      <pre>
+npm ci
+npm run web            # dev loop
+npm run check          # typecheck + lint + vitest
+npm run format:check   # prettier
+npm run build:web      # expo export → dist/
+npm run test:e2e       # Playwright (npx playwright install chromium)</pre
+      >
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>
+                <span lang="vi">Lớp</span><span lang="en">Layer</span>
+              </th>
+              <th>
+                <span lang="vi">Công cụ</span><span lang="en">Tool</span>
+              </th>
+              <th>
+                <span lang="vi">Phạm vi</span><span lang="en">Covers</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <span lang="vi">Quy tắc nghiệp vụ</span
+                ><span lang="en">Domain rules</span>
+              </td>
+              <td>Vitest</td>
+              <td>
+                <span lang="vi">185 kiểm thử trong 6 file: lõi, lưu trữ, giỏ hàng, khám phá, thành viên, hỗ trợ.</span
+                ><span lang="en">185 tests in 6 files: core, storage, cart, explore, loyalty, support.</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span lang="vi">Luồng trên trình duyệt</span
+                ><span lang="en">Browser flows</span>
+              </td>
+              <td>Playwright</td>
+              <td>
+                <span lang="vi">2 kịch bản, mỗi kịch bản chạy ở khung desktop và mobile.</span
+                ><span lang="en">2 scenarios, each run in a desktop and a mobile viewport.</span>
+              </td>
+            </tr>
+            <tr>
+              <td>Prototype</td>
+              <td><code>node --test</code></td>
+              <td>
+                <span lang="vi">13 kiểm thử biên cho quy tắc mượn, trả và tồn (<code>prototype/services.check.cjs</code>).</span
+                ><span lang="en">13 boundary tests for the borrow, return and stock rules (<code>prototype/services.check.cjs</code>).</span>
+              </td>
+            </tr>
+            <tr>
+              <td>CI</td>
+              <td>GitHub Actions</td>
+              <td>
+                <span lang="vi">Theo thứ tự: <code>format:check</code>, <code>check</code>, <code>build:web</code>, <code>test:e2e</code>, trên mỗi pull request.</span
+                ><span lang="en">In order: <code>format:check</code>, <code>check</code>, <code>build:web</code>, <code>test:e2e</code>, on every pull request.</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p lang="vi">
+        Phân công: BE giữ <code>src/core/domain.ts</code>,
+        <code>billing.ts</code> và API sau này; FE1 giữ
+        <code>src/features/merchant</code> và <code>src/components</code>; FE2
+        giữ <code>src/features/customer</code>. Thay đổi ở phần dùng chung cần
+        báo trước trong PR.
+      </p>
+      <p lang="en">
+        Ownership: BE owns <code>src/core/domain.ts</code>,
+        <code>billing.ts</code> and the future API; FE1 owns
+        <code>src/features/merchant</code> and <code>src/components</code>; FE2
+        owns <code>src/features/customer</code>. Changes to shared paths need
+        to be flagged in the PR.
+      </p>
+
+      <!-- ================= TARGET ================= -->
+      <h2 id="target">
+        <span class="tag plan"
+          ><span lang="vi">Kế hoạch</span><span lang="en">Planned</span></span
+        >
+        <span lang="vi">Kiến trúc đích cho pilot</span
+        ><span lang="en">Target architecture for the pilot</span>
+      </h2>
+      <p lang="vi">
+        Phần này là đề xuất trong PRD, chưa có mã nguồn. Mục tiêu là pilot ở
+        1–2 quán trong 10–12 tuần với 1 BE và 2 FE: một backend dạng modular
+        monolith, một cơ sở dữ liệu quan hệ, một hàng đợi tác vụ và kho lưu
+        asset.
+      </p>
+      <p lang="en">
+        This section is the PRD's proposal; none of it exists in code. The goal
+        is a pilot in 1–2 venues over 10–12 weeks with 1 BE and 2 FE: one
+        modular-monolith backend, one relational database, one job queue and
+        object storage for assets.
+      </p>
+      <div class="diagram" role="img" aria-label="Target system diagram">
+        <div class="boxes">
+          <div class="box brown">
+            <b>FE1</b>
+            <span lang="vi">Quản trị, POS, trình dựng 3D</span
+            ><span lang="en">Admin, POS, 3D editor</span>
+          </div>
+          <div class="box blue">
+            <b>FE2</b>
+            <span lang="vi">Khách: QR, đặt chỗ, checkout</span
+            ><span lang="en">Customer: QR, booking, checkout</span>
+          </div>
+        </div>
+        <div class="arrow">
+          ↓ <span lang="vi">API có phiên bản, khóa idempotency</span
+          ><span lang="en">versioned API, idempotency keys</span>
+        </div>
+        <div class="layer">
+          <div class="name">
+            <span lang="vi">Backend API và phân quyền</span
+            ><span lang="en">Backend API and authorization</span>
+          </div>
+          <div class="boxes">
+            <div class="box">Identity / Tenancy</div>
+            <div class="box">Catalog / Order</div>
+            <div class="box">Space</div>
+            <div class="box">Booking / Session</div>
+            <div class="box">Pricing / Promotion</div>
+            <div class="box">Payment / Shift</div>
+            <div class="box">Loyalty</div>
+            <div class="box">Support / AI</div>
+            <div class="box">Reporting</div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="boxes">
+          <div class="box green">
+            <b>DB</b>
+            <span lang="vi">CSDL giao dịch</span
+            ><span lang="en">Transactional database</span>
+          </div>
+          <div class="box green">
+            <b>Assets</b>
+            <span lang="vi">Kho asset có phân quyền</span
+            ><span lang="en">Access-controlled asset store</span>
+          </div>
+          <div class="box green">
+            <b>Payments</b>
+            <span lang="vi">Cổng thanh toán + webhook xác thực</span
+            ><span lang="en">Payment gateway + verified webhooks</span>
+          </div>
+          <div class="box green">
+            <b>Jobs</b>
+            <span lang="vi">Tác vụ nền, đối soát, AI gợi ý</span
+            ><span lang="en">Background jobs, reconciliation, AI suggestions</span>
+          </div>
+        </div>
+      </div>
+      <h3>
+        <span lang="vi">Từ demo đến pilot</span
+        ><span lang="en">From demo to pilot</span>
+      </h3>
+      <ul lang="vi">
+        <li>Server tính lại mọi khoản tiền; không tin tổng tiền do client gửi lên.</li>
+        <li>Xác thực và phạm vi theo quán/chi nhánh được ép ở backend.</li>
+        <li>Báo giá có hạn, lệnh idempotent, kiểm tra trùng chỗ trong transaction.</li>
+        <li>Phiên và sổ giao dịch bền vững; không suy ra thanh toán thành công từ trạng thái cục bộ.</li>
+        <li>Khóa OpenAI và khóa thanh toán chỉ nằm ở server, không bao giờ trong <code>EXPO_PUBLIC_*</code>.</li>
+        <li>Giữ lại adapter demo để frontend tiếp tục làm việc độc lập.</li>
+      </ul>
+      <ul lang="en">
+        <li>The server recomputes every amount; a total sent by the client is never trusted.</li>
+        <li>Authentication and tenant/branch scope are enforced by the backend.</li>
+        <li>Quotes expire, commands are idempotent, and seat conflicts are checked inside a transaction.</li>
+        <li>Sessions and the ledger are durable; payment success is never inferred from a local state change.</li>
+        <li>OpenAI and payment keys stay on the server, never in <code>EXPO_PUBLIC_*</code>.</li>
+        <li>The demo adapter stays so frontend work can continue independently.</li>
+      </ul>
+
+      <h3>
+        <span lang="vi">Đọc tiếp</span><span lang="en">Further reading</span>
+      </h3>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>
+                <span lang="vi">Tài liệu</span><span lang="en">Document</span>
+              </th>
+              <th>
+                <span lang="vi">Nội dung</span><span lang="en">What it covers</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="core.md">docs/core.md</a></td>
+              <td>
+                <span lang="vi">Hợp đồng lõi: hành động, tính tiền, lưu trữ. Đọc trước khi sửa <code>src/core</code>.</span
+                ><span lang="en">The core contract: actions, billing, storage. Read before changing <code>src/core</code>.</span>
+              </td>
+            </tr>
+            <tr>
+              <td><a href="../AGENTS.md">AGENTS.md</a> · <a href="../CONTRIBUTING.md">CONTRIBUTING.md</a></td>
+              <td>
+                <span lang="vi">Lệnh, quy ước, phân công và bài kiểm tra tay.</span
+                ><span lang="en">Commands, conventions, ownership and the manual smoke check.</span>
+              </td>
+            </tr>
+            <tr>
+              <td><a href="../.beads/artifacts/vhk-qwb/prd.md">PRD</a></td>
+              <td>
+                <span lang="vi">Yêu cầu FR01–FR08, phân quyền, kế hoạch 10–12 tuần, cổng mở pilot.</span
+                ><span lang="en">Requirements FR01–FR08, permissions, the 10–12 week plan, pilot gates.</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <a href="mvp-features.md">mvp-features.md</a> ·
+                <a href="mvp-features-batch-2.md">batch 2</a>
+              </td>
+              <td>
+                <span lang="vi">Đặc tả 200 tính năng MVP (F001–F200), chia theo nhóm A–W.</span
+                ><span lang="en">The 200-feature MVP spec (F001–F200), grouped into areas A–W.</span>
+              </td>
+            </tr>
+            <tr>
+              <td><a href="react-native-plan.md">react-native-plan.md</a></td>
+              <td>
+                <span lang="vi">Kế hoạch 4 giai đoạn: nền tảng, 3D, POS và phân loại AI, giá động và loyalty. Cấu trúc nhiều app trong đó đã được thay bằng cấu trúc một app hiện tại.</span
+                ><span lang="en">The 4-phase plan: foundation, 3D, POS and AI triage, dynamic pricing and loyalty. Its multi-app layout was superseded by today's single-app layout.</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <a href="prototype.md">prototype.md</a> ·
+                <a href="../design.md">design.md</a>
+              </td>
+              <td>
+                <span lang="vi">Hướng dẫn prototype và hệ thiết kế của nó.</span
+                ><span lang="en">The prototype guide and its design system.</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <footer>
+      <span lang="vi">Phản ánh mã nguồn trên nhánh <code>main</code> ngày 14/11/2026. Khi mã thay đổi, hãy cập nhật trang này cùng PR.</span>
+      <span lang="en">Reflects the code on <code>main</code> as of 2026-11-14. When the code changes, update this page in the same PR.</span>
+    </footer>
+
+    <script>
+      (function () {
+        var root = document.documentElement;
+        var buttons = document.querySelectorAll('[data-set-lang]');
+        function apply(lang) {
+          root.setAttribute('data-lang', lang);
+          root.setAttribute('lang', lang);
+          buttons.forEach(function (button) {
+            button.setAttribute(
+              'aria-pressed',
+              String(button.getAttribute('data-set-lang') === lang),
+            );
+          });
+        }
+        var saved = null;
+        try {
+          saved = localStorage.getItem('vibing-hkt:docs-lang');
+        } catch (error) {}
+        var initial =
+          saved === 'vi' || saved === 'en'
+            ? saved
+            : /^vi/i.test(navigator.language || '')
+              ? 'vi'
+              : 'en';
+        apply(initial);
+        buttons.forEach(function (button) {
+          button.addEventListener('click', function () {
+            var lang = button.getAttribute('data-set-lang');
+            apply(lang);
+            try {
+              localStorage.setItem('vibing-hkt:docs-lang', lang);
+            } catch (error) {}
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>
