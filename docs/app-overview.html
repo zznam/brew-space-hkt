@@ -493,15 +493,18 @@
         <div class="note">
           <p lang="vi">
             <strong>Hiện trạng:</strong> đây là bản demo trên một thiết bị.
-            Chưa có backend, đăng nhập, thanh toán, AI hay 3D thật. Mọi giao
-            dịch đều là mô phỏng, và bản demo chưa đạt các tiêu chí mở pilot
-            trong PRD.
+            Chưa có backend, đăng nhập hay thanh toán thật. Đã có sơ đồ 3D và
+            màn onboarding quán có thể gọi OpenAI tùy chọn; mọi phần AI còn lại
+            là quy tắc cố định. Mọi giao dịch đều là mô phỏng, và bản demo chưa
+            đạt các tiêu chí mở pilot trong PRD.
           </p>
           <p lang="en">
             <strong>Current state:</strong> this is a single-device demo. There
-            is no backend, sign-in, payment, AI, or real 3D yet. Every
-            transaction is simulated, and the demo does not yet meet the pilot
-            gates in the PRD.
+            is no backend, sign-in, or real payment yet. It now has a 3D floor
+            view and a venue onboarding screen that can optionally call OpenAI;
+            every other "AI" part is fixed rules. Every transaction is
+            simulated, and the demo does not yet meet the pilot gates in the
+            PRD.
           </p>
         </div>
 
@@ -517,17 +520,17 @@
             <span lang="en">sample venues × seats</span>
           </div>
           <div class="stat">
-            <b>7</b>
-            <span lang="vi">màn hình (3 chủ quán, 4 khách)</span>
-            <span lang="en">screens (3 merchant, 4 customer)</span>
+            <b>10</b>
+            <span lang="vi">màn hình (4 chủ quán, 6 khách)</span>
+            <span lang="en">screens (4 merchant, 6 customer)</span>
           </div>
           <div class="stat">
-            <b>198</b>
+            <b>353</b>
             <span lang="vi">kiểm thử đơn vị (Vitest)</span>
             <span lang="en">unit tests (Vitest)</span>
           </div>
           <div class="stat">
-            <b>200</b>
+            <b>300</b>
             <span lang="vi">tính năng trong đặc tả MVP</span>
             <span lang="en">features in the MVP spec</span>
           </div>
@@ -551,11 +554,11 @@
           </p>
           <p lang="vi">
             Mã nguồn thật: Expo SDK 58, React Native 0.88, Expo Router, Zustand,
-            TypeScript. Chạy trên web, iOS và Android.
+            Three.js, TypeScript. Chạy trên web, iOS và Android.
           </p>
           <p lang="en">
             The real codebase: Expo SDK 58, React Native 0.88, Expo Router,
-            Zustand, TypeScript. Runs on web, iOS and Android.
+            Zustand, Three.js, TypeScript. Runs on web, iOS and Android.
           </p>
         </div>
         <div class="card">
@@ -619,6 +622,11 @@
             <li>Ghim tối đa 3 chỗ yêu thích mỗi quán.</li>
             <li>Gợi ý “chỗ quen” sau 3 lượt ghé cùng quán.</li>
             <li>Bắt đầu phiên: tính theo phút, gói 2 giờ hoặc gói 4 giờ.</li>
+            <li>Sơ đồ 3D của quán nằm trên danh sách chỗ, có thể ẩn đi.</li>
+            <li>Lọc theo tiện ích: ổ cắm, cửa sổ, yên tĩnh, màn hình.</li>
+            <li>Thẻ chi tiết chỗ với giá ước tính cho 1, 2 và 4 giờ.</li>
+            <li>Trang quán: giờ mở cửa, địa chỉ mẫu và bảng giá theo hạng chỗ.</li>
+            <li>Link chia sẻ chỗ (<code>?venue=…&amp;seat=…</code>), mở ra là chọn sẵn chỗ đó, không chứa dữ liệu cá nhân.</li>
           </ul>
           <ul lang="en">
             <li>Text-labelled seat list: kind, hourly rate, available or occupied.</li>
@@ -627,6 +635,11 @@
             <li>Pin up to 3 favourite seats per venue.</li>
             <li>“Your usual” suggestion after 3 visits to the same venue.</li>
             <li>Start a session: metered, 2-hour bundle or 4-hour bundle.</li>
+            <li>A 3D view of the venue sits above the seat list and can be hidden.</li>
+            <li>Amenity filters: outlet, window, quiet, monitor.</li>
+            <li>A seat detail card with estimates for 1, 2 and 4 hours.</li>
+            <li>Venue page: opening hours, a demo address and a price table per seat tier.</li>
+            <li>A shareable seat link (<code>?venue=…&amp;seat=…</code>) that preselects the seat and carries no personal data.</li>
           </ul>
         </div>
         <div class="card">
@@ -642,6 +655,11 @@
             <li>Theo dõi đơn: đã nhận → đang làm → đã phục vụ (theo giờ mô phỏng).</li>
             <li>Đặt lại đơn gần nhất theo giá hiện tại.</li>
             <li>Thẻ Wi-Fi và nội quy quán.</li>
+            <li>Tùy chọn đồ uống: sữa, độ ngọt, đá. Không ảnh hưởng đến giá.</li>
+            <li>Tìm món không phân biệt dấu; sở thích đã lưu của thành viên được điền sẵn.</li>
+            <li>Ghi chú dị ứng đã lưu sẽ tạo yêu cầu cho nhân viên theo mỗi đơn.</li>
+            <li>Đồng hồ tập trung kiểu Pomodoro, không liên quan đến tính tiền.</li>
+            <li>Khi mất mạng: hiện thông báo và khóa nút đặt món, đặt lại, kết thúc phiên.</li>
           </ul>
           <ul lang="en">
             <li>Live estimate: seat time plus menu items.</li>
@@ -650,6 +668,11 @@
             <li>Order tracking: queued → preparing → served (on simulated time).</li>
             <li>Reorder the latest order at current prices.</li>
             <li>Wi-Fi and house-rules card.</li>
+            <li>Drink options: milk, sweetness, ice. They do not change the price.</li>
+            <li>Diacritic-insensitive menu search; a member's saved preferences prefill new drinks.</li>
+            <li>A saved allergy note raises a staff request with every order.</li>
+            <li>A Pomodoro-style focus timer that never touches billing.</li>
+            <li>When offline: a banner shows, and placing orders, reordering and ending the session are disabled.</li>
           </ul>
         </div>
         <div class="card">
@@ -664,6 +687,7 @@
             <li>Phân loại theo từ khóa: dị ứng, an toàn, thanh toán, thiết bị, vệ sinh, đơn món, khác.</li>
             <li>Dị ứng, an toàn, thanh toán hoặc độ tin cậy dưới 0,6 luôn chuyển cho người.</li>
             <li>Trạng thái: đang chờ → đã nhận → đã xử lý.</li>
+            <li>Gửi yêu cầu đổi chỗ.</li>
           </ul>
           <ul lang="en">
             <li>“Call staff” always creates a request, with no classifier in the way.</li>
@@ -672,6 +696,7 @@
             <li>Keyword triage: allergy, safety, payment, equipment, cleaning, order, other.</li>
             <li>Allergy, safety, payment, or confidence below 0.6 always goes to a human.</li>
             <li>Status: open → acknowledged → resolved.</li>
+            <li>Ask to change seats.</li>
           </ul>
         </div>
         <div class="card">
@@ -684,11 +709,13 @@
             <li>Kết thúc phiên sẽ trả chỗ và hiện biên nhận: gói, số phút, tiền chỗ, từng món, tổng.</li>
             <li>Chấm điểm lượt ghé từ 1 đến 5 và sửa lại được.</li>
             <li>Không thu tiền: tổng chỉ là ước tính demo.</li>
+            <li>Gửi yêu cầu hoàn tiền từ biên nhận. Yêu cầu được chuyển cho nhân viên như một việc thanh toán; ứng dụng không bao giờ báo “đã hoàn tiền”.</li>
           </ul>
           <ul lang="en">
             <li>Ending a session releases the seat and shows a receipt: mode, minutes, seat time, each item, total.</li>
             <li>Rate the visit from 1 to 5, and change it later.</li>
             <li>No money is collected: the total is a demo estimate.</li>
+            <li>Request a refund from the receipt. It goes to staff as a payment issue; the app never shows “refunded”.</li>
           </ul>
         </div>
         <div class="card">
@@ -703,6 +730,9 @@
             <li>Thống kê lượt ghé và thói quen (chỗ, gói hay dùng).</li>
             <li>Sở thích: loại sữa, độ ngọt, ghi chú dị ứng.</li>
             <li>Xóa dữ liệu lượt ghé, hoặc rời chương trình và xóa toàn bộ dữ liệu của quán đó.</li>
+            <li>Huy hiệu và chuỗi ngày ghé, chỉ để trang trí.</li>
+            <li>Mã giới thiệu: +50 điểm, một lần, trong cùng quán.</li>
+            <li>Trang quyền riêng tư và cách dùng dữ liệu (<code>/customer/privacy</code>).</li>
           </ul>
           <ul lang="en">
             <li>Join with a phone number and a demo OTP, per venue.</li>
@@ -710,6 +740,25 @@
             <li>Visit stats and habits (usual seat and mode).</li>
             <li>Preferences: milk, sweetness, allergy note.</li>
             <li>Delete visit data, or leave the programme and delete everything for that venue.</li>
+            <li>Cosmetic badges and visit streaks.</li>
+            <li>Referral code: +50 points, once, within the same venue.</li>
+            <li>A privacy and data-use page (<code>/customer/privacy</code>).</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>
+            <span lang="vi">Trợ lý</span><span lang="en">Assistant</span>
+          </h4>
+          <p><code>/customer/assistant</code></p>
+          <ul lang="vi">
+            <li>Trả lời câu hỏi về chỗ, menu, Wi-Fi, nội quy, cách tính tiền và điểm.</li>
+            <li>Hiểu tiếng Việt và tiếng Anh, dựa trên quy tắc, không gọi mô hình AI.</li>
+            <li>Chỉ đọc: từ chối đặt chỗ, thanh toán hay gọi món thay khách.</li>
+          </ul>
+          <ul lang="en">
+            <li>Answers questions about seats, the menu, Wi-Fi, house rules, billing and points.</li>
+            <li>Understands Vietnamese and English, rule-based, with no AI model call.</li>
+            <li>Read-only: it refuses to book, pay or order on the customer's behalf.</li>
           </ul>
         </div>
       </div>
@@ -733,14 +782,16 @@
             <li>Cùng danh sách chỗ với phía khách.</li>
             <li>Danh sách phiên đang mở: chỗ, số phút, tổng tạm tính.</li>
             <li>Thấy ngay phiên và món khách vừa thêm.</li>
-            <li>Lối vào bán hàng: “New order”, “Sell to {chỗ}” và “Tickets”.</li>
+            <li>Sơ đồ 3D cùng danh sách chỗ.</li>
+            <li>Lối vào: “New order”, “Sell to {chỗ}”, “Tickets” và “Onboard Cafe / 3D Studio”.</li>
           </ul>
           <ul lang="en">
             <li>Occupied seats out of the venue's total.</li>
             <li>The same seat list the customer sees.</li>
             <li>Live tabs: seat, minutes, running total.</li>
             <li>Customer sessions and added items show up immediately.</li>
-            <li>Entry points for selling: “New order”, “Sell to {seat}” and “Tickets”.</li>
+            <li>The 3D view alongside the seat list.</li>
+            <li>Entry points: “New order”, “Sell to {seat}”, “Tickets” and “Onboard Cafe / 3D Studio”.</li>
           </ul>
         </div>
         <div class="card">
@@ -785,20 +836,60 @@
         </div>
         <div class="card">
           <h4>
+            <span lang="vi">Sơ đồ 3D</span><span lang="en">3D floor view</span>
+          </h4>
+          <ul lang="vi">
+            <li>Dựng bằng Three.js: phòng cắt lớp, ánh sáng theo chủ đề, nội thất và chỗ ngồi.</li>
+            <li>Mỗi chỗ có vòng trạng thái; bấm vào chỗ trong cảnh 3D để chọn.</li>
+            <li>Xoay, thu phóng và bốn góc máy: isometric, từ trên xuống, lối vào, quầy bar.</li>
+            <li>Không có WebGL thì tự chuyển sang bản vẽ mặt bằng.</li>
+            <li>Danh sách chỗ có nhãn chữ luôn hiển thị bên dưới.</li>
+          </ul>
+          <ul lang="en">
+            <li>Built with Three.js: a cutaway room, themed lighting, fixtures and seats.</li>
+            <li>Each seat has a status ring; click a seat in the scene to select it.</li>
+            <li>Orbit, zoom and four camera presets: isometric, top-down, walk-in, bar.</li>
+            <li>Without WebGL it falls back to a blueprint drawing.</li>
+            <li>The text-labelled seat list always stays below it.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>
+            <span lang="vi">Onboarding quán và 3D Studio</span
+            ><span lang="en">Venue onboarding and 3D Studio</span>
+          </h4>
+          <p><code>/merchant/onboarding</code></p>
+          <ul lang="vi">
+            <li>Chủ quán tải ảnh, video (tự tách khung hình) và tài liệu, hoặc dùng bộ mẫu có sẵn.</li>
+            <li>Sinh ra một quán mới: chỗ ngồi, menu và cảnh 3D.</li>
+            <li>Có khóa OpenAI thì gọi <code>gpt-4o</code> với đầu ra JSON có cấu trúc; không có thì dùng bộ sinh cố định.</li>
+            <li>Góp ý qua hội thoại nhiều lượt, xem khác biệt giữa các lần lặp và khôi phục lần trước.</li>
+            <li>Chỉnh tay trong Studio rồi xuất bản; quán mới xuất hiện ngay trong thanh mô phỏng.</li>
+          </ul>
+          <ul lang="en">
+            <li>The owner uploads photos, videos (keyframes are extracted) and documents, or loads a sample bundle.</li>
+            <li>It generates a new venue: seats, menu and a 3D scene.</li>
+            <li>With an OpenAI key it calls <code>gpt-4o</code> with structured JSON output; without one it uses a deterministic generator.</li>
+            <li>Multi-turn chat feedback, a diff between iterations, and restore of an earlier one.</li>
+            <li>Manual edits in the Studio, then publish; the new venue appears in the simulator bar at once.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>
             <span lang="vi">Thanh mô phỏng</span
             ><span lang="en">Simulator bar</span>
           </h4>
           <ul lang="vi">
             <li>Đổi vai trò chủ quán / khách. Đây là cách trình bày, không phải phân quyền.</li>
-            <li>Đổi quán; phiên của quán khác được giữ nguyên.</li>
-            <li>Kịch bản buổi sáng (7/8 chỗ) và buổi chiều (2/8 chỗ).</li>
+            <li>Đổi quán, kể cả quán tự tạo từ onboarding; phiên của quán khác được giữ nguyên.</li>
+            <li>Kịch bản buổi sáng (7/8 chỗ ở quán mẫu) và buổi chiều (2 chỗ).</li>
             <li>Tua +30 phút cho mọi phiên. Không có đồng hồ chạy nền.</li>
             <li>Khôi phục toàn bộ dữ liệu mẫu.</li>
           </ul>
           <ul lang="en">
             <li>Switch merchant / customer. This is presentation, not permission.</li>
-            <li>Switch venue; other venues keep their sessions.</li>
-            <li>Morning (7/8 seats) and afternoon (2/8 seats) scenarios.</li>
+            <li>Switch venue, including venues created in onboarding; other venues keep their sessions.</li>
+            <li>Morning (7/8 seats in a seeded venue) and afternoon (2 seats) scenarios.</li>
             <li>Advance every session by 30 minutes. There is no background clock.</li>
             <li>Reset all sample data.</li>
           </ul>
@@ -809,12 +900,12 @@
             ><span lang="en">Persistence</span>
           </h4>
           <ul lang="vi">
-            <li>Phiên và dữ liệu thành viên được lưu trên thiết bị và khôi phục khi tải lại.</li>
+            <li>Phiên, quán tự tạo và dữ liệu thành viên được lưu trên thiết bị và khôi phục khi tải lại.</li>
             <li>Dữ liệu lưu bị hỏng sẽ được thay bằng dữ liệu mẫu, kèm cảnh báo.</li>
             <li>Giỏ hàng và yêu cầu hỗ trợ chỉ tồn tại trong lần chạy hiện tại.</li>
           </ul>
           <ul lang="en">
-            <li>Sessions and membership data are saved on the device and restored on reload.</li>
+            <li>Sessions, custom venues and membership data are saved on the device and restored on reload.</li>
             <li>A corrupt snapshot falls back to sample data with a warning.</li>
             <li>The cart and support requests live only for the current run.</li>
           </ul>
@@ -850,16 +941,16 @@
                 ><span lang="en">Seats and floor</span>
               </td>
               <td>
-                <span lang="vi">Danh sách chỗ dễ tiếp cận, lọc, ghim</span
-                ><span lang="en">Accessible seat list, filters, pins</span>
+                <span lang="vi">Sơ đồ 3D (Three.js), danh sách chỗ, lọc, ghim; 3D Studio sinh bố cục</span
+                ><span lang="en">3D view (Three.js), seat list, filters, pins; 3D Studio generates layouts</span>
               </td>
               <td>
                 <span lang="vi">Sơ đồ SVG 2D, góc nghiêng 2.5D, chỉnh bố trí</span
                 ><span lang="en">2D SVG map, 2.5D tilt, layout editing</span>
               </td>
               <td>
-                <span lang="vi">Trình xem và trình dựng 3D</span
-                ><span lang="en">3D viewer and builder</span>
+                <span lang="vi">Kéo thả chỗ trong 3D, bản nháp/xuất bản bố cục trên server, asset thật</span
+                ><span lang="en">Drag-and-drop editing in 3D, server-side layout draft/publish, real assets</span>
               </td>
             </tr>
             <tr>
@@ -921,8 +1012,8 @@
                 ><span lang="en">Estimate and receipt; the POS records a simulated cash/online payment</span>
               </td>
               <td>
-                <span lang="vi">Checkout mô phỏng, thử lỗi và thử lại</span
-                ><span lang="en">Simulated checkout, failure and retry</span>
+                <span lang="vi">Gói trả trước, quyết toán khi checkout, thử lỗi và thử lại</span
+                ><span lang="en">Prepaid package, settlement at checkout, failure and retry</span>
               </td>
               <td>
                 <span lang="vi">Cổng thanh toán, sổ giao dịch, hoàn tiền, ca</span
@@ -934,8 +1025,8 @@
                 <span lang="vi">Hỗ trợ</span><span lang="en">Support</span>
               </td>
               <td>
-                <span lang="vi">Gọi nhân viên, phân loại theo quy tắc</span
-                ><span lang="en">Call staff, rule-based triage</span>
+                <span lang="vi">Gọi nhân viên, phân loại theo quy tắc, trợ lý chỉ đọc, yêu cầu hoàn tiền/đổi chỗ</span
+                ><span lang="en">Call staff, rule-based triage, read-only assistant, refund and seat-change requests</span>
               </td>
               <td>
                 <span lang="vi">Hàng chờ hỗ trợ phía nhân viên</span
@@ -969,13 +1060,31 @@
                 <span lang="vi">Thành viên</span><span lang="en">Loyalty</span>
               </td>
               <td>
-                <span lang="vi">Tham gia, tích điểm, sở thích</span
-                ><span lang="en">Join, earn points, preferences</span>
+                <span lang="vi">Tham gia, tích điểm, sở thích, huy hiệu, giới thiệu</span
+                ><span lang="en">Join, earn points, preferences, badges, referral</span>
               </td>
-              <td>—</td>
+              <td>
+                <span lang="vi">Lịch sử điểm, đổi điểm khi checkout, hồ sơ</span
+                ><span lang="en">Point history, redeem at checkout, profile</span>
+              </td>
               <td>
                 <span lang="vi">OTP thật, đổi điểm, sổ điểm trên server</span
                 ><span lang="en">Real OTP, redemption, server point ledger</span>
+              </td>
+            </tr>
+            <tr>
+              <td>AI</td>
+              <td>
+                <span lang="vi">Onboarding gọi OpenAI tùy chọn từ client, có phương án cố định thay thế</span
+                ><span lang="en">Onboarding optionally calls OpenAI from the client, with a deterministic fallback</span>
+              </td>
+              <td>
+                <span lang="vi">Phân loại hỗ trợ bằng từ khóa</span
+                ><span lang="en">Keyword support triage</span>
+              </td>
+              <td>
+                <span lang="vi">AI chạy ở server, có kiểm tra đầu ra và người duyệt</span
+                ><span lang="en">Server-side AI with output checks and human review</span>
               </td>
             </tr>
             <tr>
@@ -984,8 +1093,8 @@
                 ><span lang="en">Identity and tenancy</span>
               </td>
               <td>
-                <span lang="vi">Đổi vai trò/quán để demo</span
-                ><span lang="en">Demo role and venue switch</span>
+                <span lang="vi">Đổi vai trò/quán để demo; tạo quán mới qua onboarding</span
+                ><span lang="en">Demo role and venue switch; new venues through onboarding</span>
               </td>
               <td>—</td>
               <td>
@@ -1059,6 +1168,11 @@
               <span lang="vi">Bảng phiếu chế biến</span
               ><span lang="en">Ticket board</span>
             </div>
+            <div class="box brown">
+              <b>merchant/onboarding</b>
+              <span lang="vi">Tải tệp, OpenAI hoặc bộ sinh cố định, Studio</span
+              ><span lang="en">Uploads, OpenAI or fallback generator, Studio</span>
+            </div>
             <div class="box blue">
               <b>customer/</b>
               ExploreScreen · ActiveSessionScreen
@@ -1083,6 +1197,21 @@
               <span lang="vi">Lọc và gợi ý chỗ</span
               ><span lang="en">Seat filters and suggestions</span>
             </div>
+            <div class="box blue">
+              <b>customer/venue</b>
+              <span lang="vi">Trang quán, chi tiết chỗ, link chia sẻ</span
+              ><span lang="en">Venue page, seat detail, share links</span>
+            </div>
+            <div class="box blue">
+              <b>customer/concierge</b>
+              <span lang="vi">Trợ lý chỉ đọc</span
+              ><span lang="en">Read-only assistant</span>
+            </div>
+            <div class="box blue">
+              <b>customer/focus · rewards · network</b>
+              <span lang="vi">Đồng hồ tập trung, huy hiệu, trạng thái mạng</span
+              ><span lang="en">Focus timer, badges, online status</span>
+            </div>
           </div>
         </div>
         <div class="arrow">↓</div>
@@ -1099,6 +1228,11 @@
               ><span lang="en"
                 >The <code>SeatMapProps</code> renderer contract</span
               >
+            </div>
+            <div class="box">
+              <b>canvas3d/</b>
+              <span lang="vi">Cảnh Three.js sau cùng <code>SeatMapProps</code></span
+              ><span lang="en">The Three.js scene behind the same <code>SeatMapProps</code></span>
             </div>
             <div class="box">
               <b>SimulatorBar.tsx</b>
@@ -1120,12 +1254,13 @@
           <div class="boxes">
             <div class="box green">
               <b>domain.ts</b>
-              <span lang="vi">Kiểu dữ liệu</span><span lang="en">Types</span>
+              <span lang="vi">Kiểu dữ liệu, gồm cấu hình cảnh 3D</span
+              ><span lang="en">Types, including the 3D scene config</span>
             </div>
             <div class="box green">
               <b>fixtures.ts</b>
-              <span lang="vi">Ba quán mẫu</span
-              ><span lang="en">Three seeded venues</span>
+              <span lang="vi">Ba quán mẫu kèm cảnh 3D; tra cứu cả quán tự tạo</span
+              ><span lang="en">Three seeded venues with 3D scenes; lookups include custom venues</span>
             </div>
             <div class="box green">
               <b>billing.ts</b>
@@ -1217,8 +1352,8 @@
             <tr>
               <td><code>appStore</code></td>
               <td>
-                <span lang="vi">Vai trò, quán, kịch bản, chỗ đang chọn, mọi phiên. Nguồn sự thật của hóa đơn.</span
-                ><span lang="en">Role, venue, scenario, selected seat, all sessions. The source of truth for the bill.</span>
+                <span lang="vi">Vai trò, quán, kịch bản, chỗ đang chọn, mọi phiên và các quán tự tạo. Nguồn sự thật của hóa đơn.</span
+                ><span lang="en">Role, venue, scenario, selected seat, all sessions and custom venues. The source of truth for the bill.</span>
               </td>
               <td><code>vibing-hkt:demo:v1</code></td>
             </tr>
@@ -1355,7 +1490,8 @@
         <li><strong>Mọi tra cứu theo quán.</strong> Phiên của mọi quán nằm chung một mảng và luôn được lọc theo <code>venueId</code>.</li>
         <li><strong>Giá được chụp lại.</strong> Phiên giữ giá giờ và giá món tại lúc tạo, nên đổi dữ liệu mẫu không làm đổi hóa đơn đang mở.</li>
         <li><strong>Hành động trả kết quả rõ ràng.</strong> <code>startSession</code>, <code>addItem</code>, <code>endSession</code> trả <code>ActionResult</code> để màn hình hiển thị; ID quán sai là lỗi lập trình và sẽ ném lỗi.</li>
-        <li><strong>Không cần màu để hiểu.</strong> Tình trạng chỗ luôn có nhãn chữ; renderer 3D sau này phải nhận cùng <code>SeatMapProps</code> và giữ danh sách này.</li>
+        <li><strong>Không cần màu để hiểu.</strong> Tình trạng chỗ luôn có nhãn chữ; cảnh 3D nhận cùng <code>SeatMapProps</code> và danh sách chỗ luôn được giữ lại.</li>
+            <li><strong>Khóa OpenAI chỉ ở trong bộ nhớ.</strong> Màn onboarding nhận khóa do người dùng nhập, không lưu và không đặt trong <code>EXPO_PUBLIC_*</code>. Tuy vậy lời gọi đi thẳng từ client đến OpenAI, nên chỉ phù hợp cho demo.</li>
       </ul>
       <ul lang="en">
         <li><strong>Roles are presentation.</strong> Both roles see the same sessions; a role is never a permission check.</li>
@@ -1363,7 +1499,8 @@
         <li><strong>Every lookup is venue-scoped.</strong> Sessions for all venues share one array and are always filtered by <code>venueId</code>.</li>
         <li><strong>Prices are snapshotted.</strong> A session keeps the hourly rate and item prices from when it was created, so fixture changes do not alter open tabs.</li>
         <li><strong>Actions return explicit results.</strong> <code>startSession</code>, <code>addItem</code> and <code>endSession</code> return an <code>ActionResult</code> for the screen to show; an invalid venue ID is a programmer error and throws.</li>
-        <li><strong>Colour is never required.</strong> Availability always has a text label; a future 3D renderer must take the same <code>SeatMapProps</code> and keep this list.</li>
+        <li><strong>Colour is never required.</strong> Availability always has a text label; the 3D scene takes the same <code>SeatMapProps</code> and the seat list always stays.</li>
+            <li><strong>The OpenAI key lives only in memory.</strong> The onboarding screen takes a key the user types, never stores it and never reads <code>EXPO_PUBLIC_*</code>. The call still goes straight from the client to OpenAI, so it is fit for a demo only.</li>
       </ul>
 
       <!-- ================= DOMAIN ================= -->
@@ -1374,13 +1511,13 @@
       <div class="grid">
         <div class="card">
           <h4>Venue</h4>
-          <p lang="vi">Quán: tên, màu nhấn, 8 chỗ và 2 món. Có ba quán mẫu: The Grind Co-Work, Matcha &amp; Muse Studio, CyberPod 24/7 Hub.</p>
-          <p lang="en">A venue: name, accent colour, 8 seats and 2 menu items. Three are seeded: The Grind Co-Work, Matcha &amp; Muse Studio, CyberPod 24/7 Hub.</p>
+          <p lang="vi">Quán: tên, màu nhấn, danh sách chỗ, menu và cấu hình cảnh 3D tùy chọn. Có ba quán mẫu, mỗi quán 8 chỗ và 2 món: The Grind Co-Work, Matcha &amp; Muse Studio, CyberPod 24/7 Hub. Quán tự tạo từ onboarding được kiểm tra bằng <code>isValidVenue</code> trước khi lưu.</p>
+          <p lang="en">A venue: name, accent colour, seats, menu and an optional 3D scene config. Three are seeded with 8 seats and 2 menu items each: The Grind Co-Work, Matcha &amp; Muse Studio, CyberPod 24/7 Hub. Venues created in onboarding are validated by <code>isValidVenue</code> before they are saved.</p>
         </div>
         <div class="card">
           <h4>Seat</h4>
-          <p lang="vi">Chỗ 1–5 là desk giá 30.000 ₫/giờ; chỗ 6–7 là pod và chỗ 8 là booth, giá 40.000 ₫/giờ. Mỗi chỗ có tọa độ lưới <code>x, z</code> cho bản 3D sau này.</p>
-          <p lang="en">Seats 1–5 are desks at 30,000 ₫/h; seats 6–7 are pods and seat 8 is a booth, at 40,000 ₫/h. Each seat has grid coordinates <code>x, z</code> for a later 3D view.</p>
+          <p lang="vi">Chỗ 1–5 là desk giá 30.000 ₫/giờ; chỗ 6–7 là pod và chỗ 8 là booth, giá 40.000 ₫/giờ. Mỗi chỗ có tọa độ lưới <code>x, z</code> và khu vực, dùng để đặt chỗ trong cảnh 3D.</p>
+          <p lang="en">Seats 1–5 are desks at 30,000 ₫/h; seats 6–7 are pods and seat 8 is a booth, at 40,000 ₫/h. Each seat has grid coordinates <code>x, z</code> and a zone, used to place it in the 3D scene.</p>
         </div>
         <div class="card">
           <h4>Session</h4>
@@ -1389,8 +1526,8 @@
         </div>
         <div class="card">
           <h4>DemoState</h4>
-          <p lang="vi">Toàn bộ trạng thái lõi: vai trò, quán đang chọn, kịch bản, chỗ đang chọn, danh sách phiên và bộ đếm ID.</p>
-          <p lang="en">The whole core state: role, active venue, scenario, selected seat, the session list and an ID counter.</p>
+          <p lang="vi">Toàn bộ trạng thái lõi: vai trò, quán đang chọn, kịch bản, chỗ đang chọn, danh sách phiên, bộ đếm ID và các quán tự tạo.</p>
+          <p lang="en">The whole core state: role, active venue, scenario, selected seat, the session list, an ID counter and any custom venues.</p>
         </div>
       </div>
 
@@ -1460,13 +1597,18 @@
         Bản thử thiết kế chạy độc lập: nền tối, nhấn xanh mint, bố cục điện
         thoại rộng tối đa 480 px với thanh điều hướng dưới và bottom sheet. Hai
         màn dùng chung dữ liệu qua <code>localStorage</code> khi mở cùng origin,
-        nên đơn của khách hiện ngay bên màn vận hành.
+        nên đơn của khách hiện ngay bên màn vận hành. Màn khách đi theo năm
+        bước: xác định bàn (QR, số bàn hoặc sơ đồ) → chọn dịch vụ → đối chiếu
+        gói trả trước → sử dụng → checkout.
       </p>
       <p lang="en">
         A standalone design exploration: dark surfaces, mint accents, a phone
         layout up to 480 px wide with bottom navigation and bottom sheets. The
         two screens share data through <code>localStorage</code> on the same
-        origin, so a customer order appears on the operations screen at once.
+        origin, so a customer order appears on the operations screen at once. The
+        customer screen follows five steps: identify the table (QR, table
+        number or map) → choose services → check a prepaid package → use →
+        checkout.
       </p>
       <figure>
         <img
@@ -1493,6 +1635,7 @@
             <li>Duyệt hoặc dừng ưu đãi mẫu giảm 10%.</li>
             <li>Chỉnh bố trí chỗ bằng nút hoặc phím mũi tên.</li>
             <li>Tab Dịch vụ: giao đồ mượn, nhận trả, hủy yêu cầu.</li>
+            <li>Thấy nhãn đơn chưa trả tiền; không thể trả chỗ khi lượt của khách chưa quyết toán.</li>
           </ul>
           <ul lang="en">
             <li>Seat map and list, filtered by zone, status, guest and date.</li>
@@ -1502,6 +1645,7 @@
             <li>Approve or stop a sample 10% offer.</li>
             <li>Edit the layout with buttons or arrow keys.</li>
             <li>Services tab: hand out loans, take returns, cancel requests.</li>
+            <li>Unpaid orders are labelled, and a seat cannot be released while the customer's visit is unsettled.</li>
           </ul>
         </div>
         <div class="card">
@@ -1510,16 +1654,22 @@
             <span lang="vi">Khách</span><span lang="en">Customer</span>
           </h4>
           <ul lang="vi">
-            <li>Chọn chỗ trống, gói 1, 2 hoặc 4 giờ, thêm đồ uống.</li>
-            <li>Checkout mô phỏng, có thử lỗi thanh toán và thử lại.</li>
+            <li>Xác nhận bàn bằng link QR, số bàn hoặc sơ đồ; không chọn sẵn bàn.</li>
+            <li>Chọn thời lượng, đồ uống, đồ mượn và sản phẩm trước khi bắt đầu.</li>
+            <li>Đối chiếu gói trả trước: gói mẫu <code>NEP2H</code> gồm 120 phút và một cà phê sữa.</li>
+            <li>Gọi thêm trong lúc dùng; checkout quyết toán phần ngoài gói, có thử lỗi và thử lại.</li>
+            <li>Lịch sử điểm, đổi điểm khi checkout và hồ sơ cục bộ.</li>
             <li>Gửi yêu cầu hỗ trợ bằng văn bản tự do.</li>
             <li>Mượn miễn phí: sách đọc tại quán, ổ cắm nối dài, rổ, cáp.</li>
             <li>Mua mang về: đồ giải trí và văn phòng phẩm.</li>
             <li>Phiếu mượn: chờ giao → đang mượn → đã trả.</li>
           </ul>
           <ul lang="en">
-            <li>Pick a free seat, a 1, 2 or 4-hour package, add drinks.</li>
-            <li>Simulated checkout, with a payment failure and retry path.</li>
+            <li>Confirm the table by QR link, table number or map; no table is preselected.</li>
+            <li>Choose duration, drinks, loans and products before starting.</li>
+            <li>Check a prepaid package: the sample <code>NEP2H</code> covers 120 minutes and one latte.</li>
+            <li>Add more during the visit; checkout settles what the package does not cover, with a failure and retry path.</li>
+            <li>Point history, redeeming points at checkout, and a local profile.</li>
             <li>Send a free-text support request.</li>
             <li>Borrow for free: in-house books, extension sockets, baskets, cables.</li>
             <li>Buy to keep: games and stationery.</li>
@@ -1552,6 +1702,13 @@
               <td>
                 <span lang="vi">Danh mục, tồn mẫu, mượn/giao/trả và bán hàng.</span
                 ><span lang="en">Catalogue, sample stock, borrow/hand-out/return and sales.</span>
+              </td>
+            </tr>
+            <tr>
+              <td><code>journey.js</code> · <code>journey.css</code></td>
+              <td>
+                <span lang="vi">Mô hình vòng đời một lượt dùng: chụp giá và quyền lợi gói, kiểm tra lại chỗ và tồn, quyết toán không lặp.</span
+                ><span lang="en">The visit lifecycle model: snapshots prices and package rights, revalidates seat and stock, settles without duplicate effects.</span>
               </td>
             </tr>
             <tr>
@@ -1627,8 +1784,8 @@ npm run test:e2e       # Playwright (npx playwright install chromium)</pre
               </td>
               <td>Vitest</td>
               <td>
-                <span lang="vi">198 kiểm thử trong 7 file: lõi, lưu trữ, giỏ hàng, khám phá, thành viên, hỗ trợ, POS.</span
-                ><span lang="en">198 tests in 7 files: core, storage, cart, explore, loyalty, support, POS.</span>
+                <span lang="vi">353 kiểm thử trong 14 file: lõi, lưu trữ, POS, onboarding/3D và các tính năng phía khách.</span
+                ><span lang="en">353 tests in 14 files: core, storage, POS, onboarding/3D and the customer features.</span>
               </td>
             </tr>
             <tr>
@@ -1638,16 +1795,16 @@ npm run test:e2e       # Playwright (npx playwright install chromium)</pre
               </td>
               <td>Playwright</td>
               <td>
-                <span lang="vi">7 kịch bản trong 3 file (demo, POS, sửa lỗi POS), mỗi kịch bản chạy ở khung desktop và mobile.</span
-                ><span lang="en">7 scenarios in 3 files (demo, POS, POS fixes), each run in a desktop and a mobile viewport.</span>
+                <span lang="vi">9 kịch bản trong 4 file (demo, POS, sửa lỗi POS, onboarding 3D), mỗi kịch bản chạy ở khung desktop và mobile.</span
+                ><span lang="en">9 scenarios in 4 files (demo, POS, POS fixes, 3D onboarding), each run in a desktop and a mobile viewport.</span>
               </td>
             </tr>
             <tr>
               <td>Prototype</td>
               <td><code>node --test</code></td>
               <td>
-                <span lang="vi">13 kiểm thử biên cho quy tắc mượn, trả và tồn (<code>prototype/services.check.cjs</code>).</span
-                ><span lang="en">13 boundary tests for the borrow, return and stock rules (<code>prototype/services.check.cjs</code>).</span>
+                <span lang="vi">37 kiểm thử quy tắc: 13 cho mượn, trả và tồn (<code>services.check.cjs</code>), 24 cho hành trình khách (<code>journey.check.cjs</code>).</span
+                ><span lang="en">37 rule tests: 13 for borrow, return and stock (<code>services.check.cjs</code>), 24 for the customer journey (<code>journey.check.cjs</code>).</span>
               </td>
             </tr>
             <tr>
@@ -1764,6 +1921,7 @@ npm run test:e2e       # Playwright (npx playwright install chromium)</pre
         <li>Báo giá có hạn, lệnh idempotent, kiểm tra trùng chỗ trong transaction.</li>
         <li>Phiên và sổ giao dịch bền vững; không suy ra thanh toán thành công từ trạng thái cục bộ.</li>
         <li>Khóa OpenAI và khóa thanh toán chỉ nằm ở server, không bao giờ trong <code>EXPO_PUBLIC_*</code>.</li>
+            <li>Lời gọi OpenAI của onboarding chuyển về một endpoint có xác thực ở server; bố cục đã xuất bản lưu trong cơ sở dữ liệu của quán.</li>
         <li>Giữ lại adapter demo để frontend tiếp tục làm việc độc lập.</li>
       </ul>
       <ul lang="en">
@@ -1772,6 +1930,7 @@ npm run test:e2e       # Playwright (npx playwright install chromium)</pre
         <li>Quotes expire, commands are idempotent, and seat conflicts are checked inside a transaction.</li>
         <li>Sessions and the ledger are durable; payment success is never inferred from a local state change.</li>
         <li>OpenAI and payment keys stay on the server, never in <code>EXPO_PUBLIC_*</code>.</li>
+            <li>The onboarding OpenAI call moves behind an authenticated server endpoint, and published layouts are stored in the tenant database.</li>
         <li>The demo adapter stays so frontend work can continue independently.</li>
       </ul>
 
@@ -1815,11 +1974,12 @@ npm run test:e2e       # Playwright (npx playwright install chromium)</pre
             <tr>
               <td>
                 <a href="mvp-features.md">mvp-features.md</a> ·
-                <a href="mvp-features-batch-2.md">batch 2</a>
+                <a href="mvp-features-batch-2.md">batch 2</a> ·
+                <a href="mvp-features-batch-3.md">batch 3</a>
               </td>
               <td>
-                <span lang="vi">Đặc tả 200 tính năng MVP (F001–F200), chia theo nhóm A–W.</span
-                ><span lang="en">The 200-feature MVP spec (F001–F200), grouped into areas A–W.</span>
+                <span lang="vi">Đặc tả 300 tính năng MVP (F001–F300) qua ba đợt; cột Demo cho biết phần nào đã có.</span
+                ><span lang="en">The 300-feature MVP spec (F001–F300) in three batches; the Demo column shows what exists.</span>
               </td>
             </tr>
             <tr>
@@ -1839,11 +1999,12 @@ npm run test:e2e       # Playwright (npx playwright install chromium)</pre
             <tr>
               <td>
                 <a href="prototype.md">prototype.md</a> ·
+                <a href="customer-journey.md">customer-journey.md</a> ·
                 <a href="../design.md">design.md</a>
               </td>
               <td>
-                <span lang="vi">Hướng dẫn prototype và hệ thiết kế của nó.</span
-                ><span lang="en">The prototype guide and its design system.</span>
+                <span lang="vi">Hướng dẫn prototype, hành trình khách năm bước và hệ thiết kế.</span
+                ><span lang="en">The prototype guide, the five-step customer journey and the design system.</span>
               </td>
             </tr>
           </tbody>
