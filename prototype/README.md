@@ -24,3 +24,5 @@ rtk proxy node --test prototype/services.check.cjs prototype/journey.check.cjs
 ```
 
 Lệnh trên chạy từ root repository. Không có đăng nhập, quét camera, AI hoặc thanh toán thật.
+
+Sau khi cài các dev dependency và Chromium cho Playwright, có thể chạy xuyên hai màn bằng `rtk proxy node prototype/journey.browser.cjs` khi HTTP server đang bật. Xem [báo cáo kiểm tra hành trình hiện tại](../docs/customer-journey-verification.md).

@@ -82,7 +82,7 @@ Lịch sử điểm và biên nhận giúp đối chiếu lần sử dụng. Ch�
 7. Thử lỗi thanh toán mô phỏng: phiên, quyền lợi và điểm không được quyết toán. Thử lại thành công: chỉ có một biên nhận/đợt điểm, bàn được giải phóng.
 8. Tải lại cùng origin để kiểm tra hồ sơ, phiên đang mở hoặc biên nhận còn được lưu.
 
-Đây là kịch bản cần xác minh, không phải báo cáo kết quả. [Báo cáo kiểm tra cũ](prototype-verification.md) lưu kết quả trước lần đổi hành trình này.
+Đây là hướng dẫn kịch bản. Xem [kết quả kiểm tra hành trình hiện tại](customer-journey-verification.md); [báo cáo kiểm tra cũ](prototype-verification.md) lưu kết quả trước lần đổi hành trình này.
 
 ## Giới hạn
 

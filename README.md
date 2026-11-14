@@ -79,4 +79,4 @@ Các màn chia sẻ dữ liệu mẫu qua localStorage khi mở cùng origin (gi
 
 Kiểm tra quy tắc dịch vụ và hành trình: `rtk proxy node --test prototype/services.check.cjs prototype/journey.check.cjs`. Hai HTML vẫn chạy độc lập với ứng dụng Expo; các quyền lợi và điểm mô phỏng ở HTML không thay đổi demo core trong `src/`.
 
-[Ảnh hai màn và kết quả kiểm tra luồng cũ](docs/prototype-verification.md).
+[Ảnh hai màn và kết quả kiểm tra hành trình hiện tại](docs/customer-journey-verification.md). [Báo cáo lịch sử luồng cũ](docs/prototype-verification.md).
