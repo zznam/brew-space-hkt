@@ -1,5 +1,9 @@
 # Core contract, v1
 
+The separate [server access foundation](api.md) now wraps selected pilot commands
+with secure credentials, durable transactions and validated HTTP inputs. Its
+screens are independent of the demo stores described below.
+
 `src/core` is the shared foundation, not a backend. `domain.ts` owns the data vocabulary; `fixtures.ts` seeds three isolated venues; `billing.ts` is a pure demonstration policy; `store.ts` exposes a fresh vanilla Zustand store factory; `useAppStore.ts` connects the singleton to React and AsyncStorage.
 
 ## Actions
@@ -29,3 +33,33 @@ Backend work must add authenticated tenant/branch scope, validated contracts, qu
 ## Dependency maintenance
 
 The initial dependency audit (2026-11-14) reports 8 moderate advisories and no high/critical advisories, rooted in the transitive `minimatch` glob parser used by Expo fingerprinting and TypeScript ESLint tooling ([upstream advisory](https://github.com/advisories/GHSA-g3hv-75wg-m249)). The audit's proposed Expo downgrade is not compatible with this SDK 58 foundation. Track upstream compatible updates; do not run `npm audit fix --force` blindly. This remains an open tooling maintenance item.
+
+## Local pilot command prototype
+
+`src/core/pilot/index.ts` is a separate in-memory prototype with isolated fixtures,
+atomic command execution, access checks, catalogue commands and layout versioning.
+Its catalogue is connected to Expo and POS screens through a separate adapter; order state remains isolated. See [coverage and integration limits](pilot-engine.md)
+and `tests/pilot.test.ts`. The additive `calculateLineTotal` helper keeps integer
+catalogue arithmetic here without changing existing session billing.
+
+## Shared local catalogue
+
+`src/core/catalogue/store.ts` wraps pilot catalogue commands with a pure Zustand
+store. `src/core/catalogue/useCatalogue.ts` is its separate native/React binding.
+Core session and customer cart factories accept optional menu providers; their
+defaults still use fixtures. Production app bindings supply the shared catalogue.
+Session-line IDs and names capture selected size identity/labels, preserving the
+existing `DemoState` schema and `vibing-hkt:demo:v1` key.
+
+Catalogue startup follows core restoration and registers custom venues before
+hydration. Its own `brewspace:catalogue:v1` snapshot contains only validated items,
+categories and ID sequence. It never persists demo credentials or pilot session
+state. Writes are queued; invalid data falls back to samples with an inline
+warning. Merchant/customer screens share changes on this device. Reset clears
+catalogue changes. See [screen coverage and limitations](pilot-engine.md).
+
+Integration notes (BE/FE1/FE2): root startup now awaits catalogue restore; shared
+UI adds a labeled input and live status announcements; merchant catalogue and POS
+menus plus customer menu/cart use the adapter. POS orders still live only in the
+merchant mock. Core item actions re-read current availability and prices; purchased
+line snapshots remain unchanged by later edits.

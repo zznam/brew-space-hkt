@@ -1,8 +1,14 @@
 # MVP feature spec — 100 features
 
-Status: specification only. Nothing in this file is implemented unless the "Demo" column says so.
+Status: acceptance specification. Implementation evidence is tracked separately below.
+
+Implementation evidence is now tracked separately in [MVP implementation order](mvp-implementation.md)
+and [API coverage](api.md). The Demo column is historical demo coverage, not a
+claim that a server feature or pilot acceptance gate is complete.
 
 This is the flat backlog for the 10–12 week pilot. The [MVP requirements (PRD)](../.beads/artifacts/vhk-qwb/prd.md) remain the acceptance authority; each row cites the PRD section it comes from and adds one testable check. Where the PRD and the older [React Native plan](react-native-plan.md) disagree, the PRD wins.
+
+The [pilot engine coverage](pilot-engine.md) describes the deterministic command layer. Selected access, catalogue and purchase commands now have a durable API and bilingual screens; the complete pilot checks below remain open.
 
 ## Ground rules
 
@@ -40,7 +46,7 @@ This is the flat backlog for the 10–12 week pilot. The [MVP requirements (PRD)
 | ID | Feature | Actor | Acceptance check | PRD | Pri | Own | Demo |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | F010 | Categories and item management for food and drink, time packages and services | Manager | A manager can create, edit and archive an item; a cashier cannot | FR02, §5 | M | BE, FE1 | Part |
-| F011 | Size options per item | Manager | An item with sizes shows each size with its own price and the chosen size is stored on the order line | FR02 | M | BE, FE2 | No |
+| F011 | Size options per item | Manager | An item with sizes shows each size with its own price and the chosen size is stored on the order line | FR02 | M | BE, FE2 | Part |
 | F012 | Sold-out toggle | Server | Marking an item sold out hides it from new carts at once; lifting it restores it | FR02, §5 | M | BE, FE1 | Part |
 | F013 | Fixed services with staff availability confirmation | Cashier | A limited service (e.g. monitor rental) is only fulfilled after staff confirm it is available | FR02 | M | BE, FE1 | No |
 | F014 | Seat-time packages | Manager | Seat time can only be sold from 30 minutes upward in 30-minute steps | FR02 | M | BE | Part |

@@ -18,6 +18,7 @@ test-results/
 
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 /graft/
+/.data/
 
 # Local Claude Code guidance; AGENTS.md is the shared, committed equivalent.
 /CLAUDE.md

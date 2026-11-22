@@ -1,5 +1,6 @@
 import { useStore } from 'zustand';
 import { appStore } from '@/core/useAppStore';
+import { currentMenu } from '@/core/catalogue/useCatalogue';
 import { getPreferences, isMember } from '../loyalty/loyaltyModel';
 import { loyaltyStore } from '../loyalty/useLoyalty';
 import { supportStore } from '../support/useSupport';
@@ -10,6 +11,7 @@ import { createCartStore, type CartStore } from './cartStore';
  * Loyalty is read-only here (saved preferences for members); the allergy
  * request goes through the support store. */
 export const cartStore = createCartStore(appStore, {
+  getMenu: currentMenu,
   getSavedPreferences: (venueId) => {
     const loyalty = loyaltyStore.getState();
     return isMember(loyalty, venueId) ? getPreferences(loyalty, venueId) : null;

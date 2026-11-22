@@ -4,6 +4,7 @@ import { defineMessages } from '../i18n/i18n';
 export const shellMessages = defineMessages(
   {
     openJourneys: 'User Journeys Gallery',
+    staffSignIn: 'Staff sign in',
     closeJourneys: 'Close Journey Gallery',
     loadingTitle: 'Loading your demo…',
     loadingBody: 'Restoring local workspace state and 3D venue layouts.',
@@ -20,6 +21,7 @@ export const shellMessages = defineMessages(
   },
   {
     openJourneys: 'Thư viện hành trình người dùng',
+    staffSignIn: 'Đăng nhập nhân viên',
     closeJourneys: 'Đóng thư viện hành trình',
     loadingTitle: 'Đang tải bản demo…',
     loadingBody: 'Đang khôi phục dữ liệu trên máy và bố cục 3D của quán.',

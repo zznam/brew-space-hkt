@@ -1,3 +1,5 @@
+import { catalogueMenu, posCatalogueMenu } from '@/core/catalogue/store';
+import { useCatalogue } from '@/core/catalogue/useCatalogue';
 import { useEffect, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Text, View } from 'react-native';
@@ -32,10 +34,25 @@ export function PosScreen() {
   const { t, lang } = useT(merchantMessages);
   const venueId = useAppStore((state) => state.venueId);
   const orders = usePosStore((state) => state.orders);
-  const soldOutItemIds = usePosStore((state) => state.soldOutItemIds);
+  const catalogueItems = useCatalogue((state) => state.items);
   const [justPaid, setJustPaid] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
-  const venue = getVenue(venueId);
+  const baseVenue = getVenue(venueId);
+  const menu = posCatalogueMenu({ items: catalogueItems }, baseVenue);
+  const venue = { ...baseVenue, menu };
+  const available = new Set(
+    catalogueMenu({ items: catalogueItems }, baseVenue).map((item) => item.id),
+  );
+  const soldOutItemIds = [
+    ...menu.filter((item) => item.soldOut).map((item) => item.id),
+    ...orders.flatMap((order) =>
+      order.venueId === venueId
+        ? order.lines
+            .filter((line) => !available.has(line.menuItemId))
+            .map((line) => line.menuItemId)
+        : [],
+    ),
+  ];
 
   const draftOrder = orders.find(
     (order) =>
