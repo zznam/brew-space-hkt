@@ -3,10 +3,12 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View,
   useWindowDimensions,
   type StyleProp,
   type TextStyle,
+  type TextInputProps,
   type ViewStyle,
 } from 'react-native';
 import { Icon, type IconName } from './Icon';
@@ -129,6 +131,46 @@ export function Card({
       ]}
     >
       {children}
+    </View>
+  );
+}
+
+/** Labeled text entry with the shared type, spacing and input tokens. */
+export function TextField({
+  label,
+  value,
+  onChangeText,
+  numeric = false,
+  secureTextEntry = false,
+  autoComplete,
+  autoCapitalize,
+  editable = true,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+  numeric?: boolean;
+  secureTextEntry?: boolean;
+  autoComplete?: TextInputProps['autoComplete'];
+  autoCapitalize?: TextInputProps['autoCapitalize'];
+  editable?: boolean;
+}) {
+  return (
+    <View style={{ gap: space.xs }}>
+      <Text style={styles.captionStrong}>{label}</Text>
+      <TextInput
+        accessibilityLabel={label}
+        value={value}
+        onChangeText={onChangeText}
+        secureTextEntry={secureTextEntry}
+        autoComplete={autoComplete}
+        autoCapitalize={autoCapitalize}
+        editable={editable}
+        keyboardType={numeric ? 'number-pad' : 'default'}
+        inputMode={numeric ? 'numeric' : 'text'}
+        style={styles.input}
+        placeholderTextColor={colors.subtle}
+      />
     </View>
   );
 }
@@ -279,25 +321,39 @@ export function ScreenHeader({
   subtitle,
   trailing,
   accentColor = colors.green,
+  textColor,
 }: {
   overline?: string;
   title: string;
   subtitle?: string;
   trailing?: ReactNode;
   accentColor?: string;
+  textColor?: string;
 }) {
   return (
     <View style={styles.screenHeader}>
       <View style={styles.screenHeaderRow}>
         <View style={{ flex: 1, gap: space.xs }}>
           {overline ? <Eyebrow color={accentColor}>{overline}</Eyebrow> : null}
-          <Text accessibilityRole="header" style={styles.display}>
+          <Text
+            accessibilityRole="header"
+            style={[
+              styles.display,
+              textColor ? { color: textColor } : undefined,
+            ]}
+          >
             {title}
           </Text>
         </View>
         {trailing}
       </View>
-      {subtitle ? <Text style={styles.text}>{subtitle}</Text> : null}
+      {subtitle ? (
+        <Text
+          style={[styles.text, textColor ? { color: textColor } : undefined]}
+        >
+          {subtitle}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -344,6 +400,7 @@ export function Banner({
     >
       <Text
         accessibilityRole={role}
+        accessibilityLiveRegion={role === 'alert' ? 'assertive' : 'polite'}
         style={[styles.bannerText, { color: palette.text }]}
       >
         {children}

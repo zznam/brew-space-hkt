@@ -3,7 +3,8 @@ import { TabBar, type TabItem } from '@/components/ui';
 import { useT } from '@/i18n/useLanguage';
 import { merchantMessages } from './messages';
 
-export type MerchantTab = 'live-floor' | 'pos' | 'tickets' | 'onboarding';
+export type MerchantTab =
+  'live-floor' | 'pos' | 'tickets' | 'onboarding' | 'catalogue';
 
 type Key = keyof typeof merchantMessages.en;
 const TABS: {
@@ -19,6 +20,13 @@ const TABS: {
     accessibilityLabel: 'tabFloorA11y',
     icon: 'floor',
     href: '/merchant/live-floor',
+  },
+  {
+    key: 'catalogue',
+    label: 'tabMenu',
+    accessibilityLabel: 'tabMenuA11y',
+    icon: 'order',
+    href: '/merchant/catalogue',
   },
   { key: 'pos', label: 'tabOrder', icon: 'order', href: '/merchant/pos' },
   {

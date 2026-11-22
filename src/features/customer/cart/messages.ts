@@ -17,6 +17,8 @@ export const cartMessages = defineMessages(
     partial:
       'Could not add {name} ({units} of {quantity} sent). Check your tab and try again.',
     orderPlaced: 'Order placed.',
+    pricesChanged:
+      'Menu prices changed. Review the updated total and place your order again.',
     orderPlacedDropped: 'Order placed. No longer available: {names}.',
     noEarlierOrder: 'There is no earlier order to repeat.',
     noneOnMenu: 'None of those items are on the menu any more.',
@@ -77,6 +79,7 @@ export const cartMessages = defineMessages(
     partial:
       'Không thể thêm {name} (đã gửi {units}/{quantity}). Hãy kiểm tra hóa đơn của bạn và thử lại.',
     orderPlaced: 'Đã đặt món.',
+    pricesChanged: 'Giá đã thay đổi. Kiểm tra tổng mới rồi đặt món lại.',
     orderPlacedDropped: 'Đã đặt món. Không còn phục vụ: {names}.',
     noEarlierOrder: 'Chưa có đơn nào trước đó để gọi lại.',
     noneOnMenu: 'Những món đó không còn trong thực đơn.',

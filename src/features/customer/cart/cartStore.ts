@@ -37,6 +37,7 @@ export interface CoreStoreLike {
  * React bindings and no other feature's singleton. Both are optional: without
  * them the customer is a guest and no staff request is raised. */
 export interface CartDeps {
+  getMenu?: (venueId: string) => MenuItem[];
   /** Saved preferences when the customer is a member at this venue (read-only
    * view of the loyalty state); null for guests. */
   getSavedPreferences?: (venueId: string) => Preferences | null;
@@ -141,7 +142,7 @@ export function createCartStore(coreStore: CoreStoreLike, deps: CartDeps = {}) {
           message: { key: 'sessionUnavailable' },
           sent: [],
         };
-      const menu = getVenue(core.venueId).menu;
+      const menu = deps.getMenu?.(core.venueId) ?? getVenue(core.venueId).menu;
       // Validate everything first so a known problem never half-orders.
       const priced: CartLine[] = [];
       for (const line of lines) {
@@ -152,6 +153,8 @@ export function createCartStore(coreStore: CoreStoreLike, deps: CartDeps = {}) {
             message: { key: 'itemGone', params: { name: line.name } },
             sent: [],
           };
+        if (deps.getMenu && item.price !== line.unitPrice)
+          return { ok: false, message: { key: 'pricesChanged' }, sent: [] };
         priced.push({ ...line, name: item.name, unitPrice: item.price });
       }
       const sent: CartLine[] = [];
@@ -231,7 +234,17 @@ export function createCartStore(coreStore: CoreStoreLike, deps: CartDeps = {}) {
 
     return {
       ...initial(),
-      addItem: (item) =>
+      addItem: (item) => {
+        if (deps.getMenu) {
+          const live = deps
+            .getMenu(coreStore.getState().venueId)
+            .find((entry) => entry.id === item.id);
+          if (!live) {
+            fail({ key: 'itemGone', params: { name: item.name } });
+            return;
+          }
+          item = live;
+        }
         set((state) => {
           const saved = isDrink(item)
             ? deps.getSavedPreferences?.(coreStore.getState().venueId)
@@ -246,7 +259,8 @@ export function createCartStore(coreStore: CoreStoreLike, deps: CartDeps = {}) {
             prefilled: state.prefilled || (Boolean(saved) && isNewLine),
             ...messageFields(null, null, null),
           };
-        }),
+        });
+      },
       setQuantity: (key, quantity) =>
         set((state) => {
           const lines = setQuantity(state.lines, key, quantity);
@@ -300,6 +314,17 @@ export function createCartStore(coreStore: CoreStoreLike, deps: CartDeps = {}) {
           });
           return failure;
         }
+        if (result.message.key === 'pricesChanged') {
+          const menu = deps.getMenu?.(coreStore.getState().venueId) ?? [];
+          set({
+            lines: get().lines.map((line) => {
+              const item = menu.find((item) => item.id === line.menuItemId);
+              return item
+                ? { ...line, name: item.name, unitPrice: item.price }
+                : line;
+            }),
+          });
+        }
         return fail(result.message);
       },
       reorder: (session) => {
@@ -309,7 +334,7 @@ export function createCartStore(coreStore: CoreStoreLike, deps: CartDeps = {}) {
         if (!last) return fail({ key: 'noEarlierOrder' });
         const { lines, dropped } = reorderLines(
           last,
-          getVenue(core.venueId).menu,
+          deps.getMenu?.(core.venueId) ?? getVenue(core.venueId).menu,
         );
         if (lines.length === 0) return fail({ key: 'noneOnMenu' });
         const result = place(session, lines);

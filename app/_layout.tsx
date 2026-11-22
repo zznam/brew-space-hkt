@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { initializeStore, useAppStore } from '@/core/useAppStore';
+import { initializeCatalogue } from '@/core/catalogue/useCatalogue';
 import { initializeLoyalty } from '@/features/customer/loyalty/useLoyalty';
 import { seedSpeedrunDemo } from '@/features/gallery/seedDemo';
 import { posStore } from '@/features/merchant/pos/usePosStore';
@@ -29,6 +30,7 @@ import {
 import { LanguageToggle } from '@/i18n/LanguageToggle';
 import { useT } from '@/i18n/useLanguage';
 import { shellMessages } from '@/components/messages';
+import { AccessNav } from '@/features/access/AccessNav';
 import {
   CustomerNav,
   customerTabForPath,
@@ -48,6 +50,10 @@ export default function RootLayout() {
   const { isWide } = useResponsive();
   const { t } = useT(shellMessages);
   const onGallery = pathname === '/gallery';
+  const onApiRoute =
+    pathname.startsWith('/staff') ||
+    pathname.startsWith('/v/') ||
+    pathname === '/platform';
 
   useEffect(() => {
     let active = true;
@@ -57,7 +63,8 @@ export default function RootLayout() {
         : Promise.all([initializeStore(), initializeLoyalty()]).then(
             ([message, loyaltyMessage]) => message ?? loyaltyMessage,
           );
-    void init.then((message) => {
+    void init.then(async (message) => {
+      await initializeCatalogue();
       if (active) {
         if (Platform.OS !== 'web' && posStore.getState().orders.length === 0) {
           seedSpeedrunDemo();
@@ -84,8 +91,10 @@ export default function RootLayout() {
             style={{
               minHeight: layout.appBarHeight,
               paddingHorizontal: space.lg,
+              paddingVertical: space.sm,
               backgroundColor: colors.surface,
               flexDirection: 'row',
+              flexWrap: 'wrap',
               alignItems: 'center',
               justifyContent: 'space-between',
               gap: space.sm,
@@ -124,28 +133,37 @@ export default function RootLayout() {
               }}
             >
               {ready ? <LanguageToggle /> : null}
-              <IconButton
-                icon="journeys"
-                selected={onGallery}
-                accessibilityLabel={
-                  onGallery ? t('closeJourneys') : t('openJourneys')
-                }
-                onPress={() => {
-                  if (onGallery) {
-                    router.push(
-                      (role === 'merchant'
-                        ? '/merchant/live-floor'
-                        : '/customer/explore') as never,
-                    );
-                  } else {
-                    router.push('/gallery' as never);
+              {!onApiRoute ? (
+                <IconButton
+                  accessibilityLabel={t('staffSignIn')}
+                  icon="member"
+                  onPress={() => router.push('/staff' as never)}
+                />
+              ) : null}
+              {!onApiRoute ? (
+                <IconButton
+                  icon="journeys"
+                  selected={onGallery}
+                  accessibilityLabel={
+                    onGallery ? t('closeJourneys') : t('openJourneys')
                   }
-                }}
-              />
+                  onPress={() => {
+                    if (onGallery) {
+                      router.push(
+                        (role === 'merchant'
+                          ? '/merchant/live-floor'
+                          : '/customer/explore') as never,
+                      );
+                    } else {
+                      router.push('/gallery' as never);
+                    }
+                  }}
+                />
+              ) : null}
             </View>
           </View>
 
-          {ready ? <SimulatorBar /> : null}
+          {ready && !onApiRoute ? <SimulatorBar /> : null}
 
           <ScrollView
             style={{ flex: 1 }}
@@ -164,14 +182,14 @@ export default function RootLayout() {
                 gap: space.lg,
               }}
             >
-              {!ready ? (
+              {!ready && !onApiRoute ? (
                 <Card>
                   <Text style={styles.subheading}>{t('loadingTitle')}</Text>
                   <Text style={styles.text}>{t('loadingBody')}</Text>
                 </Card>
               ) : (
                 <>
-                  {warning ? (
+                  {warning && !onApiRoute ? (
                     <Banner tone="warning" role="alert">
                       {warning.includes('incompatible')
                         ? t('warnIncompatible')
@@ -186,7 +204,9 @@ export default function RootLayout() {
             </View>
           </ScrollView>
 
-          {ready && !onGallery && pathname !== '/' ? (
+          {onApiRoute ? (
+            <AccessNav pathname={pathname} />
+          ) : ready && !onGallery && pathname !== '/' ? (
             role === 'merchant' ? (
               <MerchantNav current={merchantTabForPath(pathname)} />
             ) : (

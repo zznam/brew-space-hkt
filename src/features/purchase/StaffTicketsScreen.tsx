@@ -1,0 +1,163 @@
+import { useCallback, useState } from 'react';
+import { Text, View } from 'react-native';
+import { apiCommand } from '@/api/client';
+import {
+  Banner,
+  Button,
+  Card,
+  Chip,
+  EmptyState,
+  Heading,
+  Screen,
+  ScreenHeader,
+  styles,
+} from '@/components/ui';
+import { useT } from '@/i18n/useLanguage';
+import {
+  AccessGate,
+  RemoteState,
+  useRemote,
+  useTask,
+} from '@/features/access/shared';
+import { purchaseMessages } from './messages';
+import { PurchaseError, useRefresh } from './shared';
+
+const loadProfile = () => apiCommand('me', undefined);
+function BranchTickets({ branchId }: { branchId: string }) {
+  const { t } = useT(purchaseMessages);
+  const load = useCallback(
+    () => apiCommand('listTickets', { branchId }),
+    [branchId],
+  );
+  const remote = useRemote(load);
+  useRefresh(remote.reload);
+  const task = useTask();
+  const tickets =
+    remote.data?.filter(
+      (ticket) => !['served', 'cancelled'].includes(ticket.status),
+    ) ?? [];
+  return (
+    <>
+      <RemoteState
+        loading={!remote.data && remote.loading}
+        error={remote.error}
+        retry={remote.reload}
+      />
+      <PurchaseError code={task.error} />
+      {!tickets.length && remote.data ? (
+        <EmptyState title={t('noTickets')} message={t('noTicketsBody')} />
+      ) : (
+        tickets.map((ticket) => {
+          const next =
+            ticket.status === 'queued'
+              ? 'preparing'
+              : ticket.status === 'preparing'
+                ? 'ready'
+                : 'served';
+          return (
+            <Card key={ticket.id}>
+              <Heading>{t('order', { code: ticket.orderCode })}</Heading>
+              <Banner>{t(ticket.status)}</Banner>
+              <Text style={styles.caption}>
+                {ticket.destination === 'Counter'
+                  ? t('counter')
+                  : ticket.destination}
+              </Text>
+              {ticket.lines.map((line, i) => (
+                <View key={i}>
+                  <Text style={styles.textStrong}>
+                    {line.quantity} × {line.name}
+                  </Text>
+                  {line.detail ? (
+                    <Text style={styles.text}>{line.detail}</Text>
+                  ) : null}
+                  {line.note ? (
+                    <Text style={styles.text}>{line.note}</Text>
+                  ) : null}
+                  {line.limited && !line.confirmed ? (
+                    <Button
+                      label={t('confirmService', { name: line.name })}
+                      disabled={task.busy}
+                      onPress={() =>
+                        void task.run(async () => {
+                          await apiCommand('confirmService', {
+                            ticketId: ticket.id,
+                            lineIndex: i,
+                          });
+                          remote.reload();
+                        })
+                      }
+                    />
+                  ) : null}
+                </View>
+              ))}
+              <Button
+                label={t(
+                  next === 'preparing'
+                    ? 'prepare'
+                    : next === 'ready'
+                      ? 'markReady'
+                      : 'markServed',
+                )}
+                disabled={
+                  task.busy ||
+                  ticket.lines.some((l) => l.limited && !l.confirmed)
+                }
+                onPress={() =>
+                  void task.run(async () => {
+                    await apiCommand('advanceTicket', {
+                      ticketId: ticket.id,
+                      status: next,
+                    });
+                    remote.reload();
+                  })
+                }
+              />
+            </Card>
+          );
+        })
+      )}
+      <Button label={t('recheck')} onPress={remote.reload} />
+    </>
+  );
+}
+function Tickets() {
+  const { t } = useT(purchaseMessages);
+  const remote = useRemote(loadProfile);
+  const [branchId, setBranchId] = useState('');
+  const branch =
+    remote.data?.branches.find((b) => b.id === branchId) ??
+    remote.data?.branches[0];
+  return (
+    <Screen>
+      <ScreenHeader title={t('tickets')} />
+      <RemoteState
+        loading={remote.loading}
+        error={remote.error}
+        retry={remote.reload}
+      />
+      {remote.data && branch ? (
+        <>
+          <View style={styles.row}>
+            {remote.data.branches.map((b) => (
+              <Chip
+                key={b.id}
+                label={b.name}
+                selected={b.id === branch.id}
+                onPress={() => setBranchId(b.id)}
+              />
+            ))}
+          </View>
+          <BranchTickets key={branch.id} branchId={branch.id} />
+        </>
+      ) : null}
+    </Screen>
+  );
+}
+export default function StaffTicketsScreen() {
+  return (
+    <AccessGate kind="staff">
+      <Tickets />
+    </AccessGate>
+  );
+}

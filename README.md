@@ -1,6 +1,6 @@
 # BrewSpace
 
-Shared Expo / React Native foundation for the 3D cafe and coworking platform. One application contains merchant and customer experiences, backed by a local demo core.
+Shared Expo / React Native foundation for the 3D cafe and coworking platform. One application contains merchant and customer experiences, with a local demo core and a separate API for access, catalogue and purchasing.
 
 - [Tổng quan tính năng và kiến trúc / Features and architecture overview (HTML, VI + EN)](docs/app-overview.html)
 - [Tài liệu MVP và phân công 1 BE + 2 FE](.beads/artifacts/vhk-qwb/prd.md)
@@ -44,7 +44,7 @@ Commit `package-lock.json` when changing dependencies. Use `npx expo install <pa
 - Metered/bundle seat-time estimates, menu additions, and releasing a demo seat.
 - An interactive 3D venue viewer with an accessible shared seat list.
 
-All transactions are simulated on one device. Role switching is a demo tool, not authentication. Time advances only through the simulator. Ending a session clears its tab without taking payment. Data is scoped by venue in local actions; production tenant security must be enforced by the backend.
+The original `/merchant` and `/customer` routes simulate transactions on one device. Role switching is a demo tool, not authentication. Their time advances only through the simulator, and ending a session clears its tab without taking payment. The separate API routes below use server sessions, real time and durable transactions.
 
 ## Project map
 
@@ -60,11 +60,15 @@ docs/                  Architecture and contributor handoff
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) for team ownership, first tasks, and PR checks, and [the core contract](docs/core.md) before changing shared behavior.
 
+See the [local pilot engine](docs/pilot-engine.md) for the command prototype, shared merchant/customer catalogue screens, and remaining integration work.
+
+The [API](docs/api.md) adds tenant/branch provisioning, staff permissions, brand/catalogue management, customer quotes/orders, cash shifts, fulfilment tickets and a VNPAY adapter. Start it with `npm run api:bootstrap` (one-time administrator provisioning) and `npm run api`. Use `/platform`, `/staff` and `/v/{slug}`. VNPAY defaults to sandbox and requires server-side merchant configuration; no provider transaction has been verified yet. See the [MVP implementation order](docs/mvp-implementation.md) for evidence and remaining priorities.
+
 ## Scope and plans
 
 This implements the foundation phase of the [React Native architecture plan](docs/react-native-plan.md), using the current [Expo template conventions](https://docs.expo.dev/more/create-expo/). It supersedes the earlier proposed multi-app folder layout for this starter. Native StyleSheet primitives provide shared styling today; NativeWind can be introduced as a coordinated UI change.
 
-Still to build: production 3D/editor infrastructure, real API/auth, transactional booking and pricing, payment/ledger, AI adapters, loyalty, and production persistence. No OpenAI or payment keys belong in the client or in `EXPO_PUBLIC_*` variables. The [MVP requirements and team responsibilities](.beads/artifacts/vhk-qwb/prd.md) remain the pilot acceptance criteria; this demo does not meet those gates yet.
+Still to build: booking/editor integration, time-based pricing, refunds, support/AI, loyalty and hosted operations/backup validation. Provider sandbox certification and device/UAT checks remain open. No payment keys belong in the client or in `EXPO_PUBLIC_*` variables. The [MVP requirements and team responsibilities](.beads/artifacts/vhk-qwb/prd.md) remain the pilot acceptance criteria; the app does not meet those gates yet.
 
 ## HTML prototype
 

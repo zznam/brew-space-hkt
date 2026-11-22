@@ -6,6 +6,7 @@ import {
   type Venue,
 } from '@/core';
 import { appStore } from '@/core/useAppStore';
+import { catalogueStore } from '@/core/catalogue/useCatalogue';
 import {
   cartTotal,
   modifiersFor,
@@ -394,6 +395,7 @@ export function seedSpeedrunDemo(): void {
 
 /** Restores every demo store (core, POS, loyalty, support, cart) back to empty/initial fixtures. */
 export function resetAllDemoStores(): void {
+  catalogueStore.getState().reset();
   appStore.getState().reset();
   posStore.getState().reset();
   loyaltyStore.setState(initialLoyaltyState());

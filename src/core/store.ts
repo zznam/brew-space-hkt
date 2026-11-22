@@ -4,6 +4,7 @@ import type {
   BillingMode,
   DemoState,
   Role,
+  MenuItem,
   Scenario,
   Venue,
 } from './domain';
@@ -101,7 +102,9 @@ export function isValidVenue(value: unknown): value is Venue {
 }
 
 /** Factory isolates tests and leaves persistence/native concerns outside domain actions. */
-export function createAppStore() {
+export function createAppStore(
+  menuFor: (venue: Venue) => MenuItem[] = (venue) => venue.menu,
+) {
   setActiveCustomVenues([]);
   return createStore<AppStore>()((set, get) => ({
     ...initialState(),
@@ -184,7 +187,7 @@ export function createAppStore() {
     },
     addItem: (sessionId, itemId) => {
       const state = get();
-      const item = getVenue(state.venueId, state.customVenues).menu.find(
+      const item = menuFor(getVenue(state.venueId, state.customVenues)).find(
         (entry) => entry.id === itemId,
       );
       const session = state.sessions.find(

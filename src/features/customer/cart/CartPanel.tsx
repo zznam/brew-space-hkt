@@ -1,5 +1,7 @@
 import { Pressable, Text, TextInput, View } from 'react-native';
-import { formatMoney, type Session } from '@/core';
+import { formatMoney, getVenue, type Session } from '@/core';
+import { catalogueMenu } from '@/core/catalogue/store';
+import { useCatalogue } from '@/core/catalogue/useCatalogue';
 import {
   Badge,
   Button,
@@ -160,6 +162,12 @@ export function CartPanel({
   session: Session;
   disabledReason?: string | null;
 }) {
+  const catalogueItems = useCatalogue((state) => state.items);
+  const availableIds = new Set(
+    catalogueMenu({ items: catalogueItems }, getVenue(session.venueId)).map(
+      (item) => item.id,
+    ),
+  );
   const lines = useCart((state) => state.lines);
   const error = useCart((state) => state.errorMessage);
   const notice = useCart((state) => state.noticeMessage);
@@ -216,6 +224,11 @@ export function CartPanel({
             <Text style={styles.subheading}>
               {line.name} · {formatMoney(line.unitPrice * line.quantity)}
             </Text>
+            {!availableIds.has(line.menuItemId) && (
+              <Banner tone="warning" role="alert">
+                {t('itemGone', { name: line.name })}
+              </Banner>
+            )}
             {line.modifiers && (
               <>
                 <Text style={styles.caption}>
@@ -250,7 +263,10 @@ export function CartPanel({
               <Button
                 size="sm"
                 label="+"
-                disabled={line.quantity >= MAX_LINE_QUANTITY}
+                disabled={
+                  line.quantity >= MAX_LINE_QUANTITY ||
+                  !availableIds.has(line.menuItemId)
+                }
                 onPress={() => setQuantity(key, line.quantity + 1)}
               />
               <Button

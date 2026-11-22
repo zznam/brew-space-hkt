@@ -70,7 +70,13 @@ const initialPosState = () => ({
 });
 
 /** Factory isolates tests, mirrors src/core/store.ts's createAppStore. */
-export function createPosStore() {
+export interface PosCatalogueAdapter {
+  getMenu: (
+    venueId: string,
+  ) => { id: string; name: string; price: number; soldOut: boolean }[];
+  toggleSoldOut: (menuItemId: string) => void;
+}
+export function createPosStore(catalogue?: PosCatalogueAdapter) {
   return createStore<PosStore>()((set, get) => ({
     ...initialPosState(),
     createOrder: (venueId, seatId) => {
@@ -100,6 +106,15 @@ export function createPosStore() {
         return { ok: false, message: 'Order can no longer be edited.' };
       if (state.soldOutItemIds.includes(menuItemId))
         return { ok: false, message: 'Item is sold out.' };
+      if (catalogue) {
+        const live = catalogue
+          .getMenu(order.venueId)
+          .find((item) => item.id === menuItemId);
+        if (!live || live.soldOut)
+          return { ok: false, message: 'Item is unavailable.' };
+        name = live.name;
+        unitPrice = live.price;
+      }
       const existing = order.lines.find(
         (line) => line.menuItemId === menuItemId,
       );
@@ -129,6 +144,16 @@ export function createPosStore() {
         (line) => line.menuItemId === menuItemId,
       );
       if (!hasLine) return { ok: false, message: 'Line not found.' };
+      const currentLine = order.lines.find(
+        (line) => line.menuItemId === menuItemId,
+      );
+      if (catalogue && currentLine && quantity > currentLine.quantity) {
+        const live = catalogue
+          .getMenu(order.venueId)
+          .find((item) => item.id === menuItemId);
+        if (!live || live.soldOut)
+          return { ok: false, message: 'Item is unavailable.' };
+      }
       const lines =
         quantity === 0
           ? order.lines.filter((line) => line.menuItemId !== menuItemId)
@@ -143,6 +168,10 @@ export function createPosStore() {
       return { ok: true };
     },
     toggleSoldOut: (menuItemId) => {
+      if (catalogue) {
+        catalogue.toggleSoldOut(menuItemId);
+        return;
+      }
       const state = get();
       set({
         soldOutItemIds: state.soldOutItemIds.includes(menuItemId)
@@ -158,6 +187,20 @@ export function createPosStore() {
         return { ok: false, message: 'Order cannot be paid from this state.' };
       if (order.lines.length === 0)
         return { ok: false, message: 'Cannot pay an empty order.' };
+      if (catalogue) {
+        const menu = catalogue.getMenu(order.venueId);
+        for (const line of order.lines) {
+          const item = menu.find((item) => item.id === line.menuItemId);
+          if (!item || item.soldOut)
+            return { ok: false, message: 'Item is unavailable.' };
+          if (item.price !== line.unitPrice)
+            return {
+              ok: false,
+              message:
+                'Menu prices changed. Remove changed items and add them again.',
+            };
+        }
+      }
       set({
         orders: state.orders.map((entry) =>
           entry.id === orderId

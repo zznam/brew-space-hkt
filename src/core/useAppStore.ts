@@ -1,9 +1,17 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useStore } from 'zustand';
-import { setActiveCustomVenues } from './fixtures';
+import { getAllVenues, setActiveCustomVenues } from './fixtures';
+import { catalogueMenu } from './catalogue/store';
+import { catalogueStore } from './catalogue/useCatalogue';
 import { createAppStore, isDemoState, type AppStore } from './store';
 
-export const appStore = createAppStore();
+export const appStore = createAppStore((venue) =>
+  catalogueMenu(catalogueStore.getState(), venue),
+);
+appStore.subscribe((state, previous) => {
+  if (state.customVenues !== previous.customVenues)
+    catalogueStore.getState().ensureVenues(getAllVenues(state.customVenues));
+});
 export const useAppStore = <T>(selector: (state: AppStore) => T) =>
   useStore(appStore, selector);
 const STORAGE_KEY = 'vibing-hkt:demo:v1';

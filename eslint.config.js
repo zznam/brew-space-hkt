@@ -6,6 +6,8 @@ module.exports = defineConfig([
     ignores: [
       'dist/**',
       'coverage/**',
+      'test-results/**',
+      'playwright-report/**',
       'graft/**',
       '.beads/**',
       'android/**',
