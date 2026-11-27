@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { apiCommand, getPublicVenue, requestKey } from '@/api/client';
 import type { Output } from '@/core/pilot/engine';
 import type { Shift } from '@/core/pilot/types';
@@ -25,12 +25,16 @@ import {
   useTask,
 } from '@/features/access/shared';
 import { CustomerCheckout } from './CustomerCheckout';
+import { tenderState, tenderSuggestions } from './cashTender';
 import { purchaseMessages } from './messages';
 import { PurchaseError, useRefresh } from './shared';
 
 const loadProfile = () => apiCommand('me', undefined);
 type Branch = Output<'me'>['branches'][number];
 type Order = Output<'listOrders'>[number];
+const local = StyleSheet.create({
+  quickCash: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+});
 const validMoney = (text: string) =>
   /^\d+$/.test(text) && Number.isSafeInteger(Number(text));
 
@@ -111,6 +115,7 @@ function CashOrder({
   const [amount, setAmount] = useState('');
   const [result, setResult] = useState<Output<'confirmCash'> | null>(null);
   const [key] = useState(requestKey);
+  const tender = tenderState(order.total, amount);
   return (
     <Card>
       <Heading>{t('order', { code: order.code })}</Heading>
@@ -149,10 +154,47 @@ function CashOrder({
                 onChangeText={setAmount}
                 editable={!task.busy}
               />
+              <View
+                style={local.quickCash}
+                accessibilityRole="toolbar"
+                accessibilityLabel={t('quickCash')}
+              >
+                {tenderSuggestions(order.total).map((value) => (
+                  <Button
+                    key={value}
+                    size="sm"
+                    variant="secondary"
+                    selected={tender.kind === 'ok' && tender.tendered === value}
+                    label={
+                      value === order.total
+                        ? `${t('exactCash')} · ${formatMoney(value)}`
+                        : formatMoney(value)
+                    }
+                    disabled={task.busy}
+                    onPress={() => setAmount(String(value))}
+                  />
+                ))}
+              </View>
+              {tender.kind === 'ok' ? (
+                <Text
+                  style={styles.textStrong}
+                  accessibilityLiveRegion="polite"
+                >
+                  {t('changeDue', { amount: formatMoney(tender.change) })}
+                </Text>
+              ) : tender.kind === 'short' ? (
+                <Text style={styles.text} accessibilityLiveRegion="polite">
+                  {t('cashShort', { amount: formatMoney(tender.short) })}
+                </Text>
+              ) : tender.kind === 'invalid' ? (
+                <Text style={styles.text} accessibilityLiveRegion="polite">
+                  {t('cashInvalid')}
+                </Text>
+              ) : null}
               <Button
                 label={t('confirm')}
                 variant="primary"
-                disabled={task.busy || !validMoney(amount)}
+                disabled={task.busy || tender.kind !== 'ok'}
                 onPress={() =>
                   void task.run(async () => {
                     const paid = await apiCommand('confirmCash', {
