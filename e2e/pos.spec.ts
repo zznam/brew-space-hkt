@@ -22,3 +22,31 @@ test('cashier takes a walk-in order from menu to served ticket', async ({
   await page.getByRole('button', { name: /^Mark served/ }).click();
   expect(errors).toEqual([]);
 });
+
+test('F219: a pinned item moves to the top of the POS menu', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'New order', exact: true }).click();
+  const pins = page.getByRole('button', { name: /^Pin to top: / });
+  const name = ((await pins.last().getAttribute('aria-label')) ?? '').replace(
+    'Pin to top: ',
+    '',
+  );
+  const firstItem = page
+    .getByRole('button', { name: /^[^:]+, [\d.]+ ₫$/ })
+    .first();
+  await expect(firstItem).not.toHaveAttribute(
+    'aria-label',
+    new RegExp(`^${name}, `),
+  );
+  await pins.last().click();
+  await expect(
+    page.getByRole('button', { name: `Unpin: ${name}`, exact: true }),
+  ).toBeVisible();
+  await expect(firstItem).toHaveAttribute(
+    'aria-label',
+    new RegExp(`^${name}, `),
+  );
+  await expect(page.getByText('★ Favourite', { exact: true })).toBeVisible();
+});

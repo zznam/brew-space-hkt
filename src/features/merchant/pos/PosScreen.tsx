@@ -34,6 +34,7 @@ export function PosScreen() {
   const { t, lang } = useT(merchantMessages);
   const venueId = useAppStore((state) => state.venueId);
   const orders = usePosStore((state) => state.orders);
+  const pinnedItemIds = usePosStore((state) => state.pinnedItemIds);
   const catalogueItems = useCatalogue((state) => state.items);
   const [justPaid, setJustPaid] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -148,6 +149,10 @@ export function PosScreen() {
           <MenuGrid
             venue={venue}
             soldOutItemIds={soldOutItemIds}
+            pinnedItemIds={pinnedItemIds}
+            onTogglePinned={(itemId) =>
+              posStore.getState().togglePinned(itemId)
+            }
             onAdd={(item) => {
               if (!draftOrder) return;
               const result = posStore
