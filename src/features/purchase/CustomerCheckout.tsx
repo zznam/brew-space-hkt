@@ -157,6 +157,26 @@ function OrderProgress({
           ) ? (
             <Banner>{t('refundQueued')}</Banner>
           ) : null}
+          {remote.data?.refunds.map((refund, i) => (
+            <Banner
+              key={i}
+              tone={
+                refund.status === 'paid'
+                  ? 'success'
+                  : refund.status === 'declined'
+                    ? 'warning'
+                    : 'info'
+              }
+            >
+              {refund.status === 'requested'
+                ? t('refundRequested')
+                : refund.status === 'approved'
+                  ? t('refundApproved', { amount: formatMoney(refund.amount) })
+                  : refund.status === 'paid'
+                    ? t('refundPaid', { amount: formatMoney(refund.amount) })
+                    : t('refundDeclined')}
+            </Banner>
+          ))}
           {order.lines.map((line) => (
             <Text key={line.id} style={styles.text}>
               {line.quantity} × {line.name}

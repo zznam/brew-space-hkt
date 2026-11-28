@@ -232,6 +232,11 @@ describe('authoritative online payment lifecycle', () => {
         paymentId: first.payment.id,
       },
     ]);
+    // F127: the customer's order view shows the refund in customer terms.
+    expect(
+      data(s.engine.execute('getOrder', { orderId: s.order.id }, s.auth))
+        .refunds,
+    ).toMatchObject([{ status: 'requested', amount: 0 }]);
     expect(
       data(
         s.engine.execute(

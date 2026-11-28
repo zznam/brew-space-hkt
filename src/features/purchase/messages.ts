@@ -18,6 +18,10 @@ export const purchaseMessages = defineMessages(
     payOnline: 'Pay online',
     continuePayment: 'Continue existing payment',
     verifying: 'Verifying payment. Check status before paying again.',
+    refundRequested: 'Refund requested. A manager will review it.',
+    refundApproved: 'Refund approved: {amount}. It is being paid back.',
+    refundPaid: 'Refund paid: {amount}.',
+    refundDeclined: 'Refund declined. Ask staff if you have questions.',
     refundQueued:
       'An extra or late payment was received. Staff will review a refund.',
     storageRequired:
@@ -133,6 +137,10 @@ export const purchaseMessages = defineMessages(
     continuePayment: 'Tiếp tục lần thanh toán hiện tại',
     verifying:
       'Đang xác minh thanh toán. Kiểm tra trạng thái trước khi trả lại.',
+    refundRequested: 'Đã gửi yêu cầu hoàn tiền. Quản lý sẽ xem xét.',
+    refundApproved: 'Đã duyệt hoàn {amount}. Tiền đang được hoàn lại.',
+    refundPaid: 'Đã hoàn tiền: {amount}.',
+    refundDeclined: 'Yêu cầu hoàn tiền bị từ chối. Hãy hỏi nhân viên nếu cần.',
     refundQueued:
       'Đã nhận tiền thừa hoặc thanh toán muộn. Nhân viên sẽ xem xét hoàn tiền.',
     storageRequired:
