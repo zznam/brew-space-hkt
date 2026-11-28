@@ -64,7 +64,7 @@ The first spec already holds 96 must-have rows for one BE and two FE over 10–1
 | ID | Feature | Actor | Acceptance check | Source | Pri | Own | Demo |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | F123 | Pay at counter from the phone | Customer | Choosing cash leaves the order awaiting payment with an expiry until a cashier confirms it; nothing is fulfilled before that | FR02, U-P03 | M | BE, FE2, FE1 | No |
-| F124 | Digital receipt | Customer | A paid order shows a receipt with lines, discount, fees, total, payment method and time in the branch timezone | U-P05 | S | FE2, BE | No |
+| F124 | Digital receipt | Customer | A paid order shows a receipt with lines, discount, fees, total, payment method and time in the branch timezone | U-P05 | S | FE2, BE | Yes |
 | F125 | Receipt by email | Customer | If the customer enters an address the receipt is sent once; the address is not used for marketing | U-P05 | C | BE | No |
 | F126 | Customer refund request | Customer | The owner of a paid order can request a refund with a reason; it enters the manager's queue and refunds nothing by itself | §5, U-P07 | M | BE, FE2 | No |
 | F127 | Refund status for the customer | Customer | The customer sees requested, approved, paid or declined and never sees "refunded" before the money is confirmed | FR08, T08 | M | FE2, BE | No |
