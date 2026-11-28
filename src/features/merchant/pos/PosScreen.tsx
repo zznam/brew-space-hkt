@@ -109,6 +109,9 @@ export function PosScreen() {
     );
   }
 
+  const parkedOrders = orders.filter(
+    (order) => order.venueId === venueId && order.status === 'parked',
+  );
   const otherOpenOrders = orders.filter(
     (order) =>
       order.venueId === venueId &&
@@ -213,8 +216,59 @@ export function PosScreen() {
               }
             }}
           />
+          {draftOrder && draftOrder.lines.length > 0 ? (
+            <Button
+              label={t('parkOrder')}
+              variant="ghost"
+              onPress={() => {
+                const result = posStore.getState().parkOrder(draftOrder.id);
+                if (result.ok) {
+                  setActionError(null);
+                  posStore.getState().createOrder(venueId, selectedSeatId);
+                } else {
+                  setActionError(posErrorText(result.message, lang));
+                }
+              }}
+            />
+          ) : null}
         </Card>
       </View>
+
+      {parkedOrders.length > 0 ? (
+        <Card>
+          <View style={styles.rowBetween}>
+            <Heading level={2}>{t('parkedOrders')}</Heading>
+            <Badge label={`${parkedOrders.length}`} tone="neutral" />
+          </View>
+          {parkedOrders.map((order) => (
+            <View key={order.id} style={[styles.inset, styles.rowBetween]}>
+              <Text style={styles.textStrong}>
+                {t('parkedSummary', {
+                  id: order.id.replace(/^pos-/, ''),
+                  count: order.lines.reduce(
+                    (sum, line) => sum + line.quantity,
+                    0,
+                  ),
+                  total: formatMoney(calculateOrderTotal(order)),
+                })}
+              </Text>
+              <Button
+                size="sm"
+                label={t('resumeOrder')}
+                accessibilityLabel={`${t('resumeOrder')} #${order.id.replace(/^pos-/, '')}`}
+                onPress={() => {
+                  const result = posStore
+                    .getState()
+                    .resumeOrder(order.id, selectedSeatId);
+                  setActionError(
+                    result.ok ? null : posErrorText(result.message, lang),
+                  );
+                }}
+              />
+            </View>
+          ))}
+        </Card>
+      ) : null}
 
       {otherOpenOrders.length > 0 ? (
         <Card>

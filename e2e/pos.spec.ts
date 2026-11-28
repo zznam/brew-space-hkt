@@ -50,3 +50,22 @@ test('F219: a pinned item moves to the top of the POS menu', async ({
   );
   await expect(page.getByText('★ Favourite', { exact: true })).toBeVisible();
 });
+
+test('F211: park a counter order, serve another, then resume it', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'New order', exact: true }).click();
+  await page.getByRole('button', { name: /^Cold brew/ }).click();
+  await page.getByRole('button', { name: 'Park order', exact: true }).click();
+  await expect(page.getByText('Parked orders', { exact: true })).toBeVisible();
+  await expect(page.getByText(/^#\d+ · 1 item\(s\) · /)).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Park order', exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole('button', { name: /^Resume #\d+$/ }).click();
+  await expect(page.getByText('Parked orders', { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'Park order', exact: true }),
+  ).toBeVisible();
+});

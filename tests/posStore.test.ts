@@ -201,3 +201,51 @@ describe('F219 POS favourites', () => {
     ]);
   });
 });
+
+describe('F211 park and resume a counter order', () => {
+  const setup = async () => {
+    const { createPosStore } =
+      await import('../src/features/merchant/pos/posStore');
+    const store = createPosStore();
+    const id = store.getState().createOrder('v1', 'seat-1');
+    store.getState().addLine(id, 'latte', 'Latte', 45000);
+    return { store, id };
+  };
+
+  it('parks a non-empty draft and frees its seat', async () => {
+    const { store, id } = await setup();
+    expect(store.getState().parkOrder(id)).toEqual({ ok: true });
+    expect(store.getState().orders.find((o) => o.id === id)).toMatchObject({
+      status: 'parked',
+      seatId: null,
+    });
+    const empty = store.getState().createOrder('v1', null);
+    expect(store.getState().parkOrder(empty)).toMatchObject({ ok: false });
+  });
+
+  it('resumes into the current seat, replacing an empty draft only', async () => {
+    const { store, id } = await setup();
+    store.getState().parkOrder(id);
+    const blank = store.getState().createOrder('v1', 'seat-2');
+    expect(store.getState().resumeOrder(id, 'seat-2')).toEqual({ ok: true });
+    const orders = store.getState().orders;
+    expect(orders.find((o) => o.id === blank)).toBeUndefined();
+    expect(orders.find((o) => o.id === id)).toMatchObject({
+      status: 'draft',
+      seatId: 'seat-2',
+    });
+  });
+
+  it('refuses to resume over a draft that already has items', async () => {
+    const { store, id } = await setup();
+    store.getState().parkOrder(id);
+    const busy = store.getState().createOrder('v1', 'seat-2');
+    store.getState().addLine(busy, 'tea', 'Tea', 30000);
+    expect(store.getState().resumeOrder(id, 'seat-2')).toMatchObject({
+      ok: false,
+    });
+    expect(store.getState().resumeOrder('missing', null)).toMatchObject({
+      ok: false,
+    });
+  });
+});
