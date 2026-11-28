@@ -177,7 +177,7 @@ Section X needs a scope decision before any of it is planned. The PRD puts ingre
 | F296 | Tenant-private asset URLs | System | A tenant's private asset URL is refused for another tenant and for a caller without a session | §10.1 | M | BE | No |
 | F297 | No customer impersonation | System | No API lets staff or a platform admin obtain a customer's session or token | §5 | M | BE | No |
 | F298 | Backup before a large publish | System | Publishing a layout or price set that is flagged as large takes a backup first | §9 | M | BE | No |
-| F299 | No secrets in client bundles | System | A CI check fails if a provider or AI key appears in a built client bundle or an `EXPO_PUBLIC_*` variable | §9 | M | FE1, FE2, BE | No |
+| F299 | No secrets in client bundles | System | A CI check fails if a provider or AI key appears in a built client bundle or an `EXPO_PUBLIC_*` variable | §9 | M | FE1, FE2, BE | Yes |
 | F300 | Pilot gate test suite | System | Automated API tests cover the ten §10.1 gates and run against seed data for two independent tenants | §10.1, §1.2 | M | BE, FE1, FE2 | No |
 
 ## Summary

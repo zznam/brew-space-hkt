@@ -21,6 +21,7 @@ jobs:
         env:
           CI: '1'
           EXPO_NO_TELEMETRY: '1'
+      - run: npm run check:secrets
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
         env:
