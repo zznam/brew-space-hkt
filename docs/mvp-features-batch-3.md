@@ -67,7 +67,7 @@ Section X needs a scope decision before any of it is planned. The PRD puts ingre
 | F221 | Station routing | Manager | Each category is assigned to a station (bar, kitchen, service desk) and the ticket board can be filtered to one station | F035 | S | BE, FE1 | No |
 | F222 | Per-line ticket status | Server | A line can be marked ready on its own; the ticket becomes ready when all its lines are | F034 | C | BE, FE1 | No |
 | F223 | Undo the last ticket step | Server | Within a short configured time the last status change can be reverted by one step, and the reversal is recorded | F035 | S | BE, FE1 | No |
-| F224 | Ticket age marker | Server | A ticket waiting longer than the configured time is marked by text as well as colour and sorted first | §10.2, F035 | S | FE1 | No |
+| F224 | Ticket age marker | Server | A ticket waiting longer than the configured time is marked by text as well as colour and sorted first | §10.2, F035 | S | FE1 | Part |
 | F225 | Serve to seat or pick up at counter | Customer | The order records the choice; the ticket shows a seat label or a pickup number | FR02 | S | BE, FE2, FE1 | Part |
 | F226 | Order-ready notice | Customer | When a ticket turns ready the customer's open screen shows a notice on its next refresh, with the pickup number if any | FR05, F036 | S | FE2 | No |
 | F227 | Wrong or missing item report | Customer | A report from a served order creates a staff request that carries the order reference and refunds nothing by itself | FR05, F074 | S | BE, FE2 | No |

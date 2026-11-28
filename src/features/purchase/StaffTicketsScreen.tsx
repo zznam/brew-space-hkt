@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import { apiCommand } from '@/api/client';
 import {
@@ -21,8 +21,18 @@ import {
 } from '@/features/access/shared';
 import { purchaseMessages } from './messages';
 import { PurchaseError, useRefresh } from './shared';
+import { sortTicketsByAge, ticketAge } from './ticketAge';
 
 const loadProfile = () => apiCommand('me', undefined);
+/** Current time, refreshed on an interval so ticket ages advance between reloads. */
+function useNow(intervalMs: number) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), intervalMs);
+    return () => clearInterval(timer);
+  }, [intervalMs]);
+  return now;
+}
 function BranchTickets({ branchId }: { branchId: string }) {
   const { t } = useT(purchaseMessages);
   const load = useCallback(
@@ -32,10 +42,13 @@ function BranchTickets({ branchId }: { branchId: string }) {
   const remote = useRemote(load);
   useRefresh(remote.reload);
   const task = useTask();
-  const tickets =
+  const now = useNow(30_000);
+  const tickets = sortTicketsByAge(
     remote.data?.filter(
       (ticket) => !['served', 'cancelled'].includes(ticket.status),
-    ) ?? [];
+    ) ?? [],
+    now,
+  );
   return (
     <>
       <RemoteState
@@ -54,10 +67,20 @@ function BranchTickets({ branchId }: { branchId: string }) {
               : ticket.status === 'preparing'
                 ? 'ready'
                 : 'served';
+          const age = ticketAge(ticket.createdAt, now);
           return (
             <Card key={ticket.id}>
               <Heading>{t('order', { code: ticket.orderCode })}</Heading>
               <Banner>{t(ticket.status)}</Banner>
+              {age.overdue ? (
+                <Banner tone="warning">
+                  {t('overdue', { minutes: age.minutes })}
+                </Banner>
+              ) : (
+                <Text style={styles.caption}>
+                  {t('waiting', { minutes: age.minutes })}
+                </Text>
+              )}
               <Text style={styles.caption}>
                 {ticket.destination === 'Counter'
                   ? t('counter')
