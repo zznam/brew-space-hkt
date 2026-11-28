@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { router } from 'expo-router';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { apiCommand } from '@/api/client';
 import type { Brand } from '@/core/pilot/types';
 import {
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui';
 import { useT } from '@/i18n/useLanguage';
 import { accessMessages } from './messages';
+import { checkBrandColours, formatRatio } from './brandPreview';
 import { offerMessages } from '../offers/messages';
 import {
   AccessGate,
@@ -31,6 +32,7 @@ function BrandForm({ brand }: { brand: Brand }) {
   const [form, setForm] = useState(brand);
   const [saved, setSaved] = useState(false);
   const task = useTask();
+  const check = checkBrandColours(form);
   return (
     <CollapsibleSection
       title={t('brand')}
@@ -53,10 +55,56 @@ function BrandForm({ brand }: { brand: Brand }) {
           }}
         />
       ))}
+      {/* F265: preview the draft colours before saving; refuse unreadable pairs. */}
+      <Text style={styles.textStrong}>{t('brandPreview')}</Text>
+      {check.kind === 'invalid' ? (
+        <Banner tone="warning">
+          {t('colourInvalid', {
+            fields: check.fields.map((field) => t(field)).join(', '),
+          })}
+        </Banner>
+      ) : (
+        <>
+          <View
+            accessibilityLabel={t('brandPreview')}
+            style={{
+              backgroundColor: form.background,
+              borderColor: form.primary,
+              borderWidth: 2,
+              borderRadius: 12,
+              padding: 12,
+              gap: 8,
+            }}
+          >
+            <Text style={{ color: form.text, fontWeight: '700', fontSize: 16 }}>
+              {form.displayName}
+            </Text>
+            <Text style={{ color: form.text }}>{t('brandSample')}</Text>
+            <View
+              style={{
+                alignSelf: 'flex-start',
+                backgroundColor: form.primary,
+                borderRadius: 8,
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+              }}
+            >
+              <Text style={{ color: form.background, fontWeight: '600' }}>
+                {t('brandOrder')}
+              </Text>
+            </View>
+          </View>
+          <Banner tone={check.kind === 'ok' ? 'success' : 'warning'}>
+            {t(check.kind === 'ok' ? 'contrastOk' : 'contrastLow', {
+              ratio: formatRatio(check.ratio),
+            })}
+          </Banner>
+        </>
+      )}
       <Button
         label={t(task.busy ? 'working' : 'save')}
         variant="primary"
-        disabled={task.busy}
+        disabled={task.busy || check.kind !== 'ok'}
         onPress={() =>
           void task.run(async () => {
             await apiCommand('updateBrand', { brand: form });
