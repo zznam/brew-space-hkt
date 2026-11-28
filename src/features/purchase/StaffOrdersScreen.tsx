@@ -26,6 +26,7 @@ import {
 } from '@/features/access/shared';
 import { CustomerCheckout } from './CustomerCheckout';
 import { tenderState, tenderSuggestions } from './cashTender';
+import { formatPaidAt, hasReceipt } from './receipt';
 import { purchaseMessages } from './messages';
 import { PurchaseError, useRefresh } from './shared';
 
@@ -104,10 +105,12 @@ function ShiftPanel({
 function CashOrder({
   order,
   shift,
+  timeZone,
   changed,
 }: {
   order: Order;
   shift?: Shift;
+  timeZone: string;
   changed: () => void;
 }) {
   const { t } = useT(purchaseMessages);
@@ -140,6 +143,24 @@ function CashOrder({
       <Text style={styles.textStrong}>
         {t('total')} · {formatMoney(order.total)}
       </Text>
+      {hasReceipt(order, order.paidWith) && order.paidWith && order.paidAt ? (
+        <View accessibilityLabel={t('receiptTitle')}>
+          <Heading>{t('receiptTitle')}</Heading>
+          <Text style={styles.text}>
+            {t('paidAt', { time: formatPaidAt(order.paidAt, timeZone) })}
+          </Text>
+          <Text style={styles.textStrong}>
+            {order.paidWith.method === 'cash' &&
+            order.paidWith.tendered !== null &&
+            order.paidWith.change !== null
+              ? t('paidCash', {
+                  tendered: formatMoney(order.paidWith.tendered),
+                  change: formatMoney(order.paidWith.change),
+                })
+              : t('paidOnline', { amount: formatMoney(order.paidWith.amount) })}
+          </Text>
+        </View>
+      ) : null}
       {order.paymentPending ? <Banner>{t('pending')}</Banner> : null}
       {order.status === 'awaiting_payment' && !order.paymentPending ? (
         <>
@@ -329,6 +350,7 @@ function BranchOrders({
                     key={order.id}
                     order={order}
                     shift={shift}
+                    timeZone={branch.timezone}
                     changed={remote.reload}
                   />
                 </>

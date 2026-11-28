@@ -283,7 +283,12 @@ export function me(tx: Tx) {
     tenant: { id: tenant.id, name: tenant.name, brand: tenant.brand },
     branches: staffBranchIds(tx.db, staff).map((id) => {
       const branch = branchById(tx.db, id);
-      return { id, name: branch.name, slug: branch.slug };
+      return {
+        id,
+        name: branch.name,
+        slug: branch.slug,
+        timezone: branch.timezone,
+      };
     }),
     perms: (Object.keys(PERMS) as Perm[]).filter((perm) =>
       can(staff.role, perm),

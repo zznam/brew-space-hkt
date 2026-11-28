@@ -332,6 +332,21 @@ export function listOrders(tx: Tx, value: z.infer<typeof branchSchema>) {
         (p) =>
           p.orderId === o.id && ['initiated', 'pending'].includes(p.status),
       ),
+      // F217: enough of the settled payment for staff to show the receipt again.
+      paidWith: (() => {
+        const paid = tx.db.payments.find(
+          (p) => p.orderId === o.id && p.status === 'succeeded',
+        );
+        return paid
+          ? {
+              method: paid.method,
+              amount: paid.amount,
+              tendered: paid.tendered,
+              change:
+                paid.tendered === null ? null : paid.tendered - paid.amount,
+            }
+          : null;
+      })(),
     }));
 }
 export function cancelOrder(tx: Tx, value: z.infer<typeof cancelOrderSchema>) {
