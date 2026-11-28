@@ -173,6 +173,8 @@ export function publicVenue(tx: Tx, input: { slug: string }) {
     brand: tenant.brand,
     currency: tenant.currency,
     sales: publicSales(tx, branch.id),
+    /** Server clock, so countdowns do not depend on the device clock (F279). */
+    serverNow: tx.now,
     categories: tx.db.categories
       .filter((c) => c.tenantId === tenant.id)
       .sort((a, b) => a.sort - b.sort),

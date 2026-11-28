@@ -147,7 +147,7 @@ Section X needs a scope decision before any of it is planned. The PRD puts ingre
 | F276 | Separate marketing consent | Customer | Joining loyalty does not opt the member into messages; a separate choice does, and it can be withdrawn | FR07, §11 | S | BE, FE2 | No |
 | F277 | Consent record | System | Each consent stores the time and the policy version shown | FR07, §11 | S | BE | No |
 | F278 | Per-customer voucher limit | Manager | A voucher limited to one use per customer is refused the second time for the same member or guest token | F173 | S | BE | No |
-| F279 | Sale countdown on the banner | Customer | The banner shows time left by server time, and after the end the sale is gone on the next refresh and from new quotes | FR06, F083 | S | FE2, BE | No |
+| F279 | Sale countdown on the banner | Customer | The banner shows time left by server time, and after the end the sale is gone on the next refresh and from new quotes | FR06, F083 | S | FE2, BE | Yes |
 
 ## AF. Reports and pilot measures
 

@@ -1,8 +1,9 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { Image, View } from 'react-native';
 import { getPublicVenue } from '@/api/client';
 import {
+  Banner,
   Chip,
   EmptyState,
   Screen,
@@ -15,6 +16,60 @@ import { accessMessages } from './messages';
 import { RemoteState, useRemote } from './shared';
 import { CustomerCheckout } from '@/features/purchase/CustomerCheckout';
 import { useRefresh } from '@/features/purchase/shared';
+import { clockOffset, formatCountdown, saleTimeLeft } from './saleCountdown';
+
+type Sale = {
+  id: string;
+  name: string;
+  discountPercent: number;
+  endAt: number;
+};
+
+/** F279: live countdown per sale on the server clock; an ended sale disappears at once. */
+function SaleBanners({
+  sales,
+  serverNow,
+}: {
+  sales: Sale[];
+  serverNow: number;
+}) {
+  const { t } = useT(accessMessages);
+  // The interval is the only place state changes; the latest server time is kept in a ref.
+  const received = useRef({ serverNow, at: 0 });
+  const [clock, setClock] = useState(() => ({
+    deviceNow: Date.now(),
+    offset: 0,
+  }));
+  useEffect(() => {
+    received.current = { serverNow, at: Date.now() };
+  }, [serverNow]);
+  useEffect(() => {
+    const tick = () => {
+      const now = Date.now();
+      const { serverNow: server, at } = received.current;
+      setClock({ deviceNow: now, offset: at ? clockOffset(server, at) : 0 });
+    };
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, []);
+  const { deviceNow, offset } = clock;
+  return (
+    <>
+      {sales.map((sale) => {
+        const left = saleTimeLeft(sale.endAt, deviceNow, offset);
+        return left > 0 ? (
+          <Banner key={sale.id} tone="success">
+            {t('saleEndsIn', {
+              name: sale.name,
+              percent: sale.discountPercent,
+              time: formatCountdown(left),
+            })}
+          </Banner>
+        ) : null;
+      })}
+    </>
+  );
+}
 
 export default function PublicVenueScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -78,6 +133,7 @@ export default function PublicVenueScreen() {
               />
             ))}
           </View>
+          <SaleBanners sales={data.sales} serverNow={data.serverNow} />
           {!data.items.length ? (
             <EmptyState title={t('emptyMenu')} message={t('emptyMenuBody')} />
           ) : null}
