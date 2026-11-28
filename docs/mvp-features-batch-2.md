@@ -68,7 +68,7 @@ The first spec already holds 96 must-have rows for one BE and two FE over 10–1
 | F125 | Receipt by email | Customer | If the customer enters an address the receipt is sent once; the address is not used for marketing | U-P05 | C | BE | No |
 | F126 | Customer refund request | Customer | The owner of a paid order can request a refund with a reason; it enters the manager's queue and refunds nothing by itself | §5, U-P07 | M | BE, FE2 | No |
 | F127 | Refund status for the customer | Customer | The customer sees requested, approved, paid or declined and never sees "refunded" before the money is confirmed | FR08, T08 | M | FE2, BE | Part |
-| F128 | Money exceptions queue | Manager | Excess payments, late payments and unresolved pending payments are listed with their evidence until someone resolves each one | §4, T08 | M | FE1, BE | No |
+| F128 | Money exceptions queue | Manager | Excess payments, late payments and unresolved pending payments are listed with their evidence until someone resolves each one | §4, T08 | M | FE1, BE | Part |
 | F129 | Gateway outage mode | System | When the provider is unreachable, online checkout is disabled with a pay-at-counter message and no order is left half paid | §9 | S | BE, FE2 | No |
 | F130 | Cash movements during a shift | Cashier | Cash put in or taken out with a reason is included in the expected cash at close | FR08 | C | BE, FE1 | No |
 

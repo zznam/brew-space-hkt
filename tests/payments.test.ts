@@ -246,6 +246,57 @@ describe('authoritative online payment lifecycle', () => {
         ),
       ),
     ).toMatchObject([{ amount: s.order.total }]);
+    // F128: a manager resolves the exception with a note; it leaves the open queue.
+    const [exception] = data(
+      s.engine.execute(
+        'listPaymentExceptions',
+        { branchId: s.branch.id },
+        s.owner,
+      ),
+    );
+    expect(
+      s.engine.execute(
+        'resolvePaymentException',
+        { exceptionId: exception!.id, resolution: 'x' },
+        s.owner,
+      ),
+    ).toMatchObject({ ok: false, error: { code: 'VALIDATION' } });
+    expect(
+      data(
+        s.engine.execute(
+          'resolvePaymentException',
+          {
+            exceptionId: exception!.id,
+            resolution: 'Refunded in cash at the counter',
+          },
+          s.owner,
+        ),
+      ),
+    ).toMatchObject({
+      status: 'resolved',
+      resolution: 'Refunded in cash at the counter',
+    });
+    expect(
+      data(
+        s.engine.execute(
+          'listPaymentExceptions',
+          { branchId: s.branch.id },
+          s.owner,
+        ),
+      ),
+    ).toEqual([]);
+    expect(
+      s.engine.execute(
+        'resolvePaymentException',
+        { exceptionId: exception!.id, resolution: 'Again, twice' },
+        s.owner,
+      ),
+    ).toMatchObject({ ok: false, error: { code: 'VALIDATION' } });
+    expect(
+      s.engine
+        .snapshot()
+        .db.audit.some((a) => a.action === 'exception.resolve'),
+    ).toBe(true);
   });
   it('expires unpaid counter orders and records late money without fulfilling a cancelled order', () => {
     const s = setup();

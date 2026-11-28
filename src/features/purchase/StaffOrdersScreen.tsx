@@ -102,6 +102,42 @@ function ShiftPanel({
     </CollapsibleSection>
   );
 }
+/** F128: managers close an exception with a short written resolution. */
+function ResolveException({
+  exceptionId,
+  resolved,
+}: {
+  exceptionId: string;
+  resolved: () => void;
+}) {
+  const { t } = useT(purchaseMessages);
+  const task = useTask();
+  const [note, setNote] = useState('');
+  return (
+    <>
+      <TextField
+        label={t('resolution')}
+        value={note}
+        onChangeText={setNote}
+        editable={!task.busy}
+      />
+      <Button
+        label={t('markResolved')}
+        disabled={task.busy || note.trim().length < 3}
+        onPress={() =>
+          void task.run(async () => {
+            await apiCommand('resolvePaymentException', {
+              exceptionId,
+              resolution: note.trim(),
+            });
+            resolved();
+          })
+        }
+      />
+      <PurchaseError code={task.error} />
+    </>
+  );
+}
 function CashOrder({
   order,
   shift,
@@ -372,10 +408,13 @@ function BranchOrders({
                             {t(
                               e.kind === 'excess_payment'
                                 ? 'extraPayment'
-                                : 'latePayment',
+                                : e.kind === 'late_payment'
+                                  ? 'latePayment'
+                                  : 'pendingPayment',
                             )}{' '}
                             · {formatMoney(e.amount)}
                           </Text>
+                          <Text style={styles.caption}>{e.evidence}</Text>
                           <Text style={styles.caption}>
                             {t('refundQueued')}
                           </Text>
@@ -389,6 +428,10 @@ function BranchOrders({
                               onPress={() => setSelected(e.orderId)}
                             />
                           ) : null}
+                          <ResolveException
+                            exceptionId={e.id}
+                            resolved={remote.reload}
+                          />
                         </Card>
                       ))}
                     </CollapsibleSection>
