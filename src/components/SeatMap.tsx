@@ -5,6 +5,7 @@ import { seatLabelText } from '@/i18n/seatLabel';
 import { useT } from '@/i18n/useLanguage';
 import { CafeScene3D } from './canvas3d/CafeScene3D';
 import { seatMapMessages } from './messages';
+import { floorSummary } from './seat/floorSummary';
 import {
   Badge,
   Button,
@@ -65,12 +66,36 @@ export function SeatMap({
       </View>
 
       {show3D ? (
-        <CafeScene3D
-          venue={venue}
-          sessions={sessions}
-          selectedSeatId={selectedSeatId}
-          onSelect={onSelect}
-        />
+        <>
+          <CafeScene3D
+            venue={venue}
+            sessions={sessions}
+            selectedSeatId={selectedSeatId}
+            onSelect={onSelect}
+          />
+          {/* F260: text alternative to the 3D floor, with a way to the list view. */}
+          <View style={styles.rowBetween}>
+            <Text style={[styles.text, { flex: 1 }]}>
+              {t('floorSummary', {
+                zones: floorSummary(venue.id, venue.seats, sessions)
+                  .map((zone) =>
+                    t('zoneCount', {
+                      zone: zone.zone ?? t('otherSeats'),
+                      free: zone.free,
+                      total: zone.total,
+                    }),
+                  )
+                  .join(' · '),
+              })}
+            </Text>
+            <Button
+              size="sm"
+              variant="ghost"
+              label={t('useList')}
+              onPress={() => setShow3D(false)}
+            />
+          </View>
+        </>
       ) : null}
 
       <View
