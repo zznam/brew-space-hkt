@@ -13,7 +13,15 @@ import {
 import { snapshotItem } from './catalogue';
 import { newSessionToken, sessionDigest } from './credentials';
 import { fail, must } from './errors';
-import type { Order, Payment, Quote, Shift, Ticket, Tx } from './types';
+import type {
+  Order,
+  Payment,
+  Quote,
+  RefundStatus,
+  Shift,
+  Ticket,
+  Tx,
+} from './types';
 import { DAY, MIN, nextId, stable } from './util';
 import {
   finishPromotion,
@@ -293,7 +301,36 @@ export function getOrder(tx: Tx, value: z.infer<typeof orderIdSchema>) {
         lines: t.lines,
         destination: t.destination,
       })),
+    refunds: tx.db.refunds
+      .filter((r) => r.orderId === order.id)
+      .map((r) => ({
+        status: customerRefundStatus(r.status),
+        amount: r.amount,
+        updatedAt: r.updatedAt,
+      })),
   };
+}
+export type CustomerRefundStatus =
+  'requested' | 'approved' | 'paid' | 'declined';
+/**
+ * F127: what a customer may see. "paid" only once the money is confirmed (succeeded);
+ * processing and failed attempts stay "approved" because staff are still handling them.
+ */
+export function customerRefundStatus(
+  status: RefundStatus,
+): CustomerRefundStatus {
+  switch (status) {
+    case 'requested':
+      return 'requested';
+    case 'succeeded':
+      return 'paid';
+    case 'declined':
+      return 'declined';
+    case 'approved':
+    case 'processing':
+    case 'failed':
+      return 'approved';
+  }
 }
 export function paymentView(payment: Payment) {
   return {
