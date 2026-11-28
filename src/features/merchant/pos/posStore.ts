@@ -74,6 +74,10 @@ export interface PosStore {
   toggleSoldOut: (menuItemId: string) => void;
   pay: (orderId: string, method: PaymentMethod) => ActionResult;
   cancelOrder: (orderId: string) => ActionResult;
+  /** F211: set a non-empty draft aside; it holds no seat until resumed. */
+  parkOrder: (orderId: string) => ActionResult;
+  /** F211: bring a parked order back as the draft for `seatId` at its venue. */
+  resumeOrder: (orderId: string, seatId: string | null) => ActionResult;
   advanceTicket: (orderId: string, next: FulfillmentStatus) => ActionResult;
   reset: () => void;
 }
@@ -249,6 +253,50 @@ export function createPosStore(catalogue?: PosCatalogueAdapter) {
         orders: state.orders.map((entry) =>
           entry.id === orderId ? { ...entry, status: 'cancelled' } : entry,
         ),
+      });
+      return { ok: true };
+    },
+    parkOrder: (orderId) => {
+      const state = get();
+      const order = state.orders.find((entry) => entry.id === orderId);
+      if (!order) return { ok: false, message: 'Order not found.' };
+      if (order.status !== 'draft')
+        return { ok: false, message: 'Only a draft order can be parked.' };
+      if (order.lines.length === 0)
+        return { ok: false, message: 'Add an item before parking the order.' };
+      set({
+        orders: state.orders.map((entry) =>
+          entry.id === orderId
+            ? { ...entry, status: 'parked', seatId: null }
+            : entry,
+        ),
+      });
+      return { ok: true };
+    },
+    resumeOrder: (orderId, seatId) => {
+      const state = get();
+      const order = state.orders.find((entry) => entry.id === orderId);
+      if (!order || order.status !== 'parked')
+        return { ok: false, message: 'Order not found.' };
+      const current = state.orders.find(
+        (entry) =>
+          entry.venueId === order.venueId &&
+          entry.seatId === seatId &&
+          entry.status === 'draft',
+      );
+      if (current && current.lines.length > 0)
+        return {
+          ok: false,
+          message: 'Park or finish the current order first.',
+        };
+      set({
+        orders: state.orders
+          .filter((entry) => entry.id !== current?.id)
+          .map((entry) =>
+            entry.id === orderId
+              ? { ...entry, status: 'draft', seatId }
+              : entry,
+          ),
       });
       return { ok: true };
     },

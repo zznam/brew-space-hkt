@@ -49,7 +49,7 @@ Section X needs a scope decision before any of it is planned. The PRD puts ingre
 
 | ID | Feature | Actor | Acceptance check | Source | Pri | Own | Demo |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| F211 | Park and resume a counter order | Cashier | A draft order can be parked and resumed by a cashier of the same branch; a parked draft holds no seat, quota or count | F022 | S | FE1, BE | No |
+| F211 | Park and resume a counter order | Cashier | A draft order can be parked and resumed by a cashier of the same branch; a parked draft holds no seat, quota or count | F022 | S | FE1, BE | Part |
 | F212 | Void before payment with a reason | Cashier | Removing a line or cancelling an unpaid counter order records a reason; after payment the only path is a refund request | §4, F023 | S | BE, FE1 | No |
 | F213 | Manual discount with manager approval | Manager | A counter discount needs a manager, counts as the order's single promotion, cannot exceed the discount cap and is audited | FR02, §5, F172 | S | BE, FE1 | No |
 | F214 | Complimentary item with reason | Manager | A zero-priced line records a reason and approver and is reported separately from sales | FR08 | C | BE, FE1 | No |

@@ -75,6 +75,13 @@ export const merchantMessages = defineMessages(
     errCannotPay: 'Order cannot be paid from this state.',
     errEmptyOrder: 'Cannot pay an empty order.',
     errCancelDraftOnly: 'Only a draft order can be cancelled.',
+    errParkDraftOnly: 'Only a draft order can be parked.',
+    errParkEmpty: 'Add an item before parking the order.',
+    errResumeBusy: 'Park or finish the current order first.',
+    parkOrder: 'Park order',
+    parkedOrders: 'Parked orders',
+    resumeOrder: 'Resume',
+    parkedSummary: '#{id} · {count} item(s) · {total}',
     // Tickets
     ticketsOverline: 'MERCHANT / KITCHEN & BAR',
     ticketsTitle: 'Tickets',
@@ -158,6 +165,13 @@ export const merchantMessages = defineMessages(
     errCannotPay: 'Đơn ở trạng thái này không thanh toán được.',
     errEmptyOrder: 'Không thể thanh toán đơn trống.',
     errCancelDraftOnly: 'Chỉ hủy được đơn nháp.',
+    errParkDraftOnly: 'Chỉ đơn nháp mới có thể tạm gác.',
+    errParkEmpty: 'Hãy thêm món trước khi tạm gác đơn.',
+    errResumeBusy: 'Hãy tạm gác hoặc hoàn tất đơn hiện tại trước.',
+    parkOrder: 'Tạm gác đơn',
+    parkedOrders: 'Đơn tạm gác',
+    resumeOrder: 'Mở lại',
+    parkedSummary: '#{id} · {count} món · {total}',
     ticketsOverline: 'CHỦ QUÁN / BẾP & QUẦY',
     ticketsTitle: 'Phiếu',
     ticketsSubtitle: '{venue} · Chờ → Đang làm → Xong → Đã phục vụ',
@@ -195,6 +209,9 @@ const POS_ERROR_KEYS: Record<string, MerchantKey> = {
   'Order cannot be paid from this state.': 'errCannotPay',
   'Cannot pay an empty order.': 'errEmptyOrder',
   'Only a draft order can be cancelled.': 'errCancelDraftOnly',
+  'Only a draft order can be parked.': 'errParkDraftOnly',
+  'Add an item before parking the order.': 'errParkEmpty',
+  'Park or finish the current order first.': 'errResumeBusy',
 };
 
 /** The POS store reports errors in English; unknown ones pass through. */
