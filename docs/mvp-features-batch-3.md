@@ -69,7 +69,7 @@ Section X needs a scope decision before any of it is planned. The PRD puts ingre
 | F223 | Undo the last ticket step | Server | Within a short configured time the last status change can be reverted by one step, and the reversal is recorded | F035 | S | BE, FE1 | No |
 | F224 | Ticket age marker | Server | A ticket waiting longer than the configured time is marked by text as well as colour and sorted first | §10.2, F035 | S | FE1 | Part |
 | F225 | Serve to seat or pick up at counter | Customer | The order records the choice; the ticket shows a seat label or a pickup number | FR02 | S | BE, FE2, FE1 | Part |
-| F226 | Order-ready notice | Customer | When a ticket turns ready the customer's open screen shows a notice on its next refresh, with the pickup number if any | FR05, F036 | S | FE2 | No |
+| F226 | Order-ready notice | Customer | When a ticket turns ready the customer's open screen shows a notice on its next refresh, with the pickup number if any | FR05, F036 | S | FE2 | Yes |
 | F227 | Wrong or missing item report | Customer | A report from a served order creates a staff request that carries the order reference and refunds nothing by itself | FR05, F074 | S | BE, FE2 | No |
 | F228 | Remake ticket | Server | A remake is linked to the original ticket with a reason, charges nothing and is counted in the daily report | F038 | S | BE, FE1 | No |
 | F229 | Paid line that cannot be made | Server | Marking a paid line unavailable tells the customer, opens a refund request for that line's value and leaves the other lines in progress | §4, FR08 | S | BE, FE1, FE2 | No |

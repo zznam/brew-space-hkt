@@ -24,6 +24,7 @@ import { useT } from '@/i18n/useLanguage';
 import { useRemote, useTask } from '@/features/access/shared';
 import { purchaseMessages } from './messages';
 import { PurchaseError, useRefresh } from './shared';
+import { readyNotice } from './readyNotice';
 import {
   forgetGuestOrder,
   readGuestOrder,
@@ -129,12 +130,22 @@ function OrderProgress({
   );
   const latest = remote.data?.payments.at(-1);
   const canRedirect = readGuestOrder(menu.branch.id)?.id === orderId;
+  const ready = order
+    ? readyNotice(remote.data?.tickets ?? [], order.code)
+    : null;
   return (
     <Card>
       {order ? (
         <>
           <Heading>{t('order', { code: order.code })}</Heading>
           <Banner>{t(order.status)}</Banner>
+          {ready ? (
+            <Banner tone="success" role="alert">
+              {ready.kind === 'pickup'
+                ? t('readyPickup', { code: ready.code })
+                : t('readyServe', { destination: ready.destination })}
+            </Banner>
+          ) : null}
           <Text style={styles.text}>{t('orderKeep')}</Text>
           {order.status === 'awaiting_payment' && !pending ? (
             <Text style={styles.text}>{t('payHint')}</Text>

@@ -91,6 +91,9 @@ export const purchaseMessages = defineMessages(
     overdue: 'Overdue · waiting {minutes} min',
     preparing: 'Preparing',
     ready: 'Ready',
+    readyPickup:
+      'Your order is ready. Collect it at the counter with pickup number {code}.',
+    readyServe: 'Your order is ready and on its way to {destination}.',
     served: 'Served',
     prepare: 'Start preparing',
     markReady: 'Mark ready',
@@ -194,6 +197,8 @@ export const purchaseMessages = defineMessages(
     overdue: 'Quá hạn · đã chờ {minutes} phút',
     preparing: 'Đang chuẩn bị',
     ready: 'Sẵn sàng',
+    readyPickup: 'Đơn của bạn đã xong. Nhận tại quầy với số {code}.',
+    readyServe: 'Đơn của bạn đã xong và đang được mang tới {destination}.',
     served: 'Đã phục vụ',
     prepare: 'Bắt đầu chuẩn bị',
     markReady: 'Đã sẵn sàng',

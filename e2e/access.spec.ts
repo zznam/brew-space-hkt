@@ -433,6 +433,9 @@ test('customer quote becomes one paid order, staff serve it and close a balanced
     .getByRole('button', { name: 'Start preparing', exact: true })
     .click();
   await staff.getByRole('button', { name: 'Mark ready', exact: true }).click();
+  // F226: the customer's open order screen announces the ready ticket.
+  await page.getByRole('button', { name: 'Check status', exact: true }).click();
+  await expect(page.getByText(/^Your order is ready/)).toBeVisible();
   await staff.getByRole('button', { name: 'Mark served', exact: true }).click();
   await expect(
     staff.getByText('No open tickets', { exact: true }),
