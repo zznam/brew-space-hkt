@@ -116,7 +116,7 @@ The first spec already holds 96 must-have rows for one BE and two FE over 10–1
 | F158 | Reinstate a late arrival | Cashier | Staff can check in a no-show booking if its seat is still free for the remaining time; otherwise they are shown other seats | FR04 | M | BE, FE1 | No |
 | F159 | Server-role limited view | Server | A server sees tickets and seat information only; revenue, customer contact details and exports are refused by the API | §5 | M | BE, FE1 | No |
 | F160 | Cleaning queue | Server | Seats in cleaning are listed oldest first and one tap marks a seat ready | FR04 | S | FE1 | No |
-| F161 | New ticket and request alert | Server | A new ticket or support request raises a visible and optional sound alert on the staff screen | FR05 | S | FE1 | No |
+| F161 | New ticket and request alert | Server | A new ticket or support request raises a visible and optional sound alert on the staff screen | FR05 | S | FE1 | Part |
 | F162 | Staff note on a booking or session | Cashier | A note is visible to staff of that branch only and never to the customer | FR04 | S | BE, FE1 | No |
 | F163 | Different-tier transfer as an adjustment | Manager | Moving a booking to another tier needs a manager, records the price difference as an adjustment and keeps the original snapshot | FR04 | S | BE, FE1 | No |
 
