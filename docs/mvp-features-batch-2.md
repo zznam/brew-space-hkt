@@ -51,7 +51,7 @@ The first spec already holds 96 must-have rows for one BE and two FE over 10–1
 | F113 | Item modifiers (sugar, ice, milk) | Customer | Chosen modifiers are stored on the order line, priced by the server and printed on the staff ticket | §6.1, U-S02 | M | BE, FE2 | No |
 | F114 | Item photo and description | Manager | A manager attaches a size-limited image and text to an item; other file types are refused | FR02 | S | BE, FE1 | No |
 | F115 | Allergen and dietary tags | Manager | Tags show on the item and can be filtered; an allergy note still goes to staff regardless of tags | FR05, U-L11 | S | BE, FE2 | No |
-| F116 | Menu search | Customer | Typing part of an item name lists matching available items across categories, with an empty state | FR02 | S | FE2 | No |
+| F116 | Menu search | Customer | Typing part of an item name lists matching available items across categories, with an empty state | FR02 | S | FE2 | Yes |
 | F117 | Item availability by time band | Manager | An item limited to a time band cannot be added to a cart outside it | FR02 | C | BE | No |
 | F118 | Fixed-price combos | Manager | A combo sells as one line at one price, lists its parts on the ticket and counts as the order's single promotion if discounted | FR02, FR06 | C | BE, FE1 | No |
 | F119 | Pre-order with a booking | Customer | Items bought with an advance booking enter the fulfilment queue at check-in, not at payment | U-B11 | S | BE, FE2 | No |

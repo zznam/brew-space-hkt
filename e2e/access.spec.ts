@@ -219,6 +219,15 @@ test('owner brand edits reach the public venue and unknown slugs show not found'
     page.getByRole('heading', { name: 'Evening Cafe', exact: true }),
   ).toBeVisible();
   await expect(page.getByText('House latte', { exact: true })).toBeVisible();
+  // F116: menu search across categories, with an empty state.
+  await page.getByLabel('Search the menu', { exact: true }).fill('LATTE');
+  await expect(page.getByText('House latte', { exact: true })).toBeVisible();
+  await page.getByLabel('Search the menu', { exact: true }).fill('zzz');
+  await expect(
+    page.getByText('Nothing on the menu matches “zzz”.'),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Clear search', exact: true }).click();
+  await expect(page.getByText('House latte', { exact: true })).toBeVisible();
   await expect(
     page.getByText('Large · 45.000 ₫', { exact: true }),
   ).toBeVisible();

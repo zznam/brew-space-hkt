@@ -25,6 +25,7 @@ import { useRemote, useTask } from '@/features/access/shared';
 import { purchaseMessages } from './messages';
 import { PurchaseError, useRefresh } from './shared';
 import { readyNotice } from './readyNotice';
+import { visibleMenuItems } from './menuSearch';
 import {
   forgetGuestOrder,
   readGuestOrder,
@@ -269,6 +270,7 @@ export function CustomerCheckout({
   const { t } = useT(purchaseMessages);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [voucher, setVoucher] = useState('');
+  const [query, setQuery] = useState('');
   const [saleId, setSaleId] = useState<string | null>(null);
   const [quoted, setQuoted] = useState<{
     result: Output<'createQuote'>;
@@ -377,11 +379,22 @@ export function CustomerCheckout({
         />
       </Card>
     );
-  const items = menu.items.filter(
-    (i) => category === null || i.categoryId === category,
-  );
+  const items = visibleMenuItems(menu.items, category, query);
   return (
     <>
+      <TextField
+        label={t('menuSearch')}
+        value={query}
+        onChangeText={setQuery}
+      />
+      {query.trim() && !items.length ? (
+        <Card>
+          <Text style={styles.text}>
+            {t('menuNoMatch', { query: query.trim() })}
+          </Text>
+          <Button label={t('clearSearch')} onPress={() => setQuery('')} />
+        </Card>
+      ) : null}
       {items.map((item) => (
         <MenuItem
           key={item.id}
