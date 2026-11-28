@@ -23,6 +23,8 @@ import {
 import { useT } from '@/i18n/useLanguage';
 import { useRemote, useTask } from '@/features/access/shared';
 import { purchaseMessages } from './messages';
+import { OfflineBanner } from '@/features/customer/network/OfflineBanner';
+import { useOnlineStatus } from '@/features/customer/network/useOnlineStatus';
 import { PurchaseError, useRefresh } from './shared';
 import { readyNotice } from './readyNotice';
 import { formatPaidAt } from './receipt';
@@ -127,6 +129,8 @@ function OrderProgress({
   const remote = useRemote(load);
   useRefresh(remote.reload);
   const task = useTask();
+  // F193: actions whose result the app could not learn are blocked while offline.
+  const online = useOnlineStatus();
   const [reason, setReason] = useState('');
   const [key] = useState(requestKey);
   const order = remote.data?.order;
@@ -144,6 +148,7 @@ function OrderProgress({
     : null;
   return (
     <Card>
+      <OfflineBanner online={online} />
       {order ? (
         <>
           <Heading>{t('order', { code: order.code })}</Heading>
@@ -231,7 +236,7 @@ function OrderProgress({
               <Button
                 label={t(pending ? 'continuePayment' : 'payOnline')}
                 variant="primary"
-                disabled={task.busy || !canRedirect}
+                disabled={task.busy || !canRedirect || !online}
                 onPress={() =>
                   void task.run(async () => {
                     const result = pending
@@ -269,7 +274,7 @@ function OrderProgress({
               />
               <Button
                 label={t('cancel')}
-                disabled={task.busy || !reason.trim()}
+                disabled={task.busy || !reason.trim() || !online}
                 onPress={() =>
                   void task.run(async () => {
                     await customerCommand(
@@ -335,6 +340,8 @@ export function CustomerCheckout({
     onCounterOrder ? null : readGuestOrder(menu.branch.id),
   );
   const task = useTask();
+  // F193: actions whose result the app could not learn are blocked while offline.
+  const online = useOnlineStatus();
   const estimate = estimateCatalogueCart(menu.items, cart);
   const quote = () =>
     task.run(async () => {
@@ -376,6 +383,7 @@ export function CustomerCheckout({
   if (quoted)
     return (
       <Card>
+        <OfflineBanner online={online} />
         <Heading>{t('quote')}</Heading>
         {quoted.result.quote.lines.map((line) => (
           <Text key={line.id} style={styles.text}>
@@ -403,7 +411,7 @@ export function CustomerCheckout({
         <Button
           label={t(onCounterOrder ? 'createOrder' : 'accept')}
           variant="primary"
-          disabled={task.busy}
+          disabled={task.busy || !online}
           onPress={() =>
             void task.run(async () => {
               const input = {

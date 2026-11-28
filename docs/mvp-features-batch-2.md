@@ -168,7 +168,7 @@ The first spec already holds 96 must-have rows for one BE and two FE over 10–1
 | F190 | Correlation ID across order, payment and support | System | One ID finds an order's API calls, payment events and support requests in the logs | §9 | M | BE | No |
 | F191 | Error tracking and health alerts | System | An unhandled API or client error and a failing webhook or job each raise an alert to the on-call person | §12 | M | BE, FE1, FE2 | No |
 | F192 | Bounded polling with write-time recheck | System | Open screens refresh every 5 to 10 seconds, stop when hidden, and every write is revalidated by the server | §6.2 | M | FE1, FE2 | No |
-| F193 | Connection-loss banner | Customer | When offline the app says so and blocks confirming any transaction whose result it cannot learn | §9, U-A04 | M | FE2, FE1 | No |
+| F193 | Connection-loss banner | Customer | When offline the app says so and blocks confirming any transaction whose result it cannot learn | §9, U-A04 | M | FE2, FE1 | Yes |
 | F194 | Performance budgets and load test | System | At the §9 test load the business APIs stay under 800 ms p95 and the customer menu is usable within 3 seconds on the pilot Android device | §9 | M | BE, FE2 | No |
 | F195 | Pilot metrics capture | Manager | Time from open to hold, no-show rate, extension rate and payment exception count are reported for the pilot period | §10.2 | M | BE | No |
 | F196 | In-app staff exception guide | Cashier | Staff can open the procedure for each exception state (pending payment, late arrival, refund) from the screen where it occurs | §12 | M | FE1 | No |

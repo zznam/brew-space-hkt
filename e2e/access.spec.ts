@@ -404,6 +404,30 @@ test('live catalogue edits reach a separate customer and staff availability resp
   await noOverflow(page);
 });
 
+test('F193: placing an order is blocked while offline and resumes when back online', async ({
+  page,
+  context,
+  api,
+}) => {
+  expect(api).toBeTruthy();
+  await page.goto('/v/test-cafe');
+  await page
+    .getByRole('button', { name: 'Add House latte', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Review price', exact: true }).click();
+  const place = page.getByRole('button', {
+    name: 'Place order · pay at counter',
+    exact: true,
+  });
+  await expect(place).toBeEnabled();
+  await context.setOffline(true);
+  await expect(page.getByText(/^You're offline\./)).toBeVisible();
+  await expect(place).toBeDisabled();
+  await context.setOffline(false);
+  await expect(page.getByText(/^You're offline\./)).toHaveCount(0);
+  await expect(place).toBeEnabled();
+});
+
 test('customer quote becomes one paid order, staff serve it and close a balanced shift', async ({
   page,
   api,
