@@ -28,6 +28,8 @@ import { CustomerCheckout } from './CustomerCheckout';
 import { tenderState, tenderSuggestions } from './cashTender';
 import { formatPaidAt, hasReceipt } from './receipt';
 import { purchaseMessages } from './messages';
+import { OfflineBanner } from '@/features/customer/network/OfflineBanner';
+import { useOnlineStatus } from '@/features/customer/network/useOnlineStatus';
 import { PurchaseError, useRefresh } from './shared';
 
 const loadProfile = () => apiCommand('me', undefined);
@@ -52,6 +54,8 @@ function ShiftPanel({
 }) {
   const { t } = useT(purchaseMessages);
   const task = useTask();
+  // F193: actions whose result the app could not learn are blocked while offline.
+  const online = useOnlineStatus();
   const [amount, setAmount] = useState('');
   const [key] = useState(requestKey);
   return (
@@ -79,7 +83,7 @@ function ShiftPanel({
       />
       <Button
         label={t(shift ? 'closeShift' : 'openShift')}
-        disabled={task.busy || !validMoney(amount)}
+        disabled={task.busy || !validMoney(amount) || !online}
         onPress={() =>
           void task.run(async () => {
             if (shift)
@@ -115,6 +119,8 @@ function CashOrder({
 }) {
   const { t } = useT(purchaseMessages);
   const task = useTask();
+  // F193: actions whose result the app could not learn are blocked while offline.
+  const online = useOnlineStatus();
   const [amount, setAmount] = useState('');
   const [result, setResult] = useState<Output<'confirmCash'> | null>(null);
   const [key] = useState(requestKey);
@@ -215,7 +221,7 @@ function CashOrder({
               <Button
                 label={t('confirm')}
                 variant="primary"
-                disabled={task.busy || tender.kind !== 'ok'}
+                disabled={task.busy || tender.kind !== 'ok' || !online}
                 onPress={() =>
                   void task.run(async () => {
                     const paid = await apiCommand('confirmCash', {
@@ -309,6 +315,7 @@ function BranchOrders({
   const order = data?.orders.find((o) => o.id === selected);
   return (
     <>
+      <OfflineBanner />
       <RemoteState
         loading={!data && remote.loading}
         error={remote.error}
