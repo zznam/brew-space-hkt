@@ -118,7 +118,7 @@ Section X needs a scope decision before any of it is planned. The PRD puts ingre
 | F257 | View from the seat | Customer | From a seat card the camera moves to that seat's eye level and back | FR03 | C | FE1 | No |
 | F258 | Seat photo | Manager | A size-limited photo attached to a seat shows on the seat card; other file types are refused | F135 | S | BE, FE1, FE2 | No |
 | F259 | Map follows the chosen time | Customer | Changing date, time or duration redraws seat status on the map and list from the availability answer | FR04, F051 | S | FE2, FE1 | No |
-| F260 | Text summary of the floor | Customer | The 3D view has a text alternative giving free seats by zone and a link to the list view | §9 | S | FE1 | No |
+| F260 | Text summary of the floor | Customer | The 3D view has a text alternative giving free seats by zone and a link to the list view | §9 | S | FE1 | Yes |
 
 ## AD. Venue setup and go-live
 
