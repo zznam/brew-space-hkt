@@ -5,7 +5,10 @@ import {
   updateBranchSchema,
 } from '../src/core/pilot/tenants';
 import type { Command } from '../src/core/pilot/engine';
-import { onlinePaymentSchema } from '../src/core/pilot/payments';
+import {
+  onlinePaymentSchema,
+  resolveExceptionSchema,
+} from '../src/core/pilot/payments';
 import {
   priceRuleSchema,
   publishPriceSchema,
@@ -68,6 +71,7 @@ export const contracts = {
   resumeOnlinePayment: { auth: 'staff', schema: orderIdSchema },
   recheckPayment: { auth: 'staff', schema: orderIdSchema },
   listPaymentExceptions: { auth: 'staff', schema: branchSchema },
+  resolvePaymentException: { auth: 'staff', schema: resolveExceptionSchema },
   configureFees: { auth: 'staff', schema: feesSchema },
   createQuote: { auth: 'staff', schema: quoteSchema },
   createOrder: { auth: 'staff', schema: orderSchema },

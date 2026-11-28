@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { branchById, requireStaff, staffOf } from './access';
+import { audit, branchById, requireStaff, staffActor, staffOf } from './access';
 import { newSessionToken } from './credentials';
 import { fail, must } from './errors';
 import {
@@ -275,6 +275,44 @@ export function expireUnpaidOrders(tx: Tx) {
     expired++;
   }
   return { expired };
+}
+export const resolveExceptionSchema = z
+  .object({
+    exceptionId: z.string().min(1).max(100),
+    resolution: z.string().trim().min(3).max(300),
+  })
+  .strict();
+/**
+ * F128: a manager closes a money exception with a written resolution (e.g. "Refunded in cash,
+ * shift 12"). It leaves the open queue but stays on record with who resolved it and how.
+ */
+export function resolvePaymentException(
+  tx: Tx,
+  value: z.infer<typeof resolveExceptionSchema>,
+) {
+  const input = parse(resolveExceptionSchema, value);
+  const staff = staffOf(tx);
+  const exception = tx.db.exceptions.find(
+    (e) => e.id === input.exceptionId && e.tenantId === staff.tenantId,
+  );
+  if (!exception) fail('NOT_FOUND');
+  requireStaff(tx, 'shift.use', exception.branchId);
+  if (!['owner', 'manager'].includes(staff.role)) fail('FORBIDDEN');
+  if (exception.status !== 'open')
+    fail('VALIDATION', 'This exception is already resolved.');
+  exception.status = 'resolved';
+  exception.resolvedBy = staff.id;
+  exception.resolution = input.resolution;
+  audit(tx, staffActor(staff), 'exception.resolve', exception.id, {
+    tenantId: exception.tenantId,
+    branchId: exception.branchId,
+    meta: { kind: exception.kind },
+  });
+  return {
+    id: exception.id,
+    status: exception.status,
+    resolution: exception.resolution,
+  };
 }
 export function listPaymentExceptions(tx: Tx, input: { branchId: string }) {
   const staff = staffOf(tx);

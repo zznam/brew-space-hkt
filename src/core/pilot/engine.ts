@@ -29,6 +29,7 @@ export const commands = {
   applyPaymentEvidence: payments.applyPaymentEvidence,
   expireUnpaidOrders: payments.expireUnpaidOrders,
   listPaymentExceptions: payments.listPaymentExceptions,
+  resolvePaymentException: payments.resolvePaymentException,
   configureFees: orders.configureFees,
   createQuote: orders.createQuote,
   createOrder: orders.createOrder,
