@@ -466,6 +466,13 @@ test('customer quote becomes one paid order, staff serve it and close a balanced
   ).toBeVisible();
   await page.getByRole('button', { name: 'Check status', exact: true }).click();
   await expect(page.getByText('Completed', { exact: true })).toBeVisible();
+  // F120: reorder the completed order into a fresh cart at today's prices.
+  await page
+    .getByRole('button', { name: 'Order the same again', exact: true })
+    .click();
+  await expect(
+    page.getByText("Your previous order is in the cart at today's prices."),
+  ).toBeVisible();
   await staff.getByRole('button', { name: 'Orders', exact: true }).click();
   await staff.getByRole('button', { name: /^Cash shift/ }).click();
   await staff.getByLabel('Counted cash (VND)', { exact: true }).fill('145000');
