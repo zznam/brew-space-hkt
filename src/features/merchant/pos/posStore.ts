@@ -40,9 +40,24 @@ export function ticketLabel(order: PosOrder, venue: Venue): string {
   return seat ? seat.label : `Walk-in #${order.id}`;
 }
 
+/** F219: pinned items first (in menu order), then the rest; sold-out items stay in place. */
+export function favouritesFirst<T extends { id: string }>(
+  items: readonly T[],
+  pinnedIds: readonly string[],
+): T[] {
+  const pinned = new Set(pinnedIds);
+  return [
+    ...items.filter((item) => pinned.has(item.id)),
+    ...items.filter((item) => !pinned.has(item.id)),
+  ];
+}
+
 export interface PosStore {
   orders: PosOrder[];
   soldOutItemIds: string[];
+  /** Items a manager pinned to the top of the POS menu (F219). */
+  pinnedItemIds: string[];
+  togglePinned: (menuItemId: string) => void;
   nextOrderId: number;
   createOrder: (venueId: string, seatId: string | null) => string;
   addLine: (
@@ -66,6 +81,7 @@ export interface PosStore {
 const initialPosState = () => ({
   orders: [] as PosOrder[],
   soldOutItemIds: [] as string[],
+  pinnedItemIds: [] as string[],
   nextOrderId: 1,
 });
 
@@ -166,6 +182,14 @@ export function createPosStore(catalogue?: PosCatalogueAdapter) {
         ),
       });
       return { ok: true };
+    },
+    togglePinned: (menuItemId) => {
+      const state = get();
+      set({
+        pinnedItemIds: state.pinnedItemIds.includes(menuItemId)
+          ? state.pinnedItemIds.filter((id) => id !== menuItemId)
+          : [...state.pinnedItemIds, menuItemId],
+      });
     },
     toggleSoldOut: (menuItemId) => {
       if (catalogue) {

@@ -164,3 +164,40 @@ describe('ticketLabel', () => {
     expect(ticketLabel(order, venue)).toBe('Walk-in #pos-3');
   });
 });
+
+describe('F219 POS favourites', () => {
+  it('pins and unpins items, keeping pin order', async () => {
+    const { createPosStore } =
+      await import('../src/features/merchant/pos/posStore');
+    const store = createPosStore();
+    store.getState().togglePinned('b');
+    store.getState().togglePinned('a');
+    expect(store.getState().pinnedItemIds).toEqual(['b', 'a']);
+    store.getState().togglePinned('b');
+    expect(store.getState().pinnedItemIds).toEqual(['a']);
+  });
+
+  it('lists pinned items first in menu order, sold-out items included', async () => {
+    const { favouritesFirst } =
+      await import('../src/features/merchant/pos/posStore');
+    const menu = [{ id: 'a' }, { id: 'b' }, { id: 'c' }, { id: 'd' }];
+    expect(favouritesFirst(menu, ['d', 'b']).map((i) => i.id)).toEqual([
+      'b',
+      'd',
+      'a',
+      'c',
+    ]);
+    expect(favouritesFirst(menu, []).map((i) => i.id)).toEqual([
+      'a',
+      'b',
+      'c',
+      'd',
+    ]);
+    expect(favouritesFirst(menu, ['zzz']).map((i) => i.id)).toEqual([
+      'a',
+      'b',
+      'c',
+      'd',
+    ]);
+  });
+});
