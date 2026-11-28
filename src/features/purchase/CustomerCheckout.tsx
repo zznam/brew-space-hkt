@@ -25,6 +25,7 @@ import { useRemote, useTask } from '@/features/access/shared';
 import { purchaseMessages } from './messages';
 import { PurchaseError, useRefresh } from './shared';
 import { readyNotice } from './readyNotice';
+import { formatPaidAt } from './receipt';
 import { visibleMenuItems } from './menuSearch';
 import { rebuildCart } from './reorder';
 import {
@@ -133,6 +134,10 @@ function OrderProgress({
     ['initiated', 'pending'].includes(p.status),
   );
   const latest = remote.data?.payments.at(-1);
+  const settled =
+    order && ['paid', 'completed'].includes(order.status)
+      ? remote.data?.payments.find((p) => p.status === 'succeeded')
+      : undefined;
   const canRedirect = readGuestOrder(menu.branch.id)?.id === orderId;
   const ready = order
     ? readyNotice(remote.data?.tickets ?? [], order.code)
@@ -200,6 +205,22 @@ function OrderProgress({
           <Text style={styles.textStrong}>
             {t('total')} · {formatMoney(order.total)}
           </Text>
+          {/* F124: a paid order doubles as the customer's digital receipt. */}
+          {settled && order.paidAt !== null ? (
+            <View accessibilityLabel={t('receiptTitle')}>
+              <Heading>{t('receiptTitle')}</Heading>
+              <Text style={styles.text}>
+                {t('paidAt', {
+                  time: formatPaidAt(order.paidAt, menu.branch.timezone),
+                })}
+              </Text>
+              <Text style={styles.textStrong}>
+                {t(settled.method === 'cash' ? 'paidCashShort' : 'paidOnline', {
+                  amount: formatMoney(settled.amount),
+                })}
+              </Text>
+            </View>
+          ) : null}
           {remote.data?.tickets.map((ticket, i) => (
             <Banner key={i}>{t(ticket.status)}</Banner>
           ))}

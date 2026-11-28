@@ -451,6 +451,11 @@ test('customer quote becomes one paid order, staff serve it and close a balanced
   ).toBeVisible();
   await page.getByRole('button', { name: 'Check status', exact: true }).click();
   await expect(page.getByText('Paid', { exact: true })).toBeVisible();
+  // F124: the paid order shows a digital receipt with method and time.
+  await expect(page.getByText(/^Paid in cash · /)).toBeVisible();
+  await expect(
+    page.getByText(/^Paid \d{2}:\d{2} \d{2}\/\d{2}\/\d{4}$/),
+  ).toBeVisible();
   await staff.getByRole('button', { name: 'Tickets', exact: true }).click();
   await expect(staff.getByText('No ice', { exact: true })).toBeVisible();
   await staff
