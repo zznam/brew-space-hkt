@@ -307,6 +307,16 @@ describe('server quote, cash order and fulfilment rules', () => {
     ).toMatchObject({ ok: false, error: { code: 'VALIDATION' } });
     const paid = data(s.engine.execute('confirmCash', input, s.cashier));
     expect(paid.change).toBe(200000 - o.order.total);
+    // F217: the staff order list carries what the receipt needs to be redisplayed.
+    const listed = data(
+      s.engine.execute('listOrders', { branchId: o.order.branchId }, s.cashier),
+    ).find((row) => row.id === o.order.id);
+    expect(listed?.paidWith).toEqual({
+      method: 'cash',
+      amount: o.order.total,
+      tendered: 200000,
+      change: 200000 - o.order.total,
+    });
     expect(data(s.engine.execute('confirmCash', input, s.cashier))).toEqual(
       paid,
     );

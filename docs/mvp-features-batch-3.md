@@ -55,7 +55,7 @@ Section X needs a scope decision before any of it is planned. The PRD puts ingre
 | F214 | Complimentary item with reason | Manager | A zero-priced line records a reason and approver and is reported separately from sales | FR08 | C | BE, FE1 | No |
 | F215 | Cash tendered and change | Cashier | Entering the amount received shows the change; an amount below the total cannot be confirmed | FR02, F031 | S | FE1 | Yes |
 | F216 | Order search for staff | Cashier | A cashier finds an order of their own shift by code, seat or time; a manager searches the whole branch | §5 | S | BE, FE1 | No |
-| F217 | Receipt redisplay at the counter | Cashier | Staff reopen the receipt of a paid counter order to show or read out to the customer | F124 | S | FE1 | No |
+| F217 | Receipt redisplay at the counter | Cashier | Staff reopen the receipt of a paid counter order to show or read out to the customer | F124 | S | FE1 | Yes |
 | F218 | Link a counter order to an active session | Cashier | A counter order linked to a seat's active session appears in that session's order list and total | FR02, F142 | S | BE, FE1 | No |
 | F219 | POS favourites grid | Cashier | Items a manager pins appear first on the POS; sold-out items stay visible but disabled | F022 | C | FE1 | No |
 | F220 | Staff refund proposal | Cashier | A cashier or server proposes a refund on a paid order with a reason; it enters the manager's queue and refunds nothing by itself | §5 | M | BE, FE1 | No |

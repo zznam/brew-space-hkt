@@ -425,6 +425,12 @@ test('customer quote becomes one paid order, staff serve it and close a balanced
   await expect(
     staff.getByText('Cash recorded. Change · 5.000 ₫', { exact: true }),
   ).toBeVisible();
+  // F217: the paid order shows its receipt again for the customer.
+  await expect(
+    staff.getByText('Cash · received 50.000 ₫ · change 5.000 ₫', {
+      exact: true,
+    }),
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Check status', exact: true }).click();
   await expect(page.getByText('Paid', { exact: true })).toBeVisible();
   await staff.getByRole('button', { name: 'Tickets', exact: true }).click();
