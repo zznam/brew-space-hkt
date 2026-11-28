@@ -288,7 +288,11 @@ export function getOrder(tx: Tx, value: z.infer<typeof orderIdSchema>) {
       .map(paymentView),
     tickets: tx.db.tickets
       .filter((t) => t.orderId === order.id)
-      .map((t) => ({ status: t.status, lines: t.lines })),
+      .map((t) => ({
+        status: t.status,
+        lines: t.lines,
+        destination: t.destination,
+      })),
   };
 }
 export function paymentView(payment: Payment) {
