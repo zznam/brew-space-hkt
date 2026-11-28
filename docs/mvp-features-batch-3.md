@@ -130,7 +130,7 @@ Section X needs a scope decision before any of it is planned. The PRD puts ingre
 | F264 | Starter configuration set | Platform | A new venue can start with a sample menu, prices and policies as its own copy to edit | §1.3, F002 | S | BE | No |
 | F265 | Brand preview and contrast check | Owner | Brand colours are previewed on the customer menu before saving, and a text and background pair below the contrast minimum is refused | FR01, §9 | S | FE1 | Yes |
 | F266 | Editor duplicate and multi-select | Manager | Several assets can be selected, moved together and duplicated; duplicates get no seat until one is bound | FR03, F047 | S | FE1 | No |
-| F267 | Editor overlap warning | Manager | Overlapping assets are flagged before publish as a warning that does not block it | FR03, F049 | C | FE1 | No |
+| F267 | Editor overlap warning | Manager | Overlapping assets are flagged before publish as a warning that does not block it | FR03, F049 | C | FE1 | Part |
 | F268 | Automatic seat labels | Manager | A new seat gets the next free label in its zone; relabelling keeps the seat ID and its bookings | FR03, F039 | S | BE, FE1 | No |
 | F269 | Venue notice banner | Manager | A notice with a validity period shows on the venue page and stops showing when it ends | FR01, F140 | S | BE, FE1, FE2 | No |
 | F270 | Versioned policy and terms text | Owner | Each edit creates a new version, and bookings and consents keep the version they were made under | §11, F171 | S | BE, FE1 | No |

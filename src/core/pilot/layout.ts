@@ -156,6 +156,49 @@ export function seatPosition(
   };
 }
 
+/** Two placed assets whose footprints overlap (F267). Shared edges are not an overlap. */
+export interface LayoutOverlap {
+  placementIds: [string, string];
+}
+
+/**
+ * Overlapping placements, as warnings: they never block saving or publishing (F267).
+ * Unknown assets are skipped here because layoutProblems already reports them.
+ */
+export function layoutOverlaps(
+  doc: Pick<LayoutDoc, 'placements'>,
+  assets: readonly Pick<AssetDef, 'id' | 'width' | 'depth'>[],
+): LayoutOverlap[] {
+  const boxes = doc.placements.flatMap((placement) => {
+    const asset = assets.find((row) => row.id === placement.assetId);
+    if (!asset) return [];
+    const size = footprint(asset, placement.rotation);
+    return [
+      {
+        id: placement.id,
+        left: placement.x - size.width / 2,
+        right: placement.x + size.width / 2,
+        top: placement.z - size.depth / 2,
+        bottom: placement.z + size.depth / 2,
+      },
+    ];
+  });
+  const overlaps: LayoutOverlap[] = [];
+  for (let i = 0; i < boxes.length; i++)
+    for (let j = i + 1; j < boxes.length; j++) {
+      const a = boxes[i]!;
+      const b = boxes[j]!;
+      if (
+        a.left < b.right &&
+        b.left < a.right &&
+        a.top < b.bottom &&
+        b.top < a.bottom
+      )
+        overlaps.push({ placementIds: [a.id, b.id] });
+    }
+  return overlaps;
+}
+
 // ── Validation and publishing ───────────────────────────────────────────────
 
 export interface LayoutProblem {
@@ -267,6 +310,7 @@ export function getLayout(tx: Tx, input: { branchId: string }) {
       seats: doc.seats.length,
     })),
     problems: layoutProblems(tx.db, layout, layout.draft),
+    warnings: layoutOverlaps(layout.draft, usableAssets(tx.db, staff.tenantId)),
     assets: usableAssets(tx.db, staff.tenantId),
   };
 }
@@ -318,6 +362,7 @@ export function saveLayoutDraft(
   return {
     version: layout.draft.version,
     problems: layoutProblems(tx.db, layout, layout.draft),
+    warnings: layoutOverlaps(layout.draft, assets),
   };
 }
 
