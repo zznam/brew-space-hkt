@@ -24,6 +24,10 @@ export const activeSessionMessages = defineMessages(
     disclaimer:
       'Demo estimate only. Ending this session releases the seat and clears its tab; it does not collect payment.',
     endSession: 'End demo session',
+    earlyEnd:
+      'You still have {minutes} minutes of prepaid seat time. Ending now does not refund unused time.',
+    endAnyway: 'End anyway',
+    keepSeat: 'Keep my seat',
   },
   {
     overline: 'KHÁCH / PHIÊN ĐANG MỞ',
@@ -46,6 +50,10 @@ export const activeSessionMessages = defineMessages(
     disclaimer:
       'Chỉ là ước tính của bản demo. Kết thúc phiên sẽ trả chỗ ngồi và xóa hóa đơn của phiên; không thu tiền thật.',
     endSession: 'Kết thúc phiên demo',
+    earlyEnd:
+      'Bạn còn {minutes} phút đã trả trước. Kết thúc bây giờ sẽ không hoàn lại thời gian chưa dùng.',
+    endAnyway: 'Vẫn kết thúc',
+    keepSeat: 'Giữ chỗ',
   },
 );
 

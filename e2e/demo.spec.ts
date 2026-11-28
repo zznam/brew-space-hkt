@@ -116,9 +116,18 @@ test('shared seat link, assistant answers and refund request', async ({
   await page
     .getByRole('button', { name: '2h bundle · 15% off', exact: true })
     .click();
+  // F248: ending a prepaid bundle early asks first; keeping the seat cancels.
   await page
     .getByRole('button', { name: 'End demo session', exact: true })
     .click();
+  await expect(
+    page.getByText(/Ending now does not refund unused time\./),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Keep my seat', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'End demo session', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'End anyway', exact: true }).click();
   await page
     .getByLabel('Reason for your refund request')
     .fill('Had to leave early');

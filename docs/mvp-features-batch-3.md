@@ -101,7 +101,7 @@ Section X needs a scope decision before any of it is planned. The PRD puts ingre
 | F245 | End-of-day open session list | Manager | At closing the manager sees sessions still active and holds unresolved; each is closed by hand with a reason and none ends automatically | §4, F155 | S | BE, FE1 | No |
 | F246 | Return to the active session | Customer | Reopening the venue link on the same device returns to the active session without re-entering the code | FR05, F070 | S | FE2 | Part |
 | F247 | Extension at the counter | Cashier | A cashier extends a session for the customer under the same next-slot and payment rules, with cash allowed | FR04, F062 | S | BE, FE1 | No |
-| F248 | Early checkout confirmation | Customer | Ending early requires confirming a message that unused time is not refunded | FR04, U-P04 | S | FE2 | No |
+| F248 | Early checkout confirmation | Customer | Ending early requires confirming a message that unused time is not refunded | FR04, U-P04 | S | FE2 | Yes |
 | F249 | Buffer and check-in window settings | Owner | Cleaning buffer and check-in window are set per branch within fixed bounds and apply only to bookings made afterwards | §11 | S | BE, FE1 | No |
 | F250 | Whole table sold as one seat | Manager | A private table is configured as one sellable seat with a capacity label shown on the seat card | §11, FR03 | S | BE, FE1 | No |
 
