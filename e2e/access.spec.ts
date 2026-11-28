@@ -197,7 +197,16 @@ test('owner brand edits reach the public venue and unknown slugs show not found'
   await page.getByRole('button', { name: /^Brand/ }).click();
   await page.getByLabel('Display name', { exact: true }).fill('Evening Cafe');
   await page.getByLabel('Background colour', { exact: true }).fill('#172b24');
+  // F265: an unreadable text colour is previewed, explained and cannot be saved.
+  await page.getByLabel('Text colour', { exact: true }).fill('#2a3d36');
+  await expect(
+    page.getByText(/is too low\. Use at least 4\.5:1/),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Save changes', exact: true }),
+  ).toBeDisabled();
   await page.getByLabel('Text colour', { exact: true }).fill('#ffffff');
+  await expect(page.getByText(/easy to read\.$/)).toBeVisible();
   await page.getByRole('button', { name: 'Save changes', exact: true }).click();
   await expect(page.getByText('Changes saved.', { exact: true })).toBeVisible();
   await page

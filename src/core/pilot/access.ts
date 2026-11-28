@@ -406,7 +406,9 @@ export function listStaff(tx: Tx) {
 
 // ── Tenant configuration ────────────────────────────────────────────────────
 
-const HEX_COLOUR = /^#[0-9a-f]{6}$/i;
+/** WCAG AA contrast for normal text; brand text must reach it on the brand background (F265). */
+export const MIN_BRAND_CONTRAST = 4.5;
+export const HEX_COLOUR = /^#[0-9a-f]{6}$/i;
 const luminance = (hex: string) => {
   const channel = (at: number) => {
     const v = parseInt(hex.slice(at, at + 2), 16) / 255;
@@ -441,7 +443,7 @@ export function validateBrand(input: unknown): Brand {
   for (const colour of [primary, background, text])
     if (typeof colour !== 'string' || !HEX_COLOUR.test(colour))
       fail('VALIDATION', 'Colours must look like #1a2b3c.');
-  if (contrastRatio(text as string, background as string) < 4.5)
+  if (contrastRatio(text as string, background as string) < MIN_BRAND_CONTRAST)
     fail('VALIDATION', 'Text is too hard to read on that background.');
   return {
     displayName: displayName.trim(),
