@@ -682,6 +682,10 @@ test('cashier proposal needs owner approval before a flash sale reaches the menu
     .click();
   await expect(owner.getByText(/Approved ·/)).toBeVisible();
   await page.goto('/v/test-cafe');
+  // F279: the approved sale shows a live countdown banner by server time.
+  await expect(
+    page.getByText(/^⚡ Afternoon coffee · 10% off · ends in /),
+  ).toBeVisible();
   await page
     .getByRole('button', { name: 'Add House latte', exact: true })
     .click();
