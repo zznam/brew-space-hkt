@@ -55,7 +55,7 @@ The first spec already holds 96 must-have rows for one BE and two FE over 10–1
 | F117 | Item availability by time band | Manager | An item limited to a time band cannot be added to a cart outside it | FR02 | C | BE | No |
 | F118 | Fixed-price combos | Manager | A combo sells as one line at one price, lists its parts on the ticket and counts as the order's single promotion if discounted | FR02, FR06 | C | BE, FE1 | No |
 | F119 | Pre-order with a booking | Customer | Items bought with an advance booking enter the fulfilment queue at check-in, not at payment | U-B11 | S | BE, FE2 | No |
-| F120 | Reorder the last order | Customer | "Same as last time" rebuilds the cart from the previous order at current prices and skips sold-out items with a notice | U-S09 | S | FE2, BE | No |
+| F120 | Reorder the last order | Customer | "Same as last time" rebuilds the cart from the previous order at current prices and skips sold-out items with a notice | U-S09 | S | FE2, BE | Yes |
 | F121 | Pause new food and drink orders | Manager | While paused, new item orders are refused with a clear message and seat-time sales continue | FR06 | S | BE, FE1 | No |
 | F122 | Bulk menu import | Manager | A CSV import shows a preview with per-row errors and creates nothing until confirmed | FR01 | S | BE, FE1 | No |
 

@@ -26,6 +26,7 @@ import { purchaseMessages } from './messages';
 import { PurchaseError, useRefresh } from './shared';
 import { readyNotice } from './readyNotice';
 import { visibleMenuItems } from './menuSearch';
+import { rebuildCart } from './reorder';
 import {
   forgetGuestOrder,
   readGuestOrder,
@@ -109,11 +110,13 @@ function OrderProgress({
   token,
   menu,
   restart,
+  reorder,
 }: {
   orderId: string;
   token: string;
   menu: Menu;
   restart: () => void;
+  reorder: (lines: Output<'getOrder'>['order']['lines']) => void;
 }) {
   const { t } = useT(purchaseMessages);
   const load = useCallback(
@@ -240,7 +243,17 @@ function OrderProgress({
             </>
           ) : null}
           {['completed', 'cancelled'].includes(order.status) ? (
-            <Button label={t('newOrder')} onPress={restart} />
+            <>
+              {order.status === 'completed' &&
+              order.lines.some((line) => line.kind === 'item') ? (
+                <Button
+                  label={t('reorder')}
+                  variant="primary"
+                  onPress={() => reorder(order.lines)}
+                />
+              ) : null}
+              <Button label={t('newOrder')} onPress={restart} />
+            </>
           ) : null}
         </>
       ) : null}
@@ -271,6 +284,7 @@ export function CustomerCheckout({
   const [cart, setCart] = useState<CartLine[]>([]);
   const [voucher, setVoucher] = useState('');
   const [query, setQuery] = useState('');
+  const [reorderNotice, setReorderNotice] = useState<string[] | null>(null);
   const [saleId, setSaleId] = useState<string | null>(null);
   const [quoted, setQuoted] = useState<{
     result: Output<'createQuote'>;
@@ -305,6 +319,15 @@ export function CustomerCheckout({
           setOrder(null);
           setQuoted(null);
           setCart([]);
+          setReorderNotice(null);
+        }}
+        reorder={(lines) => {
+          const rebuilt = rebuildCart(lines, menu.items);
+          forgetGuestOrder(menu.branch.id);
+          setOrder(null);
+          setQuoted(null);
+          setCart(rebuilt.lines);
+          setReorderNotice(rebuilt.skipped);
         }}
       />
     );
@@ -402,6 +425,13 @@ export function CustomerCheckout({
           add={(line) => setCart((lines) => [...lines, line])}
         />
       ))}
+      {reorderNotice ? (
+        <Banner tone={reorderNotice.length ? 'warning' : 'success'}>
+          {reorderNotice.length
+            ? t('reorderSkipped', { items: reorderNotice.join(', ') })
+            : t('reorderReady')}
+        </Banner>
+      ) : null}
       <Card>
         <Heading>{t('cart')}</Heading>
         {cart.length ? (
