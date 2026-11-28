@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import { apiCommand } from '@/api/client';
 import {
@@ -22,6 +22,7 @@ import {
 import { purchaseMessages } from './messages';
 import { PurchaseError, useRefresh } from './shared';
 import { sortTicketsByAge, ticketAge } from './ticketAge';
+import { arrivedTickets, playChime } from './newTickets';
 
 const loadProfile = () => apiCommand('me', undefined);
 /** Current time, refreshed on an interval so ticket ages advance between reloads. */
@@ -49,6 +50,21 @@ function BranchTickets({ branchId }: { branchId: string }) {
     ) ?? [],
     now,
   );
+  // F161: announce tickets that arrive while the screen is open; sound is opt-in.
+  const seen = useRef<Set<string> | null>(null);
+  const [arrived, setArrived] = useState<string[]>([]);
+  const [sound, setSound] = useState(false);
+  useEffect(() => {
+    if (!remote.data) return;
+    const fresh = arrivedTickets(seen.current, remote.data);
+    seen.current = new Set(remote.data.map((ticket) => ticket.id));
+    if (!fresh.length) return;
+    setArrived((current) => [
+      ...current,
+      ...fresh.map((ticket) => ticket.orderCode),
+    ]);
+    if (sound) playChime();
+  }, [remote.data, sound]);
   return (
     <>
       <RemoteState
@@ -57,6 +73,19 @@ function BranchTickets({ branchId }: { branchId: string }) {
         retry={remote.reload}
       />
       <PurchaseError code={task.error} />
+      <Chip
+        label={sound ? `✓ ${t('soundAlerts')}` : t('soundAlerts')}
+        selected={sound}
+        onPress={() => setSound((on) => !on)}
+      />
+      {arrived.length ? (
+        <>
+          <Banner tone="info" role="alert">
+            {t('newTickets', { codes: arrived.join(', ') })}
+          </Banner>
+          <Button label={t('gotIt')} onPress={() => setArrived([])} />
+        </>
+      ) : null}
       {!tickets.length && remote.data ? (
         <EmptyState title={t('noTickets')} message={t('noTicketsBody')} />
       ) : (
