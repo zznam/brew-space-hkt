@@ -5,6 +5,21 @@ import type { FeeConfig, OrderLine, Item } from './pilot/types';
  * Once grace is exceeded, only minutes beyond grace are charged in 15 minute blocks.
  * Backend must own authoritative quotes/payment totals before pilot use.
  */
+/** Prepaid seat minutes included in a billing mode (metered sessions include none). */
+export function includedMinutes(mode: Session['mode']): number {
+  return mode === 'BUNDLE_2H' ? 120 : mode === 'BUNDLE_4H' ? 240 : 0;
+}
+
+/** Prepaid bundle minutes not yet used; ending now forfeits them (F248). */
+export function unusedPrepaidMinutes(
+  session: Pick<Session, 'mode' | 'elapsedMinutes'>,
+): number {
+  return Math.max(
+    0,
+    includedMinutes(session.mode) - Math.max(0, session.elapsedMinutes),
+  );
+}
+
 export function calculateBill(session: Session) {
   const { elapsedMinutes, lockedHourlyRate, mode } = session;
   if (
@@ -15,7 +30,7 @@ export function calculateBill(session: Session) {
   ) {
     throw new Error('Invalid billing inputs');
   }
-  const included = mode === 'BUNDLE_2H' ? 120 : mode === 'BUNDLE_4H' ? 240 : 0;
+  const included = includedMinutes(mode);
   const base = Math.round((included / 60) * lockedHourlyRate * 0.85);
   const meteredMinutes = included
     ? Math.max(0, elapsedMinutes - included - 10)

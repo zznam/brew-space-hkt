@@ -1,9 +1,17 @@
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { Text, View } from 'react-native';
-import { calculateBill, DEMO_CUSTOMER_ID, formatMoney, getVenue } from '@/core';
+import {
+  calculateBill,
+  DEMO_CUSTOMER_ID,
+  formatMoney,
+  getVenue,
+  unusedPrepaidMinutes,
+} from '@/core';
 import { useAppStore } from '@/core/useAppStore';
 import {
   Badge,
+  Banner,
   Button,
   Card,
   EmptyState,
@@ -43,6 +51,8 @@ export function ActiveSessionScreen() {
   const online = useOnlineStatus();
   const blocked = blockWhenOffline(online, lang);
   const venue = getVenue(venueId);
+  // F248: ending a prepaid bundle early asks for confirmation first.
+  const [confirmingEnd, setConfirmingEnd] = useState(false);
   if (!session)
     return (
       <Screen>
@@ -62,6 +72,10 @@ export function ActiveSessionScreen() {
       </Screen>
     );
   const bill = calculateBill(session);
+  const unused = unusedPrepaidMinutes(session);
+  const end = () => {
+    if (finishSession(session).ok) router.replace('/customer/receipt');
+  };
   const rawSeatLabel =
     venue.seats.find((seat) => seat.id === session.seatId)?.label ?? '';
   // Core keeps "Seat 3"; only the Vietnamese rendering becomes "Chỗ 3".
@@ -164,18 +178,37 @@ export function ActiveSessionScreen() {
         </Text>
         <Heading>{formatMoney(bill.total)}</Heading>
         <Text style={styles.caption}>{t('disclaimer')}</Text>
-        <View style={styles.row}>
-          <Button
-            variant="danger"
-            fullWidth={!isWide}
-            label={t('endSession')}
-            disabled={blocked !== null}
-            onPress={() => {
-              if (finishSession(session).ok)
-                router.replace('/customer/receipt');
-            }}
-          />
-        </View>
+        {confirmingEnd && unused > 0 ? (
+          <>
+            <Banner tone="warning" role="alert">
+              {t('earlyEnd', { minutes: unused })}
+            </Banner>
+            <View style={styles.row}>
+              <Button
+                variant="danger"
+                fullWidth={!isWide}
+                label={t('endAnyway')}
+                disabled={blocked !== null}
+                onPress={end}
+              />
+              <Button
+                fullWidth={!isWide}
+                label={t('keepSeat')}
+                onPress={() => setConfirmingEnd(false)}
+              />
+            </View>
+          </>
+        ) : (
+          <View style={styles.row}>
+            <Button
+              variant="danger"
+              fullWidth={!isWide}
+              label={t('endSession')}
+              disabled={blocked !== null}
+              onPress={() => (unused > 0 ? setConfirmingEnd(true) : end())}
+            />
+          </View>
+        )}
       </Card>
     </Screen>
   );
