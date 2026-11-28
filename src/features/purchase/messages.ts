@@ -2,6 +2,9 @@ import { defineMessages } from '../../i18n/i18n';
 export const purchaseMessages = defineMessages(
   {
     offer: 'Offer',
+    menuSearch: 'Search the menu',
+    menuNoMatch: 'Nothing on the menu matches “{query}”.',
+    clearSearch: 'Clear search',
     oneOffer: 'Choose one voucher or flash sale per order.',
     voucher: 'Voucher code',
     noOffer: 'No offer',
@@ -113,6 +116,9 @@ export const purchaseMessages = defineMessages(
   },
   {
     offer: 'Ưu đãi',
+    menuSearch: 'Tìm món',
+    menuNoMatch: 'Không có món nào khớp với “{query}”.',
+    clearSearch: 'Xóa tìm kiếm',
     oneOffer: 'Chọn một voucher hoặc flash sale cho mỗi đơn.',
     voucher: 'Mã voucher',
     noOffer: 'Không áp ưu đãi',
